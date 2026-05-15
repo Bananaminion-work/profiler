@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from src.ui.appcontroller import AppController
 
 from abc import ABC, abstractmethod
-from ipywidgets import Widget,Button,VBox,HBox,Label,Layout,Text,RadioButtons,FileUpload,Output,Dropdown,Textarea,Accordion
+from ipywidgets import Widget,Button,VBox,HBox,Label,Layout,Text,RadioButtons,FileUpload,Output,Dropdown,Textarea,Accordion,GridspecLayout
 
 import time
 
@@ -247,8 +247,7 @@ class ImportPage_showData(SubPage):
         )
         
         label_ovenNr = Label(
-            value="Select the oven-number:",
-            layout=Layout(width='250px')
+            value="Select the oven-number:"
         )
         
         drd_ovenNr = Dropdown(
@@ -259,8 +258,7 @@ class ImportPage_showData(SubPage):
         )
         
         label_product = Label(
-            value="Select the product:",
-            layout=Layout(width='250px')
+            value="Select the product:"
         )
         
         drd_product = Dropdown(
@@ -271,8 +269,7 @@ class ImportPage_showData(SubPage):
         )
         
         label_loadOfProfileType = Label(
-            value="Select the load of the profile type:",
-            layout=Layout(width='400px')
+            value="Select the load of the profile type:"
         )
         
         drd_loadOfProfileType = Dropdown(
@@ -283,8 +280,7 @@ class ImportPage_showData(SubPage):
         )
         
         label_posOfMeasurementCooler = Label(
-            value="Select the position of the measurement cooler:",
-            layout=Layout(width='400px')
+            value="Select the position of the measurement cooler:"
         )
         
         drd_posOfMeasurementCooler = Dropdown(
@@ -295,8 +291,7 @@ class ImportPage_showData(SubPage):
         )
         
         label_coolerCountOnTray = Label(
-            value="Select the amount of coolers\n in the process-chamber:",
-            layout=Layout(width='400px')
+            value="Select the amount of coolers\n in the process-chamber:"
         )
         
         drd_coolerCountOnTray = Dropdown(
@@ -307,8 +302,7 @@ class ImportPage_showData(SubPage):
         )
         
         label_productionOrTest = Label(
-            value="Select whether measurement\n was a test or in\n serial production:",
-            layout=Layout(width='400px')
+            value="Select whether measurement\n was a test or in\n serial production:"
         )
         
         radio_productionOrTest = RadioButtons(
@@ -319,8 +313,7 @@ class ImportPage_showData(SubPage):
         )
         
         label_nozzlefield = Label(
-            value="Enter Name of the nozzlefield\n used for measurement:",
-            layout=Layout(width='400px')
+            value="Enter Name of the nozzlefield\n used for measurement:"
         )
         
         input_nozzlefield = Text(
@@ -330,8 +323,7 @@ class ImportPage_showData(SubPage):
         accordion = self.create_accordion()
         
         label_profileName = Label(
-            value="Enter the profilename:",
-            layout=Layout(width='400px')
+            value="Enter the profilename:"
         )
         
         input_profileName = Text(
@@ -339,8 +331,7 @@ class ImportPage_showData(SubPage):
         )
         
         label_comment = Label(
-            value="Enter your personal comment:",
-            layout=Layout(width='400px')
+            value="Enter your personal comment:"
         )
         
         input_comment = Textarea(
@@ -370,17 +361,39 @@ class ImportPage_showData(SubPage):
         profileNameBox = HBox([label_profileName,input_profileName])
         commentBox = HBox([label_comment,input_comment])
         buttonBox = HBox([btn_save,btn_discard],layout=Layout(justify_content='flex-end'))
-        drdBox = VBox([
-            HBox([label_ovenNr,drd_ovenNr]),
-            HBox([label_product,drd_product]),
-            HBox([label_loadOfProfileType,drd_loadOfProfileType]),
-            HBox([label_posOfMeasurementCooler ,drd_posOfMeasurementCooler]),
-            HBox([label_coolerCountOnTray ,drd_coolerCountOnTray]),
-            HBox([label_productionOrTest, radio_productionOrTest])
-        ])
+        
+        grid = GridspecLayout(6,2)
+        grid.layout.grid_template_columns='300px 100px'
+        
+        grid[0,0]=label_ovenNr
+        grid[0,1]=drd_ovenNr
+        
+        grid[1,0]=label_product
+        grid[1,1]=drd_product
+        
+        grid[2,0]=label_loadOfProfileType
+        grid[2,1]=drd_loadOfProfileType
+        
+        grid[3,0]=label_posOfMeasurementCooler
+        grid[3,1]=drd_posOfMeasurementCooler
+        
+        grid[4,0]=label_coolerCountOnTray
+        grid[4,1]=drd_coolerCountOnTray
+        
+        grid[5,0]=label_productionOrTest
+        grid[5,1]=radio_productionOrTest
+        
+        #drdBox = VBox([
+        #    HBox([label_ovenNr,drd_ovenNr]),
+        #    HBox([label_product,drd_product]),
+        #    HBox([label_loadOfProfileType,drd_loadOfProfileType]),
+        #    HBox([label_posOfMeasurementCooler ,drd_posOfMeasurementCooler]),
+        #    HBox([label_coolerCountOnTray ,drd_coolerCountOnTray]),
+        #    HBox([label_productionOrTest, radio_productionOrTest])
+        #])
         
         metaBox = VBox([
-            drdBox,nozzleFieldBox,profileNameBox,accordion,commentBox,buttonBox
+            grid,nozzleFieldBox,profileNameBox,accordion,commentBox,buttonBox
         ],layout=Layout(width='50%')
                        )       
         
