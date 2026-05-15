@@ -1,0 +1,2 @@
+class BronzeCreator:
+    pass
