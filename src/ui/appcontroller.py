@@ -1,9 +1,8 @@
 from src.ui.ui_view import UiView
 from src.ui.pages import BasePage,LandingPage, ImportPage_getData, ImportPage_showData, PlotPage_selectData, PlotPage_showData, Popup_confirm, Popup_warning
 from src.shared.data_models import DataComposition, Data, Metadata
-import ipywidgets as widgets
-from ipywidgets import Output, Layout, VBox
-from typing import cast
+from nicegui import ui
+from typing import Any, cast
 
 
 class AppController:
@@ -18,10 +17,10 @@ class AppController:
     # Attributes:
     
     current_session_measurement : DataComposition
-    terminalContent : Output
-    terminalContainer : VBox
-    pageContainer : Output
-    _layout : VBox
+    terminalContent : Any
+    terminalContainer : Any
+    pageContainer : Any
+    _layout : Any
     pages={}
     
     # Functions:
@@ -32,37 +31,12 @@ class AppController:
         creates the UiView
         creates framework for visual output
         """
-        # create boxes
-        self.terminalContent = Output()
-        pageContainer_layout=Layout(
-            max_width='1920px',
-            min_width='1200px',
-            max_height='1080px',
-            min_height='720px',
-            overflow='auto',
-            justify_content='center',
-            align_items='center'
-        )
-        self.pageContainer = Output(layout=pageContainer_layout)
-        self.terminalContainer = VBox()
-        
-        # create layout to make terminal scrollable
-        terminal_layout = Layout(
-            width='100%',
-            height='80px',
-            border='1px solid grey',
-            padding='5px',
-            overflow_y='auto'
-        )
-        
-        # boxing
-        self.terminalContainer = VBox(
-            [self.terminalContent], layout=terminal_layout
-        )        
-        
-        self._layout = VBox(
-            [self.pageContainer, self.terminalContainer]
-        )
+        with ui.column().classes("w-full max-w-[1920px] mx-auto") as root:
+            self.pageContainer = ui.column().classes("w-full min-h-[720px]")
+            ui.separator()
+            self.terminalContainer = ui.column().classes("w-full h-24 border p-2 overflow-auto")
+        self.terminalContent = self.terminalContainer
+        self._layout = root
         
         # create pages dictionary
         self.create_pages()
@@ -78,12 +52,12 @@ class AppController:
     
     def log(self, text:str):
         with self.terminalContent:
-            print(f"{text}")
+            ui.label(text)
     
     
     
     @property
-    def layout(self)->VBox:
+    def layout(self)->Any:
         return self._layout
     
     
@@ -109,7 +83,7 @@ class AppController:
         if pageName=='landing':
             self.reset_all_pages()
         
-        self.terminalContent.clear_output()
+        self.terminalContent.clear()
         self.ui.switch_page(pageName)
         
         

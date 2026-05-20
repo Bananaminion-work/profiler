@@ -1,16 +1,16 @@
 from src.ui.pages import BasePage
-from ipywidgets import Output
-from IPython.display import display, clear_output
+from nicegui import ui
 from src.shared.exceptions import WrongInputError
+from typing import Any
 
 
 class UiView:
 # Attributes
     _pages : dict[str,BasePage]
-    _layout : Output
+    _layout : Any
     
 # Functions
-    def __init__(self, pages: dict[str,BasePage], layout: Output):
+    def __init__(self, pages: dict[str,BasePage], layout: Any):
         self._pages = pages
         self._layout = layout
 
@@ -19,10 +19,9 @@ class UiView:
         pageToShow = self._pages.get(pageName)
         
         if pageToShow:# is available
-            
+            self._layout.clear()
             with self._layout:
-                clear_output(wait=True)
-                display(pageToShow.layout)
+                pageToShow.render(self._layout)
                 
         else:
             raise WrongInputError(f"The given string: {pageName} was not found in the dictionary of available pages.")
