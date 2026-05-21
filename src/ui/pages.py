@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import time
 from typing import TYPE_CHECKING
 
 from nicegui import ui
+from nicegui.events import UploadEventArguments
+
+from src.shared.upload_container import UploadContainer
 
 if TYPE_CHECKING:
     from src.ui.appcontroller import AppController
@@ -61,77 +63,103 @@ class LandingPage(BasePage):
 
 class ImportPage_getData(SubPage):
     pageName = "import-get"
-
-    def __init__(self, controller: AppController):
-        super().__init__(controller)
-        self.input_path = None
-        self.radio_source = None
-        self.uploaded_file_name = ""
+    path: str = ""
+    source: str = "Solderstar"
+    uploadWidget: ui.upload
+    uploaded_file_name: str = ""
+    uploaded_content: bytes | None = None
 
     def build_content(self) -> None:
-        with ui.column().classes("gap-4"):
-            ui.label("Please enter the path of the ZIP-file:")
-            with ui.row().classes("items-center gap-2"):
-                self.input_path = ui.input(placeholder="dbms\\ path\\ to\\ file...").classes("w-96")
-                ui.button("Submit", icon="check", on_click=self.on_submit_click)
+          
+        with ui.column().classes("gap-4 w-96 mx-auto my-8 items-center"):
+                ui.label("Please use the upload-button to upload the zip-file of your measurement:").classes("text-lg")
+                ui.separator()
+                ui.label("Please select your source of Data:")
+                ui.radio(
+                    ["Solderstar", "Rehm-recorder", "Datapaq"],
+                ).bind_value(self, "source")
 
-            ui.label("Please select your source of Data:")
-            self.radio_source = ui.radio(
-                ["Solderstar", "Rehm-recorder", "Datapaq"],
-                value="Solderstar",
-            )
+                self.uploadWidget = ui.upload(
+                    on_upload=self.on_upload, 
+                    multiple=False,
+                    auto_upload=True
+                ).props("accept=.zip").classes("w-full")
 
-            ui.label("Enter file instead of path:")
+                ui.separator()
 
-            def on_upload(e) -> None:
-                self.uploaded_file_name = e.name
-                self.controller.log(f"uploaded file: {e.name}")
-
-            ui.upload(on_upload=on_upload, multiple=False).props("accept=.zip")
-
+                ui.button(
+                    "Submit",
+                    icon="check",
+                    on_click=self.on_submit_click
+                    ).classes("w-full")
+        
+    async def on_upload(self, e: UploadEventArguments) -> None:
+        """handles the upload-event of the upload-widget, 
+        saves the file name and content in the page-attributes.
+        needs to be async because of the await for reading the file content"""
+        self.uploaded_file_name = e.file.name
+        self.uploaded_content = await e.file.read()
+    
     def on_submit_click(self) -> None:
-        chosen_source = self.radio_source.value if self.radio_source else ""
-        self.controller.log("send path..")
-        self.controller.log(f"chosen source is {chosen_source}")
-        self.controller.log("calls handle_data_import_request")
-        self.controller.handle_data_import_request()
-        time.sleep(2)
+        
+        if self.uploaded_content is None:
+            ui.notify("Please upload a file before submitting.", color="negative")
+            return
+        
+        self.controller.log(f"Submit clicked with uploaded file name: {self.uploaded_file_name}")
+        self.controller.log(f"chosen source is {self.source}")
+        
+        uploadContainer = UploadContainer(self.uploaded_file_name, self.uploaded_content)
+        self.controller.handle_data_import_request(uploadContainer, self.source)
         self.controller.handle_navigation_request("import-show")
-        if self.input_path:
-            self.input_path.value = ""
+
 
     def reset(self) -> None:
-        if self.input_path:
-            self.input_path.value = ""
+        #self.path = ""
+        self.source = "Solderstar"
         self.uploaded_file_name = ""
+        self.uploaded_content = b""
 
 
 class ImportPage_showData(SubPage):
     pageName = "import-show"
-
-    def __init__(self, controller: AppController):
-        super().__init__(controller)
-        self.accordionNames: list[ui.input] = []
-        self.input_nozzlefield = None
-        self.input_profileName = None
-        self.input_comment = None
+    oven_nr: str = "1234"
+    product: str = "PM6"
+    load: str = "8"
+    pos: str = "8"
+    count: str = "8"
+    prod_test: str = "Test"
+    nozzlefield: str = ""
+    profile_name: str = ""
+    comment: str = ""
+    injection_1: str = ""
+    injection_2: str = ""
+    injection_3: str = ""
+    injection_4: str = ""
+    waiting_1: str = ""
+    waiting_2: str = ""
+    waiting_3: str = ""
+    waiting_4: str = ""
+    cooling_freq_1: str = ""
+    cooling_freq_2: str = ""
+    cooling_freq_3: str = ""
+    cooling_freq_4: str = ""
+    cooling_time_1: str = ""
+    cooling_time_2: str = ""
+    cooling_time_3: str = ""
+    cooling_time_4: str = ""
 
     def _create_accordion(self) -> None:
-        self.accordionNames = []
-
-        def add_fields(prefix: str) -> None:
-            for i in range(1, 5):
-                field = ui.input(f"{prefix} {i}:", placeholder="enter value...").classes("w-80")
-                self.accordionNames.append(field)
-
-        with ui.expansion("Injections", icon="expand_more"):
-            add_fields("Injection")
-        with ui.expansion("Waiting-time", icon="expand_more"):
-            add_fields("Waiting-time")
-        with ui.expansion("Cooling-frequency", icon="expand_more"):
-            add_fields("Cooling-frequency")
-        with ui.expansion("Cooling-time", icon="expand_more"):
-            add_fields("Cooling-time")
+        groups = [
+            ("Injections",        "Injection",         ["injection_1",    "injection_2",    "injection_3",    "injection_4"]),
+            ("Waiting-time",      "Waiting-time",      ["waiting_1",      "waiting_2",      "waiting_3",      "waiting_4"]),
+            ("Cooling-frequency", "Cooling-frequency", ["cooling_freq_1", "cooling_freq_2", "cooling_freq_3", "cooling_freq_4"]),
+            ("Cooling-time",      "Cooling-time",      ["cooling_time_1", "cooling_time_2", "cooling_time_3", "cooling_time_4"]),
+        ]
+        for title, prefix, attrs in groups:
+            with ui.expansion(title, icon="expand_more"):
+                for i, attr in enumerate(attrs, 1):
+                    ui.input(f"{prefix} {i}:", placeholder="enter value...").classes("w-80").bind_value(self, attr)
 
     def build_content(self) -> None:
         with ui.column().classes("w-full gap-4"):
@@ -141,18 +169,18 @@ class ImportPage_showData(SubPage):
 
                 with ui.card().classes("w-3/5"):
                     with ui.grid(columns=2).classes("w-full gap-3"):
-                        drd_ovenNr = ui.select(["1234", "2345", "3456", "4567"], value="1234", label="Select the oven-number")
-                        drd_product = ui.select(["VW-ECO", "VOLVO-ERAD", "BASE", "PM6"], value="PM6", label="Select the product")
-                        drd_load = ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Load of the profile type")
-                        drd_pos = ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Position of measurement cooler")
-                        drd_count = ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Amount of coolers")
-                        radio_prod_test = ui.radio(["Serialproduction", "Test"], value="Test").props("inline")
+                        ui.select(["1234", "2345", "3456", "4567"], value="1234", label="Select the oven-number").bind_value(self, "oven_nr")
+                        ui.select(["VW-ECO", "VOLVO-ERAD", "BASE", "PM6"], value="PM6", label="Select the product").bind_value(self, "product")
+                        ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Load of the profile type").bind_value(self, "load")
+                        ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Position of measurement cooler").bind_value(self, "pos")
+                        ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Amount of coolers").bind_value(self, "count")
+                        ui.radio(["Serialproduction", "Test"], value="Test").props("inline").bind_value(self, "prod_test")
 
                     ui.separator()
-                    self.input_nozzlefield = ui.input("Nozzlefield", placeholder="Dreifachdüsenfeld")
-                    self.input_profileName = ui.input("Profilename", placeholder="used profilename")
+                    ui.input("Nozzlefield", placeholder="Dreifachdüsenfeld").bind_value(self, "nozzlefield")
+                    ui.input("Profilename", placeholder="used profilename").bind_value(self, "profile_name")
                     self._create_accordion()
-                    self.input_comment = ui.textarea("Comment", placeholder="enter your comment..")
+                    ui.textarea("Comment", placeholder="enter your comment..").bind_value(self, "comment")
 
                     with ui.row().classes("justify-end w-full"):
                         ui.button("Save", on_click=self.on_save_click)
@@ -187,8 +215,6 @@ class ImportPage_showData(SubPage):
                         label="Ventilate 2",
                     )
 
-            _ = drd_ovenNr, drd_product, drd_load, drd_pos, drd_count, radio_prod_test
-
     def on_save_click(self) -> None:
         self.controller.log("Data gets written to the database...")
         self.controller.log("this is to be implemented soon...")
@@ -198,35 +224,50 @@ class ImportPage_showData(SubPage):
         self.controller.handle_popup("confirm", "Are you sure to discard and return to home?", self.pageName)
 
     def reset(self) -> None:
-        if self.input_nozzlefield:
-            self.input_nozzlefield.value = ""
-        if self.input_profileName:
-            self.input_profileName.value = ""
-        if self.input_comment:
-            self.input_comment.value = ""
-        for text_field in self.accordionNames:
-            text_field.value = ""
+        self.oven_nr = "1234"
+        self.product = "PM6"
+        self.load = "8"
+        self.pos = "8"
+        self.count = "8"
+        self.prod_test = "Test"
+        self.nozzlefield = ""
+        self.profile_name = ""
+        self.comment = ""
+        self.injection_1 = ""
+        self.injection_2 = ""
+        self.injection_3 = ""
+        self.injection_4 = ""
+        self.waiting_1 = ""
+        self.waiting_2 = ""
+        self.waiting_3 = ""
+        self.waiting_4 = ""
+        self.cooling_freq_1 = ""
+        self.cooling_freq_2 = ""
+        self.cooling_freq_3 = ""
+        self.cooling_freq_4 = ""
+        self.cooling_time_1 = ""
+        self.cooling_time_2 = ""
+        self.cooling_time_3 = ""
+        self.cooling_time_4 = ""
 
 
 class PlotPage_selectData(SubPage):
     pageName = "plot-select"
-
-    def __init__(self, controller: AppController):
-        super().__init__(controller)
-        self.datePicker = None
-        self.input_nozzlefield = None
-        self.input_product = None
-        self.input_profileName = None
+    date: str = ""
+    oven_nr: str = "1234"
+    product: str = ""
+    nozzlefield: str = ""
+    profile_name: str = ""
 
     def build_content(self) -> None:
         with ui.column().classes("w-full gap-4"):
             with ui.card().classes("w-full"):
                 with ui.grid(columns=3).classes("w-full gap-3"):
-                    self.datePicker = ui.input("Pick the date").props("type=date")
-                    ui.select(["1234", "2345", "3456", "4567"], value="1234", label="Select the oven-number")
-                    self.input_product = ui.input("Enter the product name", placeholder="Product name")
-                    self.input_nozzlefield = ui.input("Nozzlefield", placeholder="Nozzlefield")
-                    self.input_profileName = ui.input("Profilename", placeholder="Profilename")
+                    ui.input("Pick the date").props("type=date").bind_value(self, "date")
+                    ui.select(["1234", "2345", "3456", "4567"], value="1234", label="Select the oven-number").bind_value(self, "oven_nr")
+                    ui.input("Enter the product name", placeholder="Product name").bind_value(self, "product")
+                    ui.input("Nozzlefield", placeholder="Nozzlefield").bind_value(self, "nozzlefield")
+                    ui.input("Profilename", placeholder="Profilename").bind_value(self, "profile_name")
 
             with ui.card().classes("w-full min-h-96"):
                 ui.label("Table placeholder")
@@ -244,14 +285,11 @@ class PlotPage_selectData(SubPage):
                 )
 
     def reset(self) -> None:
-        if self.input_nozzlefield:
-            self.input_nozzlefield.value = ""
-        if self.input_product:
-            self.input_product.value = ""
-        if self.input_profileName:
-            self.input_profileName.value = ""
-        if self.datePicker:
-            self.datePicker.value = ""
+        self.date = ""
+        self.oven_nr = "1234"
+        self.product = ""
+        self.nozzlefield = ""
+        self.profile_name = ""
 
 
 class PlotPage_showData(SubPage):
@@ -270,10 +308,6 @@ class PlotPage_showData(SubPage):
 
 
 class Popup_confirm(BasePage):
-    def __init__(self, controller: AppController):
-        super().__init__(controller)
-        self.message = ""
-        self.returnPage = "landing"
 
     def render(self, parent: ui.column) -> None:
         with parent:
@@ -295,10 +329,6 @@ class Popup_confirm(BasePage):
 
 
 class Popup_warning(BasePage):
-    def __init__(self, controller: AppController):
-        super().__init__(controller)
-        self.message = ""
-        self.returnPage = "landing"
 
     def render(self, parent: ui.column) -> None:
         with parent:

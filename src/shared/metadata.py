@@ -1,24 +1,18 @@
 class Metadata:
     date:str
-    ovenNr:int
     startTime:int
+    dataSource:str
+    ovenNr:int
+    product:str
+    loadProfile:float
+    positionMeasurementCooler:str
+    testCooler_flag:bool
+    coolerCountOnTray:int
+    nozzlefield:str
+    injectionAmount:dict[str, float]
+    waitingTime:dict[str, float]
+    coolingFrequency:dict[str, float]
+    coolingTime:dict[str, float]
     profileName:str
-
-    def __init__(self, date:str, ovenNr:int, startTime:int, profileName:str):
-        self.date = date
-        self.ovenNr = ovenNr
-        self.startTime = startTime
-        self.profileName = profileName
-        
-    def get_date(self)->str:
-        return self.date
-    
-    def get_ovenNr(self)->int:
-        return self.ovenNr
-    
-    def get_startTime(self)->int:
-        return self.startTime
-    
-    def get_profileName(self)->str:
-        return self.date
+    comment:str
     

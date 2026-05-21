@@ -1,6 +1,8 @@
+from src.shared.upload_container import UploadContainer
 from src.ui.ui_view import UiView
-from src.ui.pages import BasePage,LandingPage, ImportPage_getData, ImportPage_showData, PlotPage_selectData, PlotPage_showData, Popup_confirm, Popup_warning
-from src.shared.data_models import DataComposition, Data, Metadata
+from src.ui.pages import LandingPage, ImportPage_getData, ImportPage_showData, PlotPage_selectData, PlotPage_showData, Popup_confirm, Popup_warning
+from src.shared.data_models import DataComposition
+from src.data.data_manager import DataManager
 from nicegui import ui
 from typing import Any, cast
 
@@ -9,7 +11,7 @@ class AppController:
     
     # Modules:
     
-    #data : DataManager
+    data : DataManager
     #database : DatabaseTooling
     #plot : PlotManager
     ui : UiView
@@ -44,15 +46,19 @@ class AppController:
         # create UiView
         self.ui = UiView(self.pages,self.pageContainer)
         
+        # create DataManager
+        self.data = DataManager()
+        
         # show initial page
         self.handle_navigation_request('landing')
     
         
     
     
-    def log(self, text:str):
+    def log(self, text: str):
         with self.terminalContent:
             ui.label(text)
+        self.terminalContent.update()
     
     
     
@@ -76,14 +82,14 @@ class AppController:
 
 
 
-    def handle_navigation_request(self,pageName:str):
+    def handle_navigation_request(self, pageName: str):
         """calls UiView to switch the page\n
         resets user input of the pages
         """
-        if pageName=='landing':
+        if pageName == 'landing':
             self.reset_all_pages()
-        
-        self.terminalContent.clear()
+            self.terminalContent.clear()
+
         self.ui.switch_page(pageName)
         
         
@@ -94,7 +100,8 @@ class AppController:
         
         
         
-    def handle_data_import_request(self):
+    def handle_data_import_request(self, uploadContainer: UploadContainer, source:str):
+        self.data.create_data_from_measurement(uploadContainer, source)
         self.log("here is handle-method: i will call Data-Component to create Data")
         
         
