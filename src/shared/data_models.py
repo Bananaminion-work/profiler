@@ -1,17 +1,10 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING, Union
+#from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from src.shared.metadata import Metadata
 from src.shared.exceptions import WrongInputError
 import pandas as pd
-
-if TYPE_CHECKING:
-    import pyspark.sql
-    
-#unites pandas and pyspark dataframes as DataFrameType for local implementation
-DataFrameType = Union[pd.DataFrame, 'pyspark.sql.DataFrame'] if TYPE_CHECKING else pd.DataFrame
-
-
+from pandas import DataFrame
 
 class Data(ABC):
     """
@@ -19,11 +12,11 @@ class Data(ABC):
     """
     
     @abstractmethod
-    def set_dataframe(self, df: Union[pd.DataFrame, pyspark.sql.DataFrame]):
+    def set_dataframe(self, df: DataFrame):
         pass
     
     @abstractmethod
-    def get_dataframe(self) -> Union[pd.DataFrame, pyspark.sql.DataFrame]:
+    def get_dataframe(self) -> DataFrame:
         pass
     
     @abstractmethod
@@ -36,14 +29,14 @@ class BronzeData(Data):
     
     typeString = "BronzeData"
     
-    def __init__(self, bronzeValues: Union[pd.DataFrame, pyspark.sql.DataFrame] ):
+    def __init__(self, bronzeValues: DataFrame):
         self.set_dataframe(bronzeValues)
         
       
-    def set_dataframe(self, df: Union[pd.DataFrame, pyspark.sql.DataFrame]):
+    def set_dataframe(self, df: DataFrame):
         self.bronzeValues = df
         
-    def get_dataframe(self) -> Union[pd.DataFrame, pyspark.sql.DataFrame]:
+    def get_dataframe(self) -> DataFrame:
         return self.bronzeValues
     
     def get_type(self) -> str:
@@ -55,14 +48,14 @@ class SilverData(Data):
     
     typeString = "SilverData"
     
-    def __init__(self, silverValues: Union[pd.DataFrame, pyspark.sql.DataFrame] ):
+    def __init__(self, silverValues: DataFrame):
         self.set_dataframe(silverValues)
         
       
-    def set_dataframe(self, df: Union[pd.DataFrame, pyspark.sql.DataFrame]):
+    def set_dataframe(self, df: DataFrame):
         self.silverValues = df
         
-    def get_dataframe(self) -> Union[pd.DataFrame, pyspark.sql.DataFrame]:
+    def get_dataframe(self) -> DataFrame:
         return self.silverValues
     
     def get_type(self) -> str:
@@ -74,14 +67,14 @@ class GoldData(Data):
        
     typeString = "GoldData"
     
-    def __init__(self, goldValues: Union[pd.DataFrame, pyspark.sql.DataFrame] ):
+    def __init__(self, goldValues: DataFrame):
         self.set_dataframe(goldValues)
         
       
-    def set_dataframe(self, df: Union[pd.DataFrame, pyspark.sql.DataFrame]):
+    def set_dataframe(self, df: DataFrame):
         self.goldValues = df
         
-    def get_dataframe(self) -> Union[pd.DataFrame, pyspark.sql.DataFrame]:
+    def get_dataframe(self) -> DataFrame:
         return self.goldValues
     
     def get_type(self) -> str:

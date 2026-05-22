@@ -1,7 +1,7 @@
 from src.data.bronze_creator import BronzeCreator
 from src.data.silver_creator import SilverCreator
 from src.data.gold_creator import GoldCreator
-from src.shared.data_models import BronzeData, Data, SilverData 
+from src.shared.data_models import Data
 from pandas import DataFrame
 
 from src.shared.upload_container import UploadContainer
@@ -25,8 +25,8 @@ class Creator():
         dataObjects = dict[str,Data]()
         
         dataObjects["bronze"] = self._bronzeCreator.create_bronze_object(uploadContainer, source)
-        dataObjects["silver"] = self._silverCreator.create_silver_object(dataObjects["bronze"])
-        dataObjects["gold"] = self._goldCreator.create_gold_object_multiple(dataObjects["silver"])
+        dataObjects["silver"] = self._silverCreator.create_silver_object(dataObjects["bronze"],source)
+        dataObjects["gold"] = self._goldCreator.create_gold_object_multiple(dataObjects["silver"],source)
             
         return dataObjects
         

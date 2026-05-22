@@ -15,3 +15,9 @@ class DatabaseQueryError(StdToolError):
 
 class WrongInputError(StdToolError):
     pass
+
+class NoDataToWorkWithError(StdToolError):
+    pass
+
+class SourceNotProvidedError(StdToolError):
+    pass
