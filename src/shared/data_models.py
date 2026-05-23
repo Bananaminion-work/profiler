@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 from src.shared.metadata import Metadata
 from src.shared.exceptions import WrongInputError
-import pandas as pd
 from pandas import DataFrame
 
 class Data(ABC):
@@ -83,16 +82,11 @@ class GoldData(Data):
 
 class DataComposition:
     
-    metadata : Metadata
-    medallionData : dict[str,Data]
-    
-    def __init__(self, metadata: Metadata, medallionData: dict[str,Data]):
-        self.set_metadata(metadata)
-        self.set_medallion_data(medallionData)
-        
+    _metadata : Metadata
+    _medallionData : dict[str,Data]
         
     def set_metadata(self, metadata: Metadata):
-        self.metadata = metadata
+        self._metadata = metadata
         
         
     def set_medallion_data(self, medallionData: dict[str,Data]):
@@ -104,10 +98,10 @@ class DataComposition:
             raise WrongInputError("The Dictionary has keys than expected")
         
         else:
-            self.medallionData = medallionData
+            self._medallionData = medallionData
                 
     def get_medallion_data(self) ->dict[str,Data]:
-        return self.medallionData
+        return self._medallionData
            
     def get_metadata(self) -> Metadata:
-        return self.metadata
+        return self._metadata

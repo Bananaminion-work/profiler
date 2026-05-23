@@ -1,6 +1,3 @@
-# MUSS NOCH GELÖSCHT WERDEN; IST NUR FÜR TESTING DABEI !!!!!
-from nicegui import ui
-
 import pandas as pd
 from pandas import DataFrame
 from src.shared.data_models import Data, BronzeData,  SilverData

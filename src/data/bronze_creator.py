@@ -1,7 +1,4 @@
 from __future__ import annotations
-# MUSS NOCH GELÖSCHT WERDEN; IST NUR FÜR TESTING DABEI !!!!!
-from nicegui import ui
-
 from src.shared.data_models import BronzeData, Data
 import pandas as pd
 from pandas import DataFrame

@@ -1,6 +1,3 @@
-# MUSS NOCH GELÖSCHT WERDEN; IST NUR FÜR TESTING DABEI !!!!!
-from nicegui import ui
-
 from pandas import DataFrame
 import pandas as pd
 from src.shared.data_models import GoldData, SilverData, Data
@@ -33,8 +30,7 @@ class GoldCreator():
                 else:
                     raise WrongInputError(f"Expected a DataFrame, got {type(gradientDf)} instead.")
                 
-            ui.notify("call of function create_gold_object_multiple successful")
-            return GoldData(DataFrame())
+            return GoldData(self.goldDf)
     
     
     def create_gold_data_final(self, gold: Data, chosenZeropoints: dict[str,DataFrame])->GoldData:
@@ -44,8 +40,8 @@ class GoldCreator():
             raise WrongInputError("Expected GoldData as input for gold parameter")
         
         else:
-            ui.notify("call of function create_gold_data_final successful")
-            return GoldData(DataFrame())
+            print("the function create_gold_data_final is still a placeholder...")
+            return GoldData(self.goldDf)
         
     def calc_gradient(self, dataInput: DataFrame):
         """calculates the gradient for each column in the provided DataFrame and returns it as a dict of DataFrames"""

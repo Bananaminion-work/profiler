@@ -1,7 +1,10 @@
+from src.plot.plot_factory import PlotFactory
+from src.shared.exceptions import WrongInputError
+from src.shared.metadata import Metadata
 from src.shared.upload_container import UploadContainer
 from src.ui.ui_view import UiView
 from src.ui.pages import LandingPage, ImportPage_getData, ImportPage_showData, PlotPage_selectData, PlotPage_showData, Popup_confirm, Popup_warning
-from src.shared.data_models import DataComposition
+from src.shared.data_models import Data, DataComposition
 from src.data.data_manager import DataManager
 from nicegui import ui
 from typing import Any, cast
@@ -13,7 +16,7 @@ class AppController:
     
     data : DataManager
     #database : DatabaseTooling
-    #plot : PlotManager
+    plot : PlotFactory
     ui : UiView
     
     # Attributes:
@@ -27,19 +30,26 @@ class AppController:
     
     # Functions:
     
-    def __init__(self):
+    def __init__(self, pageContainer, terminalContainer):
         """
         creates all Pages in a dictionary
         creates the UiView
         creates framework for visual output
         """
-        with ui.column().classes("w-full max-w-[1920px] mx-auto") as root:
-            self.pageContainer = ui.column().classes("w-full min-h-[720px]")
-            ui.separator()
-            self.terminalContainer = ui.column().classes("w-full h-24 border p-2 overflow-auto")
-        self.terminalContent = self.terminalContainer
-        self._layout = root
+        #with ui.column().classes("w-full max-w-[1920px] mx-auto") as root:
+        #    self.pageContainer = ui.column().classes("w-full min-h-[720px]")
+        #    ui.separator()
+        #    self.terminalContainer = ui.column().classes("w-full h-24 border p-2 overflow-auto")
+        #    
+        #self.terminalContent = self.terminalContainer
+        #self._layout = root
         
+        # assign containers to instance of AppController -> multiple users get their own instance of AppController
+        self.pageContainer = pageContainer
+        self.terminalContainer = terminalContainer
+        self.terminalContent = terminalContainer
+        self._layout = pageContainer.parent_slot.parent
+            
         # create pages dictionary
         self.create_pages()
         
@@ -48,6 +58,12 @@ class AppController:
         
         # create DataManager
         self.data = DataManager()
+        
+        # create PlotFactory
+        self.plot = PlotFactory()
+        
+        # instanciate current session measurement with empty data
+        self.current_session_measurement = DataComposition()
         
         # show initial page
         self.handle_navigation_request('landing')
@@ -101,8 +117,11 @@ class AppController:
         
         
     def handle_data_import_request(self, uploadContainer: UploadContainer, source:str):
-        self.data.create_data_from_measurement(uploadContainer, source)
-        self.log("here is handle-method: i will call Data-Component to create Data")
+        medallionObjects = self.data.create_data_from_measurement(uploadContainer, source)
+        if isinstance(medallionObjects, dict):
+            self.current_session_measurement.set_medallion_data(medallionObjects)
+        else:
+            raise WrongInputError(f"Expected a dict of Data objects, got {type(medallionObjects)} instead.")
         
         
     
@@ -126,3 +145,11 @@ class AppController:
             popupObject.set_message(message)
             popupObject.set_returnPage(returnPage)
             self.handle_navigation_request('popup-warning')
+            
+            
+    def handle_import_preview(self,config:str):
+        goldData = self.current_session_measurement.get_medallion_data().get("gold")
+        if isinstance(goldData, Data):
+            ui.plotly(self.plot.create_plot(goldData.get_dataframe(), config))
+        else:
+            raise WrongInputError(f"Expected a Data object for gold data, got {type(goldData)} instead.")

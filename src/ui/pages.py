@@ -110,12 +110,14 @@ class ImportPage_getData(SubPage):
         self.controller.log(f"chosen source is {self.source}")
         
         uploadContainer = UploadContainer(self.uploaded_file_name, self.uploaded_content)
+        
+        self.controller.log("strating calculation of Data-Objects...")
         self.controller.handle_data_import_request(uploadContainer, self.source)
+        self.controller.log("Data import successful, now navigating to preview...")
         self.controller.handle_navigation_request("import-show")
 
 
     def reset(self) -> None:
-        #self.path = ""
         self.source = "Solderstar"
         self.uploaded_file_name = ""
         self.uploaded_content = b""
@@ -148,6 +150,7 @@ class ImportPage_showData(SubPage):
     cooling_time_2: str = ""
     cooling_time_3: str = ""
     cooling_time_4: str = ""
+    config: str = ""
 
     def _create_accordion(self) -> None:
         groups = [
@@ -165,7 +168,8 @@ class ImportPage_showData(SubPage):
         with ui.column().classes("w-full gap-4"):
             with ui.row().classes("w-full gap-6 items-start"):
                 with ui.card().classes("w-2/5 min-h-72"):
-                    ui.label("Plot preview")
+                    self.plotContainer = ui.column()
+                    self.update_plot_preview()
 
                 with ui.card().classes("w-3/5"):
                     with ui.grid(columns=2).classes("w-full gap-3"):
@@ -190,15 +194,16 @@ class ImportPage_showData(SubPage):
                 ui.label("Choose zeropoints")
                 with ui.grid(columns=5).classes("w-full gap-3"):
                     ui.select(
-                        ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
-                        value="muss uebergeben werden",
-                        label="Plot",
+                        ["standard", "first injection", "above 235", "Ventilate 2"],
+                        value="standard",
+                        label="Choose zeropoint for plot",
+                        on_change=self.update_plot_preview
                     )
                     ui.select(
-                        ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
-                        value="muss uebergeben werden",
-                        label="Bulkhead",
-                    )
+                        ["standard", "standard2", "3", "4", "5", "6", "7", "8"],
+                        value="standard",
+                        label="choose config for plot",
+                    ).bind_value(self,"config")
                     ui.select(
                         ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
                         value="muss uebergeben werden",
@@ -214,6 +219,15 @@ class ImportPage_showData(SubPage):
                         value="muss uebergeben werden",
                         label="Ventilate 2",
                     )
+                    
+        self.update_plot_preview
+        
+    def update_plot_preview(self):
+        """clears plot container and redraws with fresh plot"""
+        self.plotContainer.clear()
+        # with function enables the call of handle-method on the container object
+        with self.plotContainer:
+            self.controller.handle_import_preview(self.config)
 
     def on_save_click(self) -> None:
         self.controller.log("Data gets written to the database...")
@@ -249,6 +263,7 @@ class ImportPage_showData(SubPage):
         self.cooling_time_2 = ""
         self.cooling_time_3 = ""
         self.cooling_time_4 = ""
+        self.config = "standard"
 
 
 class PlotPage_selectData(SubPage):
