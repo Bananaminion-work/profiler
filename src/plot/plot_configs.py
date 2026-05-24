@@ -31,7 +31,8 @@ class StandardConfig(BasePlotConfig):
         fig.update_layout(
             title_text='TESTPLOT',
             xaxis_title='Time',
-            yaxis_title='Measurement-values'
+            yaxis_title='Measurement-values',
+            autosize=True
         )
         
         return fig
@@ -57,7 +58,8 @@ class StandardConfig2(BasePlotConfig):
         fig.update_layout(
             title_text='TESTPLOT NUMMER 2',
             xaxis_title='Time',
-            yaxis_title='Measurement-values'
+            yaxis_title='Measurement-values',
+            autosize=True
         )
         
         return fig

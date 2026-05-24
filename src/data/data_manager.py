@@ -1,6 +1,7 @@
 from src.shared.data_models import Data, GoldData
 from src.data.creator import Creator
 from pandas import DataFrame
+from src.shared.exceptions import NoDataToWorkWithError
 from src.shared.upload_container import UploadContainer
 
 
@@ -20,6 +21,10 @@ class DataManager():
         gold = self._measurementObjects.get("gold")
         if gold is not None:
             self._measurementObjects["gold"] = self._creator.get_final_gold_object(gold, chosenZeropoints)
+        else:
+            raise NoDataToWorkWithError("Gold data object is missing, cannot create final gold data.")
+        
+        return self._measurementObjects["gold"]
         
     def get_measurement_objects(self)->dict[str,Data]:
         return self._measurementObjects

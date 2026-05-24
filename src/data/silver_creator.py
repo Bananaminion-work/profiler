@@ -19,7 +19,7 @@ class SilverCreator():
             self.silverDataFrame = bronze.get_dataframe().copy()
                             
             if source == "Rehm-recorder":
-                self.resample_one_entry_per_second()
+                self.resample_dataframe()
                 self.rename_attributes_for_legend()
             
             else:
@@ -70,7 +70,7 @@ class SilverCreator():
         
         self.silverDataFrame.rename(columns=renameColumns, inplace=True)
     
-    def resample_one_entry_per_second(self):
+    def resample_dataframe(self):
         """Resample the DataFrame to have one entry per second."""
         
         # convert ReadTime to datetime (use the specified format) and set as index
@@ -87,4 +87,4 @@ class SilverCreator():
         self.silverDataFrame = self.silverDataFrame.ffill()
         
         #reset index to ensure it as a column again
-        self.silverDataFrame.reset_index(inplace=True)
+        #self.silverDataFrame.reset_index(inplace=True)

@@ -26,6 +26,7 @@ class GoldCreator():
                 # call function to calc gradient if df is instanciated
                 if isinstance(gradientDf, DataFrame):
                     self.calc_gradient(gradientDf)
+                    self.calc_rolling_average(gradientDf, mode="trailing", window_size=10)
                 
                 else:
                     raise WrongInputError(f"Expected a DataFrame, got {type(gradientDf)} instead.")

@@ -12,7 +12,6 @@ class PlotFactory():
     def __init__(self) -> None:
         self.configsDict = {}
         self._load_configs()
-        print(f"Loaded plot configs: {list(self.configsDict.keys())}")
     
     def _load_configs(self):
         # path of the module
@@ -30,8 +29,6 @@ class PlotFactory():
             if obj.__module__ == moduleName and hasattr(obj, 'configName'):
                 self.configsDict[obj.configName] = obj()
                 
-    def change_config(self, configName:str):
-       pass
     
     def create_plot(self, data, configName:str):
         
