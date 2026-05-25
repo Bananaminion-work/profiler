@@ -2,13 +2,15 @@ import pandas as pd
 from pandas import DataFrame
 from src.shared.data_models import Data, BronzeData,  SilverData
 from src.shared.exceptions import WrongInputError
+from typing import Tuple
+from datetime import datetime
 
 
 class SilverCreator():
     
     silverDataFrame: DataFrame
     
-    def create_silver_object(self, bronze: Data, source: str)->SilverData:
+    def create_silver_object(self, bronze: Data, source: str)->Tuple[SilverData,datetime]:
         """creates SilverData object from a BronzeData object and processes it according to the source of measurement"""
         
         # raise error if no BronzeData is provided
@@ -19,13 +21,15 @@ class SilverCreator():
             self.silverDataFrame = bronze.get_dataframe().copy()
                             
             if source == "Rehm-recorder":
-                self.resample_dataframe()
+                # resample and save first entry for datetime
+                dateTime = self.resample_dataframe()
+                # rename attributes for better legend display
                 self.rename_attributes_for_legend()
             
             else:
                 raise WrongInputError("Source not supported for SilverData creation")
             
-            return SilverData(self.silverDataFrame)
+            return SilverData(self.silverDataFrame),dateTime
     
     def rename_attributes_for_legend(self):
         
@@ -78,6 +82,14 @@ class SilverCreator():
             self.silverDataFrame['ReadTime'],
             format='%d/%m/%y %H:%M:%S:%f'
         )
+        
+        # save the datetime of the first entry
+        firstEntry = self.silverDataFrame['ReadTime'].iloc[0]
+        #convert first entry to datetime object if it is not already
+        if not isinstance(firstEntry, datetime):
+            firstEntry = pd.to_datetime(firstEntry)
+        
+        # set the index and replace ReadTime for resampling
         self.silverDataFrame.set_index('ReadTime', inplace=True)
         
         # resample to 1 second intervals
@@ -87,4 +99,10 @@ class SilverCreator():
         self.silverDataFrame = self.silverDataFrame.ffill()
         
         #reset index to ensure it as a column again
-        #self.silverDataFrame.reset_index(inplace=True)
+        self.silverDataFrame.reset_index(inplace=True)
+        
+        # create new column with integer seconds as offset to first entry for easier handling of zeropoints
+        self.silverDataFrame['ReadTime'] = range(len(self.silverDataFrame))
+        
+        return firstEntry
+        

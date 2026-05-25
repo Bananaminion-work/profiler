@@ -1,3 +1,4 @@
+from nicegui import ui
 from pandas import DataFrame
 import pandas as pd
 from src.shared.data_models import GoldData, SilverData, Data
@@ -7,11 +8,11 @@ class GoldCreator():
     
     goldDf: DataFrame   
     
-    def create_gold_object_multiple(self, silver: SilverData, source: str)->GoldData:
+    def create_gold_object(self, silver: SilverData, source: str)->GoldData:
         
         # raise error if no SilverData is provided
         if not isinstance(silver, SilverData): 
-            raise WrongInputError("Expected SilverData as input for silver parameter")
+            raise WrongInputError(f"Expected SilverData as input for silver parameter, got {type(silver)} instead.")
         
         else:
             
@@ -29,20 +30,14 @@ class GoldCreator():
                     self.calc_rolling_average(gradientDf, mode="trailing", window_size=10)
                 
                 else:
-                    raise WrongInputError(f"Expected a DataFrame, got {type(gradientDf)} instead.")
+                    ui.notify(f"Expected a DataFrame, got {type(gradientDf)} instead.")
+                
+            # erase column ReadTime as it is not necessary anymore
+            self.goldDf.drop(columns=['ReadTime'], inplace=True)
                 
             return GoldData(self.goldDf)
-    
-    
-    def create_gold_data_final(self, gold: Data, chosenZeropoints: dict[str,DataFrame])->GoldData:
         
-        # raise error if no GoldData is provided
-        if not isinstance(gold, GoldData):
-            raise WrongInputError("Expected GoldData as input for gold parameter")
         
-        else:
-            print("the function create_gold_data_final is still a placeholder...")
-            return GoldData(self.goldDf)
         
     def calc_gradient(self, dataInput: DataFrame):
         """calculates the gradient for each column in the provided DataFrame and returns it as a dict of DataFrames"""
@@ -55,21 +50,23 @@ class GoldCreator():
         # append values to goldDf
         self.goldDf = pd.concat([self.goldDf, gradientDf], axis=1)
         
+        
+        
     def calc_rolling_average(self, dataInput: DataFrame, mode: str, window_size: int):
         """calculates the rolling average for each column in the provided DataFrame and returns it as a dict of DataFrames"""
         
-        windowStr = f"{window_size}s"
+        #windowStr = f"{window_size}s"
         rollingDf = None
         
         if mode == "trailing":
         # calculate rolling average using rolling() method and fill NaN values with 0
-            rollingDf = dataInput.rolling(windowStr).mean().fillna(0)
+            rollingDf = dataInput.rolling(window_size).mean().fillna(0)
         
         elif mode == "centered":
-            rollingDf = dataInput.rolling(windowStr, center=True).mean().fillna(0)
+            rollingDf = dataInput.rolling(window_size, center=True).mean().fillna(0)
             
         elif mode == "leading":
-            rollingDf = dataInput.rolling(windowStr).mean().fillna(0).shift(-1, freq=windowStr)
+            rollingDf = dataInput.rolling(window_size).mean().fillna(0).shift(-1, freq=window_size)
         
                 
         # append values to goldDf if type matches

@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 class Metadata:
     date:str
     startTime:str
@@ -32,8 +35,6 @@ class Metadata:
     def set_user_input(self, metadata: dict[str,str]):
         
         # set all metadata attributes
-        self.date = metadata.get("date", "")
-        self.startTime = (metadata.get("startTime", ""))
         self.ovenNr = int(metadata.get("ovenNr", 0))
         self.product = metadata.get("product", "")
         self.loadProfile = float(metadata.get("loadProfile", 0.0))
@@ -69,5 +70,6 @@ class Metadata:
     def set_source(self, source:str):
         self.source = source
         
-
-        
+    def set_datetime(self,date: datetime):
+        self.date = date.strftime("%Y-%m-%d")
+        self.startTime = date.strftime("%H:%M:%S")

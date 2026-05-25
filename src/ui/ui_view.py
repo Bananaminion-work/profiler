@@ -1,4 +1,4 @@
-from src.ui.pages import BasePage
+from src.ui.pages.base_pages import BasePage
 from nicegui import ui
 from src.shared.exceptions import WrongInputError
 from typing import Any

@@ -21,3 +21,6 @@ class NoDataToWorkWithError(StdToolError):
 
 class SourceNotProvidedError(StdToolError):
     pass
+
+class CalculationError(StdToolError):
+    pass

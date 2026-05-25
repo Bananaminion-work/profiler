@@ -1,16 +1,31 @@
-from datetime import time
+from typing import Any, cast
 
+from nicegui import ui
+
+# import components
 from src.plot.plot_factory import PlotFactory
-from src.shared.exceptions import WrongInputError
-from src.shared.metadata import Metadata
-from src.shared.upload_container import UploadContainer
 from src.ui.ui_view import UiView
-from src.ui.pages import LandingPage, ImportPage_getData, ImportPage_showData, PlotPage_selectData, PlotPage_showData, Popup_confirm, Popup_warning
-from src.shared.data_models import Data, DataComposition
 from src.data.data_manager import DataManager
 from src.database.database_manager import DatabaseManager
-from nicegui import ui
-from typing import Any, cast
+from src.analyzer.analyzer import Analyzer
+
+# import helping classes and containers
+from src.shared.metadata import Metadata
+from src.shared.upload_container import UploadContainer
+from src.shared.data_models import Data
+from src.shared.data_composition import DataComposition
+
+# import pages
+from src.ui.pages.importPage_getData import ImportPage_getData
+from src.ui.pages.importPage_showData import ImportPage_showData
+from src.ui.pages.landing import LandingPage
+from src.ui.pages.plotPage_selectData import PlotPage_selectData
+from src.ui.pages.plotPage_showData import PlotPage_showData
+from src.ui.pages.popup_pages import Popup_confirm, Popup_warning
+
+# import exceptions
+from src.shared.exceptions import WrongInputError
+
 
 
 class AppController:
@@ -67,6 +82,9 @@ class AppController:
         
         #create DatabaseManager
         self.database = DatabaseManager()
+        
+        # create Analyzer
+        self.analyzer = Analyzer(self.database.load_vvt())
         
         # instanciate current session measurement with empty data
         self.current_session_measurement = DataComposition()
@@ -125,13 +143,33 @@ class AppController:
     def handle_data_import_request(self, uploadContainer: UploadContainer, source:str):
         """creates the medallion objects from input data"""
         
-        # if return is valid, medallion objects get structured in current session measurement
-        medallionObjects = self.data.create_data_from_measurement(uploadContainer, source)
+        # saves medallionobjects in current session, as well as the datetime of the measurement (from silver data)
+        medallionObjects, dateTime = self.data.create_data_from_measurement(uploadContainer, source)
         
         if isinstance(medallionObjects, dict):
             self.current_session_measurement.set_medallion_data(medallionObjects)
+            self.current_session_measurement.get_metadata().set_datetime(dateTime)
         else:
             raise WrongInputError(f"Expected a dict of Data objects, got {type(medallionObjects)} instead.")
+                
+        # calc zeros and vvt and store in current session measurement
+        gold = self.current_session_measurement.get_medallion_data().get("gold")
+        
+        if not isinstance(gold, Data):
+            raise WrongInputError(f"Expected a Data object for gold data, got {type(gold)} instead.")   
+        
+        # if gold data is valid, calculate zeropoints and violations and store in current session measurement
+        else:
+            # get zeros and violations
+            zeropointList, violationList = self.analyzer.analyze_measurement(gold.get_dataframe())
+            
+            #save them in current session measurement
+            self.current_session_measurement.set_zeropoints(zeropointList)
+            
+            # TODO:
+            
+            #self.current_session_measurement.set_violations(violationList)
+            
         
         # store the source in metadata
         self.current_session_measurement.get_metadata().set_source(source)
@@ -179,13 +217,18 @@ class AppController:
         if not isinstance(self.current_session_measurement.get_metadata(), Metadata):
             raise WrongInputError(f"Expected a Metadata-object in current session, got {type(self.current_session_measurement.get_metadata())} instead.")
         
-        # create final gold object with zeropoints and set it in current session measurement
-        finalGoldObject = self.data.create_final_data(chosenZeropoints)
-        if not isinstance(finalGoldObject, Data):
-            raise WrongInputError(f"Expected a Data object for final gold data, got {type(finalGoldObject)} instead.")
         
-        else:
-            self.current_session_measurement.set_final_gold_object(finalGoldObject)
+        
+        
+        
+        
+        
+        #save zeropoints and results of vvt to database
+        
+        
+        
+        
+        
         
         # save measurement to database
         self.database.save_measurement(self.current_session_measurement)
