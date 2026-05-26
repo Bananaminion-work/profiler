@@ -1,7 +1,23 @@
+from pandas import DataFrame
+
+import src
+from src.database.vvt_repositorys import CsvRepository, DatabricksRepository, VvtRepository
 from src.shared.data_composition import DataComposition
 from nicegui import ui
 
 class DatabaseManager:
+    
+    _vvtRepository : VvtRepository
+    
+    def __init__(self,source: str):
+        
+        # create repos object based on source parameter
+        if source == "csv":
+            self._vvtRepository = CsvRepository()
+        elif source == "databricks":
+            self._vvtRepository = DatabricksRepository()
+        else:
+            raise ValueError(f"Invalid source '{source}' for VVT repository.")
     
     def connect_to_database(self):
         """connects to the database"""
@@ -15,11 +31,8 @@ class DatabaseManager:
         """saves the measurement to the database"""
         ui.notify("function to save measurement was called... wait to be implemented", color="orange")
     
-    def load_vvt(self)-> dict[str, dict[str, str]]:
+    def load_vvt(self)-> DataFrame:
         """loads the vvt from the database"""
-        ui.notify("function to load vvt was called... wait to be implemented", color="orange")
         
-        
-        
-        # TODO: ausgelesene vvt werte aus DB übergeben
-        return dict[str, dict[str, str]]()
+        # returns the whole vvt table
+        return self._vvtRepository.load_vvt()

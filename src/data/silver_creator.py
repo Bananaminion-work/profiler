@@ -89,19 +89,19 @@ class SilverCreator():
         if not isinstance(firstEntry, datetime):
             firstEntry = pd.to_datetime(firstEntry)
         
-        # set the index and replace ReadTime for resampling
+        # set the index to ReadTime for resampling
         self.silverDataFrame.set_index('ReadTime', inplace=True)
         
         # resample to 1 second intervals
         self.silverDataFrame = self.silverDataFrame.resample('1s').mean()
         
-        #optional: use fill method to fill missing values with last known value
+        # use fill method to fill missing values with last known value
         self.silverDataFrame = self.silverDataFrame.ffill()
         
-        #reset index to ensure it as a column again
+        # reset index to ensure it is a column again
         self.silverDataFrame.reset_index(inplace=True)
         
-        # create new column with integer seconds as offset to first entry for easier handling of zeropoints
+        # add a new column with the time in seconds since the start of the measurement for easier handling in plots and analysis
         self.silverDataFrame['ReadTime'] = range(len(self.silverDataFrame))
         
         return firstEntry

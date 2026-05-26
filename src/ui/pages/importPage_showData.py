@@ -37,6 +37,7 @@ class ImportPage_showData(SubPage):
     above235Zeropoint: str = ""
     ventilate2Zeropoint: str = ""
     chosenZeropoint_show: str = "none"
+    selectedVVT: str = ""
 
     def _create_accordion(self) -> None:
         groups = [
@@ -83,13 +84,18 @@ class ImportPage_showData(SubPage):
                                 on_click=lambda: ui.run_javascript(f'getElement({plotCard.id}).$el.requestFullscreen()')
                             ).props('flat round')
             
-            # section 3: Metadata and details
+            # section 3: vvt dropdown and table
+            with ui.card().classes("w-full"):
+                ui.label("Choose VVT to be checked").classes('text-lg')
+                vvtOptions = self.controller.load_vvt_options()
+                ui.select(vvtOptions, value=vvtOptions[0], label="Select VVT").bind_value(self, "selectedVVT")
+                #ui.table(self.controller.handle_vvt_table(self.selectedVVT)).classes("w-full").props("striped")
+            
+            # section 4: Metadata and details
             with ui.card().classes("w-full"):
                 ui.label("input Metadata to be saved to database").classes('text-lg')
             
                 with ui.grid(columns=2).classes("w-full gap-3"):
-                    ui.date().bind_value(self, "date")
-                    ui.time().bind_value(self, "startTime")
                     ui.select(["1234", "2345", "3456", "4567"], value="1234", label="Select the oven-number").bind_value(self, "oven_nr")
                     ui.select(["VW-ECO", "VOLVO-ERAD", "BASE", "PM6"], value="PM6", label="Select the product").bind_value(self, "product")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Load of the profile type").bind_value(self, "load")

@@ -4,6 +4,7 @@ from nicegui import ui
 
 # import components
 from src.plot.plot_factory import PlotFactory
+from src.shared.violation import Violation
 from src.ui.ui_view import UiView
 from src.data.data_manager import DataManager
 from src.database.database_manager import DatabaseManager
@@ -81,7 +82,7 @@ class AppController:
         self.plot = PlotFactory()
         
         #create DatabaseManager
-        self.database = DatabaseManager()
+        self.database = DatabaseManager("csv")
         
         # create Analyzer
         self.analyzer = Analyzer(self.database.load_vvt())
@@ -140,9 +141,7 @@ class AppController:
         
         
         
-    def handle_data_import_request(self, uploadContainer: UploadContainer, source:str):
-        """creates the medallion objects from input data"""
-        
+    def create_data_composition(self, uploadContainer: UploadContainer, source:str):
         # saves medallionobjects in current session, as well as the datetime of the measurement (from silver data)
         medallionObjects, dateTime = self.data.create_data_from_measurement(uploadContainer, source)
         
@@ -151,29 +150,42 @@ class AppController:
             self.current_session_measurement.get_metadata().set_datetime(dateTime)
         else:
             raise WrongInputError(f"Expected a dict of Data objects, got {type(medallionObjects)} instead.")
-                
-        # calc zeros and vvt and store in current session measurement
+        
+        
+        
+    def handle_data_import_request(self, uploadContainer: UploadContainer, source:str):
+        """creates the medallion objects from input data"""
+        
+        #create medallion data
+        self.create_data_composition(uploadContainer, source)
+        
+        # get gold data
         gold = self.current_session_measurement.get_medallion_data().get("gold")
         
+        # type checking for gold and silver
         if not isinstance(gold, Data):
-            raise WrongInputError(f"Expected a Data object for gold data, got {type(gold)} instead.")   
+            raise WrongInputError(f"Expected a Data object for gold data, got {type(gold)} instead.")     
         
-        # if gold data is valid, calculate zeropoints and violations and store in current session measurement
+        # analyze data if gold data is available
         else:
             # get zeros and violations
-            zeropointList, violationList = self.analyzer.analyze_measurement(gold.get_dataframe())
+            zeropointList = self.analyzer.analyze_zeropoints(gold.get_dataframe())
+            violationList = self.analyzer.analyze_violations(gold.get_dataframe(), "VPS-Process")
             
-            #save them in current session measurement
+            #save zeropoints in current session
             self.current_session_measurement.set_zeropoint_container(zeropointList)
             
-            # TODO:
-            
-            #self.current_session_measurement.set_violations(violationList)
-            
+            # check if violationList is a list of Violation objects
+            if isinstance(violationList, list) and all(isinstance(v, Violation) for v in violationList):
+                # save violations in current session
+                self.current_session_measurement.set_violations(violationList)
+            else:
+                raise WrongInputError(f"Expected a list of Violation objects, got {type(violationList)} instead.")
         
         # store the source in metadata
         self.current_session_measurement.get_metadata().set_source(source)
         
+    
     
     def handle_popup(self, type:str, message:str,returnPage:str):
         
@@ -252,4 +264,12 @@ class AppController:
         # reset current session after saving
         self.current_session_measurement = DataComposition()
         self.handle_navigation_request('landing')
-        
+    
+    
+    
+    def load_vvt_options(self)-> list[str]:
+        """returns a list of all vvts in the database"""
+        return self.database.load_vvt()["vvt_name"].unique().tolist()
+    
+    def handle_vvt_table(self, vvtName:str):
+        pass

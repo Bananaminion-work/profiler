@@ -72,7 +72,7 @@ class GoldCreator():
         # append values to goldDf if type matches
         if isinstance(rollingDf, DataFrame):
             # rename columns
-            rollingDf = rollingDf.add_suffix(f'_rolling_avg_{window_size}')
+            rollingDf = rollingDf.add_suffix(f'_rolling_avg')
             # append to goldDf
             self.goldDf = pd.concat([self.goldDf, rollingDf], axis=1)
             

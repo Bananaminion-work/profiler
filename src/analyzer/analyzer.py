@@ -1,5 +1,5 @@
 from src.analyzer.zeropoint_calculator import ZeropointCalculator
-from src.analyzer.violation_detecter import ViolationDetector
+from src.analyzer.violation_detector import ViolationDetector
 from pandas import DataFrame
 
 
@@ -8,11 +8,14 @@ class Analyzer:
     _zero : ZeropointCalculator
     _violation : ViolationDetector
     
-    def __init__(self, vvt: dict[str, dict[str, str]]):
+    def __init__(self, vvt: DataFrame):
         self._zero = ZeropointCalculator()
         self._violation = ViolationDetector(vvt)
-        
-    def analyze_measurement(self,df: DataFrame):
-        zeropoints = self._zero.calculate_zeropoints(df)
-        violations = self._violation.detect_violations(df)
-        return zeropoints, violations
+    
+    def analyze_zeropoints(self, gold: DataFrame):
+        zeropoints = self._zero.calculate_zeropoints(gold)
+        return zeropoints
+    
+    def analyze_violations(self, gold: DataFrame, vvtName:str):
+        violations = self._violation.detect_violations(gold, vvtName)
+        return violations
