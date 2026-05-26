@@ -164,7 +164,7 @@ class AppController:
             zeropointList, violationList = self.analyzer.analyze_measurement(gold.get_dataframe())
             
             #save them in current session measurement
-            self.current_session_measurement.set_zeropoints(zeropointList)
+            self.current_session_measurement.set_zeropoint_container(zeropointList)
             
             # TODO:
             
@@ -197,12 +197,27 @@ class AppController:
             self.handle_navigation_request('popup-warning')
             
             
-    def handle_import_preview(self,config:str):
+            
+    #def handle_import_preview(self,config:str):
+    #    goldData = self.current_session_measurement.get_medallion_data().get("gold")
+    #    if isinstance(goldData, Data):
+    #        ui.plotly(self.plot.create_plot(goldData.get_dataframe(), config)).classes("w-full h-full")
+    #    else:
+    #        raise WrongInputError(f"Expected a Data object for gold data, got {type(goldData)} instead.")
+        
+        
+        
+    def handle_plot_request_single(self, config:str, zeropoint:str):
+        offsetList = self.current_session_measurement.get_zeropoint_container().get_zeropoints()
+        offset = offsetList[zeropoint]
+        
         goldData = self.current_session_measurement.get_medallion_data().get("gold")
         if isinstance(goldData, Data):
-            ui.plotly(self.plot.create_plot(goldData.get_dataframe(), config)).classes("w-full h-full")
+            ui.plotly(self.plot.create_plot_single(goldData.get_dataframe(),config, offset)).classes("w-full h-full")
         else:
             raise WrongInputError(f"Expected a Data object for gold data, got {type(goldData)} instead.")
+        
+        
         
     def handle_save_request(self, metadata: dict[str,str], chosenZeropoints):
                 

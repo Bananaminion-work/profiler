@@ -31,7 +31,7 @@ class DataComposition:
         else:
             self._medallionData = medallionData
           
-    def set_zeropoints(self, zeropoints: ZeropointContainer):
+    def set_zeropoint_container(self, zeropoints: ZeropointContainer):
         self._zeropoints = zeropoints
         
     def set_violations(self, violations: dict[str, Violation]):
@@ -45,7 +45,7 @@ class DataComposition:
     def get_metadata(self) -> Metadata:
         return self._metadata
     
-    def get_zeropoints(self) -> ZeropointContainer:
+    def get_zeropoint_container(self) -> ZeropointContainer:
         return self._zeropoints
     
     def get_violations(self) -> dict[str, Violation]:

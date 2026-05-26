@@ -29,14 +29,14 @@ class ImportPage_showData(SubPage):
     cooling_time_2: str = ""
     cooling_time_3: str = ""
     cooling_time_4: str = ""
-    config: str = ""
+    config: str = "standard"
     date: str= ""
     startTime: str= ""
     bulkheadZeropoint: str = ""
     firstInjectionZeropoint: str = ""
     above235Zeropoint: str = ""
     ventilate2Zeropoint: str = ""
-    chosenZeropoint_show: str = ""
+    chosenZeropoint_show: str = "none"
 
     def _create_accordion(self) -> None:
         groups = [
@@ -72,9 +72,10 @@ class ImportPage_showData(SubPage):
                     ).bind_value(self,"config").classes("w-100")
                     
                     ui.select(
-                        options=["bulkhead", "first injection", "above 235", "ventilate 2"],
-                        value="bulkhead",
-                        label="choose zeropoint for plot"
+                        options=["none", "bulkhead", "first injection", "above 235", "ventilate 2"],
+                        value="none",
+                        label="choose zeropoint for plot",
+                        on_change=self.update_plot_preview
                     ).bind_value(self,"chosenZeropoint_show").classes("w-100")
                     
                     ui.button(
@@ -142,7 +143,7 @@ class ImportPage_showData(SubPage):
         self.plotContainer.clear()
         # with function enables the call of handle-method on the container object
         with self.plotContainer:
-            self.controller.handle_import_preview(self.config)
+            self.controller.handle_plot_request_single(self.config,self.chosenZeropoint_show)
 
     def on_save_click(self) -> None:
         # fields that must have a value

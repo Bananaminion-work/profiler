@@ -30,13 +30,20 @@ class PlotFactory():
                 self.configsDict[obj.configName] = obj()
                 
     
-    def create_plot(self, data, configName:str):
+    def create_plot_single(self, data, configName:str, offset:int):
         
         if configName not in self.configsDict:
             raise ValueError(f"Config {configName} not found in PlotFactory.")
         
+        # uses the chosen config
         config = self.configsDict[configName]
+        
+        # apply the offset to the data
+        data.index = data.index - offset
+        
+        # creates the go.Figure object
         return config.build_figure(data)
         
         
-            
+       
+         
