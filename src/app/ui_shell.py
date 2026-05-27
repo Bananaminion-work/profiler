@@ -1,7 +1,7 @@
 from nicegui import ui
 from src.ui.appcontroller import AppController
 
-class App:
+class UiShell:
     def __init__(self):
         ui.page('/')(self._index)  # registriert _index als Page-Handler
 
