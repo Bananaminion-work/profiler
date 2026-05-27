@@ -1,8 +1,12 @@
+from turtle import pd
+
 from nicegui import ui
+from pandas import DataFrame
 from src.ui.pages.base_pages import SubPage
 
 
 class ImportPage_showData(SubPage):
+    
     pageName = "import-show"
     oven_nr: str = "1234"
     product: str = "PM6"
@@ -86,10 +90,13 @@ class ImportPage_showData(SubPage):
             
             # section 3: vvt dropdown and table
             with ui.card().classes("w-full"):
-                ui.label("Choose VVT to be checked").classes('text-lg')
-                vvtOptions = self.controller.load_vvt_options()
-                ui.select(vvtOptions, value=vvtOptions[0], label="Select VVT").bind_value(self, "selectedVVT")
-                #ui.table(self.controller.handle_vvt_table(self.selectedVVT)).classes("w-full").props("striped")
+                ui.label("VVT - Violations").classes('text-lg')
+                self.tableContainer = ui.row().classes("w-full h-60 overflow-auto")
+                with ui.row().classes("w-full"):
+                    ui.label("Choose VVT to be checked")
+                    vvtOptions = self.controller.load_vvt_options()
+                    vvtOptions.insert(0,"None")
+                    ui.select(vvtOptions, value=vvtOptions[0], label="Select VVT", on_change=self.update_vvt_table).bind_value(self, "selectedVVT").classes("w-100")
             
             # section 4: Metadata and details
             with ui.card().classes("w-full"):
@@ -147,9 +154,27 @@ class ImportPage_showData(SubPage):
     def update_plot_preview(self):
         """clears plot container and redraws with fresh plot"""
         self.plotContainer.clear()
-        # with function enables the call of handle-method on the container object
-        with self.plotContainer:
-            self.controller.handle_plot_request_single(self.config,self.chosenZeropoint_show)
+        
+        plotContent = self.controller.handle_plot_request_single(self.config,self.chosenZeropoint_show)
+        
+        if plotContent is not None:
+            # with function enables the call of handle-method on the container object
+            with self.plotContainer:
+                ui.plotly(plotContent).classes("w-full h-full")
+
+        
+        
+    def update_vvt_table(self):
+        """clears the vvt table container and redraws the table with the violations for the selected vvt"""
+        self.tableContainer.clear()
+        
+        # get content for Table from controller
+        tableContent = self.controller.handle_violation_table_update_request(self.selectedVVT)
+        
+        if isinstance(tableContent, DataFrame):
+            with self.tableContainer:
+                ui.table.from_pandas(tableContent).classes("w-full h-full")
+    
 
     def on_save_click(self) -> None:
         # fields that must have a value

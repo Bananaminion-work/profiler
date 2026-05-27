@@ -20,17 +20,33 @@ class GoldCreator():
             
             # distiguish between different sources of measurement
             if source == "Rehm-recorder":
+                               
                 
                 # create df for gradient values
-                gradientDf = self.goldDf[['CH1', 'CH2', 'CH3', 'CH4', 'CH5', 'CH6']].copy()
+                channelDf = self.goldDf[['CH1', 'CH2', 'CH3', 'CH4', 'CH5', 'CH6']].copy()
+                
+                # create df for gradient
+                gradientDf = DataFrame()
+                
+                #create df for rolling average
+                rollingDf = DataFrame()
                 
                 # call function to calc gradient if df is instanciated
-                if isinstance(gradientDf, DataFrame):
-                    self.calc_gradient(gradientDf)
-                    self.calc_rolling_average(gradientDf, mode="trailing", window_size=10)
+                if isinstance(channelDf, DataFrame):
+                    gradientDf = self.calc_gradient(channelDf)
+                    
+                    if isinstance(gradientDf, DataFrame):
+                        rollingDf = self.calc_rolling_average(gradientDf, mode="trailing", window_size=10)
+                        
+                    else:
+                        ui.notify(f"Expected a DataFrame, got {type(gradientDf)} instead.")
                 
                 else:
-                    ui.notify(f"Expected a DataFrame, got {type(gradientDf)} instead.")
+                    ui.notify(f"Expected a DataFrame, got {type(channelDf)} instead.")
+                
+                
+                self.goldDf = pd.concat([self.goldDf, gradientDf, rollingDf], axis=1)
+                
                 
             # erase column ReadTime as it is not necessary anymore
             self.goldDf.drop(columns=['ReadTime'], inplace=True)
@@ -47,8 +63,8 @@ class GoldCreator():
         # rename columns
         gradientDf = gradientDf.add_suffix('_gradient')
         
-        # append values to goldDf
-        self.goldDf = pd.concat([self.goldDf, gradientDf], axis=1)
+        # return gradientDf
+        return gradientDf
         
         
         
@@ -69,12 +85,14 @@ class GoldCreator():
             rollingDf = dataInput.rolling(window_size).mean().fillna(0).shift(-1, freq=window_size)
         
                 
-        # append values to goldDf if type matches
+        # rename and return df if it is instanciated
         if isinstance(rollingDf, DataFrame):
+            
             # rename columns
             rollingDf = rollingDf.add_suffix(f'_rolling_avg')
-            # append to goldDf
-            self.goldDf = pd.concat([self.goldDf, rollingDf], axis=1)
+            
+            # return rollingDf
+            return rollingDf
             
         else:
             raise WrongInputError(f"Expected a DataFrame, got {type(rollingDf)} instead.")

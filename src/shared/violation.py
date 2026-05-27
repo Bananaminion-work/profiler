@@ -1,26 +1,51 @@
+from dataclasses import asdict, dataclass
+
+
+# class for violation entrys
+# dataclass decorator allows easy conversion to dictionary
+@dataclass
 class Violation:
     
-    _vvtName : str
-    _violatedRule : str
-    _actualValue : str
-    _threshold : str
-    _channel : str
+    vvtName : str
+    violatedRule : str
+    actualValue : str
+    threshold : str
+    channel : str
+    time : str
     
     def __init__(self, vvtName: str, violatedRule: str, channel:str, actualValue: str, threshold: str, time:str):
-        self._vvtName = vvtName
-        self._violatedRule = violatedRule
-        self._channel = channel
-        self._actualValue = actualValue
-        self._threshold = threshold
+        self.vvtName = vvtName
+        self.violatedRule = violatedRule
+        self.channel = channel
+        self.actualValue = actualValue
+        self.threshold = threshold
+        self.time = time
     
-    def get_vvt_name(self) -> str:
-        return self._vvtName
-    
-    def get_violated_rule(self) -> str:
-        return self._violatedRule
-    
-    def get_actual_value(self) -> str:
-        return self._actualValue
-    
-    def get_threshold(self) -> str:
-        return self._threshold
+    def to_dict(self) -> dict:
+        """returns a dictionary representation of the Violation object, useful for creating DataFrames"""
+        
+        # create mapping for column names
+        keyMapping = {
+            "vvtName": "VVT Name",
+            "violatedRule": "Violated Rule",
+            "channel": "Channel",
+            "actualValue": "Actual Value",
+            "threshold": "Threshold",
+            "time": "Time of Occurance"
+        }
+        
+        # std dict
+        violationDict = asdict(self)
+        
+        # create empty dict
+        returnDict ={}
+        
+        # map keys to new column names
+        for key, value in violationDict.items():
+            if key in keyMapping:
+                returnDict[keyMapping[key]] = value
+            else:
+                returnDict[key] = value
+        
+        # return final dict
+        return returnDict

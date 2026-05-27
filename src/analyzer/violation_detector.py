@@ -6,13 +6,15 @@ from src.shared.violation import Violation
 class ViolationDetector:
     
     _vvt : DataFrame
-    _vvtNames : list[str]
     
     def __init__(self, vvt: DataFrame):
         self._vvt = vvt
-        self.read_vvt_names()
     
     def detect_violations(self, df: DataFrame, vvt:str):
+        
+        """Detects violations in the given DataFrame based on the rules defined in the VVT for the selected VVT name.
+        
+        returns a list of Violation objects representing the detected violations."""
         
         # create empty list to store violations
         foundViolations = []
@@ -39,10 +41,13 @@ class ViolationDetector:
             # check conditions
             if condition == "max":
                 violatedRows = df[df[channel] > threshold]
+                
             elif condition == "min":
                 violatedRows = df[df[channel] < threshold]
+                
             elif condition == "duration_above":
                 entrysAboveParam1 = df[df[channel] > param1]
+                
                 duration = float(len(entrysAboveParam1))
                 
                 if duration > threshold:
@@ -76,9 +81,8 @@ class ViolationDetector:
                     elif threshold >= 0:
                         violatedRows = dfSelection[dfSelection[channel] > threshold]
                         
-                        
             # create new violation object for each violated row
-            if not violatedRows.empty and isinstance(threshold, str) and isinstance(name,str) and isinstance(channel, str) and isinstance(vvt,str):
+            if not violatedRows.empty:
                 for index, row in violatedRows.iterrows():
                     actualValue = row[channel]
                     violation = Violation(
@@ -90,13 +94,8 @@ class ViolationDetector:
                         time=str(index)
                     )
                     foundViolations.append(violation)
-                    
+        
+        # return the list of violation-objects          
         return foundViolations
-    
-    
-    
-    
-    def read_vvt_names(self):
-        self._vvtNames = self._vvt['vvt_name'].unique()
         
         

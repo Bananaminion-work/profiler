@@ -59,10 +59,6 @@ class ImportPage_getData(SubPage):
         
         # check if file was uploaded
         if isinstance(uploadContainer.content, bytes):
-            self.controller.log(f"Submit clicked with uploaded file name: {self.uploaded_file_name}")
-            self.controller.log(f"chosen source is {self.source}")
-            self.controller.log("strating calculation of Data-Objects...")
-            
             self.controller.handle_data_import_request(uploadContainer, self.source)
             
             self.controller.handle_navigation_request("import-show")

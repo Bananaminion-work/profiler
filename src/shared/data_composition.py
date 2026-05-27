@@ -5,17 +5,15 @@ from src.shared.violation import Violation
 
 
 class DataComposition:
-    
+    """this class contains a Metadata-objet, the medallion-data-objects and the zeropoints (either calculated or loaded from the database)"""
     _metadata : Metadata
     _medallionData : dict[str,Data]
     _zeropoints : ZeropointContainer
-    _violations : list[Violation]
     
     def __init__(self):
         self._metadata = Metadata()
         self._medallionData = dict[str,Data]()
         self._zeropoints = ZeropointContainer()
-        self._violations = list[Violation]()
         
     def set_metadata(self, metadata: Metadata):
         self._metadata = metadata
@@ -33,11 +31,6 @@ class DataComposition:
           
     def set_zeropoint_container(self, zeropoints: ZeropointContainer):
         self._zeropoints = zeropoints
-        
-    def set_violations(self, violations: list[Violation]):
-        self._violations = violations
-          
-          
                 
     def get_medallion_data(self) ->dict[str,Data]:
         return self._medallionData
@@ -47,12 +40,6 @@ class DataComposition:
     
     def get_zeropoint_container(self) -> ZeropointContainer:
         return self._zeropoints
-    
-    def get_violations(self) -> list[Violation]:
-        return self._violations
-    
-    
-    
     
     def set_final_gold_object(self, gold: Data):
         pass

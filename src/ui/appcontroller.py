@@ -9,6 +9,7 @@ from src.ui.ui_view import UiView
 from src.data.data_manager import DataManager
 from src.database.database_manager import DatabaseManager
 from src.analyzer.analyzer import Analyzer
+from src.plot.table_factory import TableFactory
 
 # import helping classes and containers
 from src.shared.metadata import Metadata
@@ -37,6 +38,8 @@ class AppController:
     database : DatabaseManager
     plot : PlotFactory
     ui : UiView
+    table : TableFactory
+    analyzer : Analyzer
     
     # Attributes:
     
@@ -87,6 +90,9 @@ class AppController:
         # create Analyzer
         self.analyzer = Analyzer(self.database.load_vvt())
         
+        # create TableFactory
+        self.table = TableFactory()
+        
         # instanciate current session measurement with empty data
         self.current_session_measurement = DataComposition()
         
@@ -106,6 +112,21 @@ class AppController:
     @property
     def layout(self)->Any:
         return self._layout
+    
+    
+    
+    @property    
+    def goldDataframe(self):
+        
+        """returns the DataFrame of the current import-session's gold data
+        
+        does type-cheking for you"""
+        
+        goldData = self.current_session_measurement.get_medallion_data().get("gold")
+        if isinstance(goldData, Data):
+            return goldData.get_dataframe()
+        else:
+            raise WrongInputError(f"(@property: goldDataframe): Expected a Data object for gold data, got {type(goldData)} instead.")
     
     
     
@@ -160,31 +181,17 @@ class AppController:
         self.create_data_composition(uploadContainer, source)
         
         # get gold data
-        gold = self.current_session_measurement.get_medallion_data().get("gold")
+        goldData = self.goldDataframe  
         
-        # type checking for gold and silver
-        if not isinstance(gold, Data):
-            raise WrongInputError(f"Expected a Data object for gold data, got {type(gold)} instead.")     
+        #analyze data and save results in current session measurement
+        zeropointList = self.analyzer.analyze_zeropoints(goldData)
         
-        # analyze data if gold data is available
-        else:
-            # get zeros and violations
-            zeropointList = self.analyzer.analyze_zeropoints(gold.get_dataframe())
-            violationList = self.analyzer.analyze_violations(gold.get_dataframe(), "VPS-Process")
-            
-            #save zeropoints in current session
-            self.current_session_measurement.set_zeropoint_container(zeropointList)
-            
-            # check if violationList is a list of Violation objects
-            if isinstance(violationList, list) and all(isinstance(v, Violation) for v in violationList):
-                # save violations in current session
-                self.current_session_measurement.set_violations(violationList)
-            else:
-                raise WrongInputError(f"Expected a list of Violation objects, got {type(violationList)} instead.")
+        #save zeropoints in current session
+        self.current_session_measurement.set_zeropoint_container(zeropointList)
         
         # store the source in metadata
         self.current_session_measurement.get_metadata().set_source(source)
-        
+    
     
     
     def handle_popup(self, type:str, message:str,returnPage:str):
@@ -207,27 +214,19 @@ class AppController:
             popupObject.set_message(message)
             popupObject.set_returnPage(returnPage)
             self.handle_navigation_request('popup-warning')
-            
-            
-            
-    #def handle_import_preview(self,config:str):
-    #    goldData = self.current_session_measurement.get_medallion_data().get("gold")
-    #    if isinstance(goldData, Data):
-    #        ui.plotly(self.plot.create_plot(goldData.get_dataframe(), config)).classes("w-full h-full")
-    #    else:
-    #        raise WrongInputError(f"Expected a Data object for gold data, got {type(goldData)} instead.")
         
         
         
     def handle_plot_request_single(self, config:str, zeropoint:str):
+        """takes in plot-config and the chosen zeropoint and creates the plot in the calling ui-space"""
+        
+        # get offset for the chosen zeropoint from current session measurement
         offsetList = self.current_session_measurement.get_zeropoint_container().get_zeropoints()
         offset = offsetList[zeropoint]
         
-        goldData = self.current_session_measurement.get_medallion_data().get("gold")
-        if isinstance(goldData, Data):
-            ui.plotly(self.plot.create_plot_single(goldData.get_dataframe(),config, offset)).classes("w-full h-full")
-        else:
-            raise WrongInputError(f"Expected a Data object for gold data, got {type(goldData)} instead.")
+        # get gold data for plotting and call plot factory to create the plot
+        goldData = self.goldDataframe
+        return self.plot.create_plot_single(goldData,config, offset)
         
         
         
@@ -271,5 +270,12 @@ class AppController:
         """returns a list of all vvts in the database"""
         return self.database.load_vvt()["vvt_name"].unique().tolist()
     
-    def handle_vvt_table(self, vvtName:str):
-        pass
+    
+    
+    def handle_violation_table_update_request(self, vvtName:str):
+        
+        # get gold dataframe and violations from analyzer
+        gold = self.goldDataframe
+        violations = self.analyzer.analyze_violations(gold,vvtName)
+            
+        return self.table.update_table(violations)
