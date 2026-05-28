@@ -13,4 +13,4 @@ from src.app.ui_shell import UiShell
 controller = UiShell()
 
 
-ui.run(host="0.0.0.0", port=8080, title="Temp-Profiler")
+ui.run(host="0.0.0.0", port=8000, title="Temp-Profiler", reload=False)

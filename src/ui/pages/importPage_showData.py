@@ -1,5 +1,3 @@
-from turtle import pd
-
 from nicegui import ui
 from pandas import DataFrame
 from src.ui.pages.base_pages import SubPage
