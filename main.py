@@ -11,4 +11,6 @@ from src.app.ui_shell import UiShell
 
 # databricks test:
 controller = UiShell()
-ui.run(host="0.0.0.0", port=8080)
+
+
+ui.run(host="0.0.0.0", port=8080, title="Temp-Profiler")
