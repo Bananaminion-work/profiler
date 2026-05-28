@@ -39,6 +39,7 @@ class ImportPage_showData(SubPage):
     above235Zeropoint: str = ""
     ventilate2Zeropoint: str = ""
     chosenZeropoint_show: str = "none"
+    activeZeropoint: str = ""
     selectedVVT: str = ""
 
     def _create_accordion(self) -> None:
@@ -59,9 +60,17 @@ class ImportPage_showData(SubPage):
         with ui.column().classes("w-full gap-4"):
             
             # section 1: Plot
-            with ui.card().classes("w-full h-[65vh]") as plotCard:
-                self.plotContainer = ui.column().classes("w-full h-full")
-                self.update_plot_preview()
+            with ui.card().classes("w-full h-[65vh] relative") as plotCard:
+                
+                    ui.button(
+                                    icon='fullscreen',
+                                    on_click=lambda: ui.run_javascript(
+                                            f'document.fullscreenElement ? document.exitFullscreen() : getElement({plotCard.id}).$el.requestFullscreen()'
+                                        )
+                                ).props('flat round').classes('absolute bottom-2 right-2 z-10')
+                    
+                    self.plotContainer = ui.column().classes("w-full h-full")
+                    self.update_plot_preview()
 
             # section 2: Config
             with ui.card().classes("w-full"):
@@ -71,20 +80,15 @@ class ImportPage_showData(SubPage):
                         ["standard", "standard2", "3", "4", "5", "6", "7", "8"],
                         value="standard",
                         label="choose config for plot",
-                        on_change=self.update_plot_preview
+                        on_change=self.update_plot_config
                     ).bind_value(self,"config").classes("w-100")
                     
                     ui.select(
                         options=["none", "bulkhead", "first injection", "above 235", "ventilate 2"],
                         value="none",
                         label="choose zeropoint for plot",
-                        on_change=self.update_plot_preview
+                        on_change=self.update_vvt_selection
                     ).bind_value(self,"chosenZeropoint_show").classes("w-100")
-                    
-                    ui.button(
-                                icon='fullscreen',
-                                on_click=lambda: ui.run_javascript(f'getElement({plotCard.id}).$el.requestFullscreen()')
-                            ).props('flat round')
             
             # section 3: vvt dropdown and table
             with ui.card().classes("w-full"):
@@ -167,11 +171,22 @@ class ImportPage_showData(SubPage):
         self.tableContainer.clear()
         
         # get content for Table from controller
-        tableContent = self.controller.handle_violation_table_update_request(self.selectedVVT)
+        tableContent = self.controller.handle_violation_table_update_request(self.selectedVVT, self.chosenZeropoint_show)
         
         if isinstance(tableContent, DataFrame):
             with self.tableContainer:
                 ui.table.from_pandas(tableContent).classes("w-full h-full")
+    
+    
+    def update_vvt_selection(self):
+        self.update_plot_preview()
+        self.update_vvt_table()
+        
+        
+    def update_plot_config(self):
+        self.chosenZeropoint_show = "none"
+        self.update_plot_preview()
+        self.update_vvt_table()
     
 
     def on_save_click(self) -> None:

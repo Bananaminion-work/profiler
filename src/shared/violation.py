@@ -1,4 +1,5 @@
 from dataclasses import asdict, dataclass
+from typing import Optional
 
 
 # class for violation entrys
@@ -8,18 +9,18 @@ class Violation:
     
     vvtName : str
     violatedRule : str
-    actualValue : str
-    threshold : str
+    actualValue : float
+    threshold : float
     channel : str
-    time : str
+    time : Optional[int]
     
-    def __init__(self, vvtName: str, violatedRule: str, channel:str, actualValue: str, threshold: str, time:str):
+    def __init__(self, vvtName: str, violatedRule: str, channel:str, actualValue: float, threshold: float, time: Optional[int]):
         self.vvtName = vvtName
         self.violatedRule = violatedRule
         self.channel = channel
         self.actualValue = actualValue
         self.threshold = threshold
-        self.time = time
+        self.time = int(time) if time is not None else None
     
     def to_dict(self) -> dict:
         """returns a dictionary representation of the Violation object, useful for creating DataFrames"""

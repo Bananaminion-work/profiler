@@ -49,6 +49,7 @@ class AppController:
     pageContainer : Any
     _layout : Any
     pages={}
+    current_offset : int
     
     # Functions:
     
@@ -98,6 +99,9 @@ class AppController:
         
         # show initial page
         self.handle_navigation_request('landing')
+        
+        # initiate zeropoint offset with 0
+        self._current_offset = 0
     
         
     
@@ -222,11 +226,24 @@ class AppController:
         
         # get offset for the chosen zeropoint from current session measurement
         offsetList = self.current_session_measurement.get_zeropoint_container().get_zeropoints()
-        offset = offsetList[zeropoint]
+        newOffset = offsetList[zeropoint]
+        
+        # undo previous offset, apply new one (only the delta)
+        delta = newOffset - self._current_offset
+        self._current_offset = newOffset
         
         # get gold data for plotting and call plot factory to create the plot
         goldData = self.goldDataframe
-        return self.plot.create_plot_single(goldData,config, offset)
+        return self.plot.create_plot_single(goldData, config, delta)
+        
+        
+        ## get offset for the chosen zeropoint from current session measurement
+        #offsetList = self.current_session_measurement.get_zeropoint_container().get_zeropoints()
+        #offset = offsetList[zeropoint]
+        #
+        ## get gold data for plotting and call plot factory to create the plot
+        #goldData = self.goldDataframe
+        #return self.plot.create_plot_single(goldData,config, offset)
         
         
         
@@ -272,10 +289,22 @@ class AppController:
     
     
     
-    def handle_violation_table_update_request(self, vvtName:str):
+    def handle_violation_table_update_request(self, vvtName:str, zeropoint:str):
         
         # get gold dataframe and violations from analyzer
         gold = self.goldDataframe
         violations = self.analyzer.analyze_violations(gold,vvtName)
-            
-        return self.table.update_table(violations)
+        
+        violationsDf = self.table.update_table(violations)
+        
+        if not zeropoint == "none":
+            currentOffset = self.current_session_measurement.get_zeropoint_container().get_zeropoints()[zeropoint]
+        
+        else:
+            currentOffset = 0
+        
+        # apply offset to the time column of the violations dataframe, if there are any violations
+        if not violationsDf.empty:
+            violationsDf = self.table.apply_offset(violationsDf, currentOffset)
+        
+        return violationsDf

@@ -55,9 +55,9 @@ class ViolationDetector:
                         vvtName=vvt,
                         violatedRule=name,
                         channel=channel,
-                        actualValue=str(duration),
-                        threshold=str(threshold),
-                        time="N/A"
+                        actualValue=duration,
+                        threshold=threshold,
+                        time=None
                     )
                     foundViolations.append(violation)
                     
@@ -68,7 +68,7 @@ class ViolationDetector:
                 # find base of gradient
                 baseChannel = channel.removesuffix('_gradient')
                 # select rows where base channel is between param1 and param2
-                dfSelection = df[(df[baseChannel] >= param1) & (df[baseChannel] <= param2)]
+                dfSelection = df[(df[baseChannel] <= param1) & (df[baseChannel] >= param2)]
                 
                 # check if rows were found
                 if not dfSelection.empty:
@@ -83,15 +83,16 @@ class ViolationDetector:
                         
             # create new violation object for each violated row
             if not violatedRows.empty:
+                
                 for index, row in violatedRows.iterrows():
                     actualValue = row[channel]
                     violation = Violation(
                         vvtName=vvt,
                         violatedRule=name,
                         channel=channel,
-                        actualValue=str(actualValue),
-                        threshold=str(threshold),
-                        time=str(index)
+                        actualValue=actualValue,
+                        threshold=threshold,
+                        time=int(str(index))
                     )
                     foundViolations.append(violation)
         

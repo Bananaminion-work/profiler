@@ -17,3 +17,17 @@ class TableFactory:
         tableContent = DataFrame([violation.to_dict() for violation in violations])
         
         return tableContent
+    
+    
+    
+    def apply_offset(self, df: DataFrame, offset: int) -> DataFrame:
+        """applies the given offset to the 'time' column of the given DataFrame and returns the updated DataFrame"""
+        
+        if 'time' in df.columns:
+            
+            # makes ints out of the strings, if there is an error it converts to NaN
+            numericTimeDf = pd.to_numeric(df['time'], errors='coerce')
+            
+            df['time'] = numericTimeDf + offset
+        
+        return df
