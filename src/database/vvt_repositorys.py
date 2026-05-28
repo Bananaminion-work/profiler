@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 import pandas as pd
 from pandas import DataFrame
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 class VvtRepository(ABC):
     @abstractmethod
@@ -19,11 +22,9 @@ class VvtRepository(ABC):
 
 class CsvRepository(VvtRepository):
     
-    _pathToCsv : str
-    
     def __init__(self):
         """initializes the repository with the path to the csv file"""
-        self._pathToCsv = r"C:\Users\DEA6RT\OneDrive - Bosch Group\VS-Code\tmp-profiler_1.0\tests\fixtures\vvt_limits.csv"
+        self._pathToCsv = PROJECT_ROOT / "tests" / "fixtures" / "vvt_limits.csv"
     
     def load_vvt(self) -> DataFrame:
         return pd.read_csv(self._pathToCsv)
