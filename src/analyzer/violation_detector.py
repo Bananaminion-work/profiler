@@ -45,23 +45,74 @@ class ViolationDetector:
             elif condition == "min":
                 violatedRows = df[df[channel] < threshold]
                 
-            elif condition == "duration_above":
-                entrysAboveParam1 = df[df[channel] > param1]
+            elif condition == "duration_above_while_process":
+                # select rows after PrcChbInletBulkheadOpen changes from 1 to zero
+                chamberCloseIdx = df.index[df['PrcChbInletBulkheadOpen'].diff() == -1]
+                # delet rows after PrcChbOutletBulkheadOpen changes from 0 to 1
+                chamberOpenIdx = df.index[df['PrcChbOutletBulkheadOpen'].diff() == 1]
                 
-                duration = float(len(entrysAboveParam1))
+                # check if more than one index was found and only choose one
+                if len(chamberCloseIdx) > 0 and len(chamberOpenIdx) > 0:
+                    start = chamberCloseIdx[0]
+                    # Erstes Outlet-Öffnen NACH dem Start
+                    after_start = chamberOpenIdx[chamberOpenIdx > start]
+                    end = after_start[0] if len(after_start) > 0 else df.index[-1]
+                    dfSelection = df.loc[start:end]
                 
-                if duration > threshold:
+                else:
+                    dfSelection = DataFrame()
+                    
+                if not dfSelection.empty:
+                    
+                    entrysAboveThreshold = len(dfSelection[dfSelection[channel] > threshold])
+
+                    if entrysAboveThreshold < param1:
+                        violation = Violation(
+                            vvtName=vvt,
+                            violatedRule=name,
+                            channel=channel,
+                            actualValue=entrysAboveThreshold,
+                            threshold=param1,
+                            time=None
+                        )
+                        foundViolations.append(violation)
+                
+            elif condition == "min_duration_above":
+                entrysAboveParam1 = df[df[channel] > threshold]
+                
+                duration = len(entrysAboveParam1)
+                
+                if duration > param1:
                     violation = Violation(
                         vvtName=vvt,
                         violatedRule=name,
                         channel=channel,
                         actualValue=duration,
-                        threshold=threshold,
+                        threshold=param1,
                         time=None
                     )
                     foundViolations.append(violation)
                     
                 continue
+            
+            elif condition == "min_duration_below":
+                entrysBelowParam1 = df[df[channel] < threshold]
+                
+                duration = len(entrysBelowParam1)
+                
+                if duration < param1:
+                    violation = Violation(
+                        vvtName=vvt,
+                        violatedRule=name,
+                        channel=channel,
+                        actualValue=duration,
+                        threshold=param1,
+                        time=None
+                    )
+                    foundViolations.append(violation)
+                    
+                continue
+            
                 
             elif condition == "rate_in_range":
                 
