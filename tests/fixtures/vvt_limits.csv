@@ -1,10 +1,10 @@
 vvt_name,rule_name,channel,condition,threshold,param1,param2
 VPS-Process,max_heatup_rate_avg10s,CH1_gradient_rolling_avg,max,3,,
-VPS-Process,max_time_above_217C,CH1,min_duration_above,330,217,
+VPS-Process,max_time_above_217C,CH1,max_duration_above,330,217,
 VPS-Process,max_temp,CH1,max,245,,
 VPS-Process,max_cooling_rate_avg10s,CH1_gradient_rolling_avg,min,-3,,
-VPS-Process,minimum 230°C for 150s,CH1,duration_above_while_process,230,150,
-VPS-Process,min_vacuum_pressure,VacuumActualV in mBar,min_duration_below,100,120,
+VPS-Process,minimum 230°C for 150s,CH1,duration_above_while_process,230,300,
+VPS-Process,minimum of 100mBar for at least 120s,VacuumActualV in mBar,min_duration_below,100,120,
 VPS-Process,min_time_at_vacuum,VacuumActualV in mBar,min_duration_below,100,1,
 Gen4VL,max_cooling_rate_in_range,CH1_gradient,rate_in_range,-0.7,218,206
 Gen4VL,max_cooling_rate_avg10s,CH1_gradient_rolling_avg,min,-1,,

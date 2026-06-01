@@ -172,6 +172,7 @@ class AppController:
         
         if isinstance(medallionObjects, dict):
             self.current_session_measurement.set_medallion_data(medallionObjects)
+            
             self.current_session_measurement.get_metadata().set_datetime(dateTime)
         else:
             raise WrongInputError(f"Expected a dict of Data objects, got {type(medallionObjects)} instead.")
@@ -195,7 +196,7 @@ class AppController:
         
         # store the source in metadata
         self.current_session_measurement.get_metadata().set_source(source)
-    
+        
     
     
     def handle_popup(self, type:str, message:str,returnPage:str):
@@ -247,7 +248,7 @@ class AppController:
         
         
         
-    def handle_save_request(self, metadata: dict[str,str], chosenZeropoints):
+    def handle_save_request(self, metadata: dict[str,str]):
                 
         # set metadata for current session measurement
         self.current_session_measurement.get_metadata().set_user_input(metadata)

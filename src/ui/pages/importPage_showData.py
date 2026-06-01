@@ -32,8 +32,6 @@ class ImportPage_showData(SubPage):
     cooling_time_3: str = ""
     cooling_time_4: str = ""
     config: str = "standard"
-    date: str= ""
-    startTime: str= ""
     bulkheadZeropoint: str = ""
     firstInjectionZeropoint: str = ""
     above235Zeropoint: str = ""
@@ -215,9 +213,7 @@ class ImportPage_showData(SubPage):
             "cooling_time_1",
             "cooling_time_2",
             "cooling_time_3",
-            "cooling_time_4",
-            "date",
-            "startTime"
+            "cooling_time_4"
         ]
         
         for field in requiredFields:
@@ -254,8 +250,6 @@ class ImportPage_showData(SubPage):
             "cooling_time_2": self.cooling_time_2,
             "cooling_time_3": self.cooling_time_3,
             "cooling_time_4": self.cooling_time_4,
-            "date": self.date,
-            "startTime": self.startTime,
             "prod_test": self.prod_test
         }
         
@@ -267,7 +261,7 @@ class ImportPage_showData(SubPage):
         }
         
         try:
-            self.controller.handle_save_request(metadata, chosenZeropoints)
+            self.controller.handle_save_request(metadata)
         
         except:
             raise Exception("The function to handle the save request did not get called successfully.")

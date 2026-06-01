@@ -1,36 +1,37 @@
+from dataclasses import dataclass
 from datetime import datetime
+from dataclasses import asdict
 
-
+@dataclass
 class Metadata:
-    date:str
-    startTime:str
-    dataSource:str
-    ovenNr:int
-    product:str
-    loadProfile:float
-    positionMeasurementCooler:str
-    testCooler_flag:bool
-    coolerCountOnTray:int
-    nozzlefield:str
-    injection_1:str
-    injection_2:str
-    injection_3:str
-    injection_4:str
-    waiting_1:str
-    waiting_2:str
-    waiting_3:str
-    waiting_4:str
-    cooling_freq_1:str
-    cooling_freq_2:str
-    cooling_freq_3:str
-    cooling_freq_4:str
-    cooling_time_1:str
-    cooling_time_2:str
-    cooling_time_3:str
-    cooling_time_4:str
-    profileName:str
-    comment:str
-    source:str
+    date:str = ""
+    startTime:str = ""
+    dataSource:str = ""
+    ovenNr:int = 0
+    product:str = ""
+    loadProfile:float = 0.0
+    positionMeasurementCooler:str =""
+    testCooler_flag:bool = False
+    coolerCountOnTray:int = 0
+    nozzlefield:str = ""
+    injection_1:str = ""
+    injection_2:str = ""
+    injection_3:str = ""
+    injection_4:str = ""
+    waiting_1:str = ""
+    waiting_2:str = ""
+    waiting_3:str = ""
+    waiting_4:str = ""
+    cooling_freq_1:str = ""
+    cooling_freq_2:str = ""
+    cooling_freq_3:str = ""
+    cooling_freq_4:str = ""
+    cooling_time_1:str = ""
+    cooling_time_2:str = ""
+    cooling_time_3:str = ""
+    cooling_time_4:str = ""
+    profileName:str = ""
+    comment:str = ""
     
     def set_user_input(self, metadata: dict[str,str]):
         
@@ -68,8 +69,11 @@ class Metadata:
         self.comment = metadata.get("comment", "")
         
     def set_source(self, source:str):
-        self.source = source
+        self.dataSource = source
         
     def set_datetime(self,date: datetime):
         self.date = date.strftime("%Y-%m-%d")
         self.startTime = date.strftime("%H:%M:%S")
+        
+    def get_metadata_dict(self) -> dict:
+        return asdict(self)

@@ -1,7 +1,7 @@
 from nicegui import ui
 from pandas import DataFrame
 import pandas as pd
-from src.shared.data_models import GoldData, SilverData, Data
+from src.shared.data_models import GoldData, SilverData
 from src.shared.exceptions import WrongInputError
 
 class GoldCreator():
@@ -47,9 +47,14 @@ class GoldCreator():
                 
                 self.goldDf = pd.concat([self.goldDf, gradientDf, rollingDf], axis=1)
                 
+                print(f"Gold DataFrame after concatenation:\n{self.goldDf.head()}")
+                
                 
             # erase column ReadTime as it is not necessary anymore
-            self.goldDf.drop(columns=['ReadTime'], inplace=True)
+            #self.goldDf.drop(columns=['ReadTime'], inplace=True)
+            
+            # set ReadTime as index
+            self.goldDf.set_index('ReadTime', inplace=True)
                 
             return GoldData(self.goldDf)
         

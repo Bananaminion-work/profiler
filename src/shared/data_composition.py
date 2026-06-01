@@ -24,7 +24,7 @@ class DataComposition:
         
         requiredKeys = {'bronze', 'silver', 'gold'}
         if requiredKeys != medallionData.keys():
-            raise WrongInputError("The Dictionary has keys than expected")
+            raise WrongInputError(f"Expected keys {requiredKeys} for the method set_medallion_data but got {medallionData.keys()}.")
         
         else:
             self._medallionData = medallionData

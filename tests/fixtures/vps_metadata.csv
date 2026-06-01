@@ -1,0 +1,6 @@
+measurement_id,startTime,dataSource,ovenNr,product,loadProfile,positionMeasurementCooler,testCooler_flag,coolerCountOnTray,nozzlefield,injection_1,injection_2,injection_3,injection_4,waiting_1,waiting_2,waiting_3,waiting_4,cooling_freq_1,cooling_freq_2,cooling_freq_3,cooling_freq_4,cooling_time_1,cooling_time_2,cooling_time_3,cooling_time_4,profileName,comment
+0,2025-12-02,13:19:10,Rehm-recorder,1234,PM6,4.0,4,False,8,drei,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4,meinProfil,mein test kommentar für test speichern,8bd4572c-faf0-41c2-8794-4db11bc57ae7
+0,2025-12-02,13:19:10,Rehm-recorder,1234,PM6,8.0,8,True,8,a,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4,a,meintestkommentar,cfa31a42-67e4-4746-a41c-59c2726f8f6a
+0,2025-12-02,13:19:10,Rehm-recorder,1234,PM6,8.0,8,True,8,dreifachdüsenfeld,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4,meinProfilname,mein testkommentar für das erste speichern!,437e00be-eb99-486d-a621-0572c3edd3e2
+0,2025-12-02,13:19:10,Rehm-recorder,1234,PM6,8.0,8,True,8,dre,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4,meinprofil,mein testkommentar,30d40d04-8dec-49dd-a025-7ad1e1e7df55
+0,2025-12-02,13:19:10,Rehm-recorder,1234,PM6,8.0,8,True,8,drei,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4,meinProfil,mein erster speicehrtest,06c5b674-e806-4edf-a9dd-586045d2b748

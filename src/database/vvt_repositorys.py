@@ -20,7 +20,7 @@ class VvtRepository(ABC):
 
 
 
-class CsvRepository(VvtRepository):
+class VvtRepoCsv(VvtRepository):
     
     def __init__(self):
         """initializes the repository with the path to the csv file"""
@@ -36,7 +36,7 @@ class CsvRepository(VvtRepository):
         pass
     
     
-class DatabricksRepository(VvtRepository):
+class VvtRepoDatabricks(VvtRepository):
     
     def __init__(self):
         pass
