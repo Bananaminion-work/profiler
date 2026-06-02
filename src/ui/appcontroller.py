@@ -49,7 +49,6 @@ class AppController:
     pageContainer : Any
     _layout : Any
     pages={}
-    current_offset : int
     
     # Functions:
     
@@ -99,9 +98,6 @@ class AppController:
         
         # show initial page
         self.handle_navigation_request('landing')
-        
-        # initiate zeropoint offset with 0
-        self._current_offset = 0
     
         
     
@@ -227,24 +223,11 @@ class AppController:
         
         # get offset for the chosen zeropoint from current session measurement
         offsetList = self.current_session_measurement.get_zeropoint_container().get_zeropoints()
-        newOffset = offsetList[zeropoint]
+        offset = offsetList[zeropoint]
         
-        # undo previous offset, apply new one (only the delta)
-        delta = newOffset - self._current_offset
-        self._current_offset = newOffset
-        
-        # get gold data for plotting and call plot factory to create the plot
-        goldData = self.goldDataframe
-        return self.plot.create_plot_single(goldData, config, delta)
-        
-        
-        ## get offset for the chosen zeropoint from current session measurement
-        #offsetList = self.current_session_measurement.get_zeropoint_container().get_zeropoints()
-        #offset = offsetList[zeropoint]
-        #
-        ## get gold data for plotting and call plot factory to create the plot
-        #goldData = self.goldDataframe
-        #return self.plot.create_plot_single(goldData,config, offset)
+        # copy gold-data and apply offset, create plot with offset
+        goldData = self.goldDataframe.copy()
+        return self.plot.create_plot_single(goldData, config, offset)
         
         
         
@@ -260,19 +243,6 @@ class AppController:
             
         if not isinstance(self.current_session_measurement.get_metadata(), Metadata):
             raise WrongInputError(f"Expected a Metadata-object in current session, got {type(self.current_session_measurement.get_metadata())} instead.")
-        
-        
-        
-        
-        
-        
-        
-        #save zeropoints and results of vvt to database
-        
-        
-        
-        
-        
         
         # save measurement to database
         self.database.save_measurement(self.current_session_measurement)

@@ -27,6 +27,7 @@ class BronzeCreator():
             self.parse_xml() # read xml
             self.parse_csv() # read csv
             self.change_id_to_names() # create final dataframe
+            self.csvData.set_index('ReadTime', inplace=True)
             
             #build Object
             self.bronzeObject = BronzeData(self.csvData)

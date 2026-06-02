@@ -43,7 +43,7 @@ class MeasurementRepoCsv(MeasurementRepository):
             silverDf = silver.get_dataframe()
             goldDf = gold.get_dataframe()
         
-            # set measurement_id as index for all dataframes
+            # append measurement_id to each dataframe
             bronzeDf['measurement_id'] = measurement_id
             silverDf['measurement_id'] = measurement_id
             goldDf['measurement_id'] = measurement_id

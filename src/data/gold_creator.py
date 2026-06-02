@@ -18,6 +18,8 @@ class GoldCreator():
             
             self.goldDf = silver.get_dataframe().copy()
             
+            self.goldDf.reset_index(inplace=True) # ensure ReadTime is a column for processing
+            
             # distiguish between different sources of measurement
             if source == "Rehm-recorder":
                                
@@ -46,12 +48,6 @@ class GoldCreator():
                 
                 
                 self.goldDf = pd.concat([self.goldDf, gradientDf, rollingDf], axis=1)
-                
-                print(f"Gold DataFrame after concatenation:\n{self.goldDf.head()}")
-                
-                
-            # erase column ReadTime as it is not necessary anymore
-            #self.goldDf.drop(columns=['ReadTime'], inplace=True)
             
             # set ReadTime as index
             self.goldDf.set_index('ReadTime', inplace=True)

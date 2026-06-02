@@ -57,20 +57,8 @@ class ImportPage_showData(SubPage):
         
         with ui.column().classes("w-full gap-4"):
             
-            # section 1: Plot
-            with ui.card().classes("w-full h-[65vh] relative") as plotCard:
-                
-                    ui.button(
-                                    icon='fullscreen',
-                                    on_click=lambda: ui.run_javascript(
-                                            f'document.fullscreenElement ? document.exitFullscreen() : getElement({plotCard.id}).$el.requestFullscreen()'
-                                        )
-                                ).props('flat round').classes('absolute bottom-2 right-2 z-10')
-                    
-                    self.plotContainer = ui.column().classes("w-full h-full")
-                    self.update_plot_preview()
-
-            # section 2: Config
+            
+            # section 1: Config
             with ui.card().classes("w-full"):
                 ui.label("Choose config and zeropoint").classes('text-lg')
                 with ui.row().classes("w-full"):
@@ -87,6 +75,19 @@ class ImportPage_showData(SubPage):
                         label="choose zeropoint for plot",
                         on_change=self.update_vvt_selection
                     ).bind_value(self,"chosenZeropoint_show").classes("w-100")
+                    
+            # section 2: Plot
+            with ui.card().classes("w-full h-[65vh] relative") as plotCard:
+                
+                    ui.button(
+                                    icon='fullscreen',
+                                    on_click=lambda: ui.run_javascript(
+                                            f'document.fullscreenElement ? document.exitFullscreen() : getElement({plotCard.id}).$el.requestFullscreen()'
+                                        )
+                                ).props('flat round').classes('absolute bottom-2 right-2 z-10')
+                    
+                    self.plotContainer = ui.column().classes("w-full h-full")
+                    self.update_plot_preview()
             
             # section 3: vvt dropdown and table
             with ui.card().classes("w-full"):

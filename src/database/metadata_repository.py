@@ -21,6 +21,10 @@ class MetadataRepository:
         # Code to delete measurement metadata from the database
         pass
     
+    def get_saved_measurements(self):
+        # Code to retrieve all saved measurements from the database
+        pass
+    
     
     
 class MetadataRepoCsv(MetadataRepository):
@@ -51,9 +55,43 @@ class MetadataRepoCsv(MetadataRepository):
         }
         metaDf = metaDf.astype(type_conversions)
         
+        # move Values in the right order
+        columnOrder = [
+            "measurement_id",
+            "date",
+            "startTime",
+            "dataSource",
+            "ovenNr",
+            "product",
+            "loadProfile",
+            "positionMeasurementCooler",
+            "testCooler_flag",
+            "coolerCountOnTray",
+            "nozzlefield",
+            "injection_1",
+            "injection_2",
+            "injection_3",
+            "injection_4",
+            "waiting_1",
+            "waiting_2",
+            "waiting_3",
+            "waiting_4",
+            "cooling_freq_1",
+            "cooling_freq_2",
+            "cooling_freq_3",
+            "cooling_freq_4",
+            "cooling_time_1",
+            "cooling_time_2",
+            "cooling_time_3",
+            "cooling_time_4",
+            "profileName",
+            "comment"
+        ]
+        metaDf = metaDf[columnOrder]
+        
         # save df to csv
         if self._pathToCsv.exists():
-            metaDf.to_csv(self._pathToCsv, mode='a', header=False, index=True)
+            metaDf.to_csv(self._pathToCsv, mode='a', header=False, index=False)
             return measurement_id
         else:
             return ""

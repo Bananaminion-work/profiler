@@ -19,6 +19,8 @@ class SilverCreator():
         
         else:
             self.silverDataFrame = bronze.get_dataframe().copy()
+            
+            self.silverDataFrame.reset_index(inplace=True) # ensure ReadTime is a column for processing
                             
             if source == "Rehm-recorder":
                 # resample and save first entry for datetime
@@ -28,6 +30,9 @@ class SilverCreator():
             
             else:
                 raise WrongInputError("Source not supported for SilverData creation")
+            
+            # set ReadTime as index
+            self.silverDataFrame.set_index('ReadTime', inplace=True)
             
             return SilverData(self.silverDataFrame),dateTime
     
@@ -101,7 +106,7 @@ class SilverCreator():
         # reset index to ensure it is a column again
         self.silverDataFrame.reset_index(inplace=True)
         
-        # add a new column with the time in seconds since the start of the measurement for easier handling in plots and analysis
+        # replace ReadTime with a range of inkrementing integers
         self.silverDataFrame['ReadTime'] = range(len(self.silverDataFrame))
         
         return firstEntry
