@@ -78,26 +78,52 @@ class ImportPage_showData(SubPage):
                     
             # section 2: Plot
             with ui.card().classes("w-full h-[65vh] relative") as plotCard:
-                
+                    #fullscreen button 
                     ui.button(
                                     icon='fullscreen',
                                     on_click=lambda: ui.run_javascript(
                                             f'document.fullscreenElement ? document.exitFullscreen() : getElement({plotCard.id}).$el.requestFullscreen()'
                                         )
-                                ).props('flat round').classes('absolute bottom-2 right-2 z-10')
+                                ).props('flat round').classes('absolute bottom-2 right-2 z-10') #orientation of the button
                     
+                    # create container for specialist to draw in
                     self.plotContainer = ui.column().classes("w-full h-full")
+                    # call function to draw plot (init)
                     self.update_plot_preview()
             
+            ## section 3: vvt dropdown and table
+            #with ui.card().classes("w-full"):
+            #    ui.label("VVT - Violations").classes('text-lg')
+            #    self.tableContainer = ui.row().classes("w-full h-60 overflow-auto")
+            #    with ui.row().classes("w-full"):
+            #        ui.label("Choose VVT to be checked")
+            #        vvtOptions = self.controller.load_vvt_options()
+            #        vvtOptions.insert(0,"None")
+            #        ui.select(vvtOptions, value=vvtOptions[0], label="Select VVT", on_change=self.update_vvt_table).bind_value(self, "selectedVVT").classes("w-100")
+                    
+                    
             # section 3: vvt dropdown and table
             with ui.card().classes("w-full"):
+                
+                # create table container with label
                 ui.label("VVT - Violations").classes('text-lg')
                 self.tableContainer = ui.row().classes("w-full h-60 overflow-auto")
+                
+                # create dropdown to select vvt use on change event
                 with ui.row().classes("w-full"):
+                    
                     ui.label("Choose VVT to be checked")
                     vvtOptions = self.controller.load_vvt_options()
                     vvtOptions.insert(0,"None")
-                    ui.select(vvtOptions, value=vvtOptions[0], label="Select VVT", on_change=self.update_vvt_table).bind_value(self, "selectedVVT").classes("w-100")
+                    
+                    ui.select(
+                        vvtOptions,
+                        value=vvtOptions[0],
+                        label="Select VVT",
+                        on_change=self.update_vvt_table
+                        ).bind_value(self, "selectedVVT").classes("w-100")
+                    
+                    
             
             # section 4: Metadata and details
             with ui.card().classes("w-full"):
@@ -163,18 +189,14 @@ class ImportPage_showData(SubPage):
             with self.plotContainer:
                 ui.plotly(plotContent).classes("w-full h-full")
 
-        
-        
+                
+                
     def update_vvt_table(self):
         """clears the vvt table container and redraws the table with the violations for the selected vvt"""
         self.tableContainer.clear()
         
-        # get content for Table from controller
-        tableContent = self.controller.handle_violation_table_update_request(self.selectedVVT, self.chosenZeropoint_show)
-        
-        if isinstance(tableContent, DataFrame):
-            with self.tableContainer:
-                ui.table.from_pandas(tableContent).classes("w-full h-full")
+        with self.tableContainer:
+            self.controller.handle_violation_table_update_request(self.selectedVVT, self.chosenZeropoint_show)
     
     
     def update_vvt_selection(self):

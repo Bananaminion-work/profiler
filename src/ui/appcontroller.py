@@ -261,21 +261,24 @@ class AppController:
     
     
     def handle_violation_table_update_request(self, vvtName:str, zeropoint:str):
-        
+    
         # get gold dataframe and violations from analyzer
         gold = self.goldDataframe
         violations = self.analyzer.analyze_violations(gold,vvtName)
         
-        violationsDf = self.table.update_table(violations)
-        
+        # get value of zeropoint from current session measurement
         if not zeropoint == "none":
             currentOffset = self.current_session_measurement.get_zeropoint_container().get_zeropoints()[zeropoint]
         
         else:
             currentOffset = 0
         
-        # apply offset to the time column of the violations dataframe, if there are any violations
-        if not violationsDf.empty:
-            violationsDf = self.table.apply_offset(violationsDf, currentOffset)
+        # let specialist create table with violation-list and zeropoint-logic
+        self.table.update_violation_table(violations, currentOffset)
+    
+    
+    
+    def handle_read_measurements_request(self):
+        """reads the metadata from the given source and returns it to display"""
         
-        return violationsDf
+        

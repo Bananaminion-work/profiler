@@ -1,33 +1,39 @@
+from nicegui import ui
+
 from src.shared.violation import Violation
 import pandas as pd
 from pandas import DataFrame
 
 
 class TableFactory:
-    
-    def update_table(self, violations: list[Violation]):
-        """takes in a list of Violations, processes it and returns a DataFrame that can be used to create a table with nicegui and "from_pandas" """
         
-        # if there are no violations, return an empty DataFrame to avoid errors in the table creation
-        if not violations:
-            return DataFrame()
+    def update_violation_table(self, violations: list[Violation], offset: int):
+        """draws a table with a given list of violation-objects and applys the given offset to the 'Time of Occurance' column of the table"""
         
         
-        # create a Dataframe from the lists of found vioations
-        tableContent = DataFrame([violation.to_dict() for violation in violations])
+        # check if content is not empty and create df out of the violation-objects
+        if violations is not None and len(violations) > 0:
+            tableContent = DataFrame([violation.to_dict() for violation in violations])
+            
+            # apply the offset to the time column of the tableContent df
+            tableContent = self.apply_offset(tableContent, offset)
         
-        return tableContent
+        else:
+            tableContent = DataFrame()
+            
+        # draw the table with nicegui
+        ui.table.from_pandas(tableContent).classes("w-full h-full")
     
     
     
     def apply_offset(self, df: DataFrame, offset: int) -> DataFrame:
-        """applies the given offset to the 'time' column of the given DataFrame and returns the updated DataFrame"""
+        """applies the given offset to the 'Time of Occurance' column of the given DataFrame and returns the updated DataFrame"""
         
-        if 'time' in df.columns:
+        if "Time of Occurance" in df.columns:
             
             # makes ints out of the strings, if there is an error it converts to NaN
-            numericTimeDf = pd.to_numeric(df['time'], errors='coerce')
+            numericTimeDf = pd.to_numeric(df['Time of Occurance'], errors='coerce')
             
-            df['time'] = numericTimeDf + offset
+            df['Time of Occurance'] = numericTimeDf + offset
         
         return df

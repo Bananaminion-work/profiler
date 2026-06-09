@@ -7,7 +7,7 @@ from src.database.vvt_repositorys import VvtRepoCsv, VvtRepoDatabricks, VvtRepos
 from src.shared.data_composition import DataComposition
 from nicegui import ui
 
-from src.shared.data_models import BronzeData, Data
+from src.shared.data_models import Data
 from src.shared.exceptions import DataError, WrongInputError
 
 class DatabaseManager:
@@ -69,3 +69,7 @@ class DatabaseManager:
         
         # returns the whole vvt table
         return self._vvtRepository.load_vvt()
+    
+    def list_saved_measurements(self):
+        """lists all saved measurements in the database"""
+        return self._metadataRepository.get_saved_measurements()
