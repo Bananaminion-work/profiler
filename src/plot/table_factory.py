@@ -69,19 +69,20 @@ class TableFactory:
         # create rows
         rows = filteredDf.to_dict(orient='records')
         
-        print("[TableFactory|update_measurement_table] drawing table")
-        
         # create table 
         ui.table(
             columns=columns,
             rows=rows,
-            selection = 'multiple'
+            selection = 'multiple',
+            row_key = MetaNames.MEASUREMENT_ID
             ).classes("w-full h-full")
         
         
         
     def apply_filter(self, content: DataFrame, filter: FilterComposition) -> DataFrame:
-        print("[TableFactory|apply_filter] Applying filter to measurement table content...")
+        """applys filters with the given values of the FilterComposition-object to the given Dataframe
+        
+        returns the filtered DataFrame"""
         
         # return the df if filter is empty
         if content.empty:

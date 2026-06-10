@@ -11,7 +11,7 @@ class PlotPage_selectData(SubPage):
     pageName = "plot-select"
     date: Optional[datetime] = None
     time: Optional[datetime] = None
-    oven_nr: str = "1234"
+    oven_nr: str = ""
     oven_Recipe: str = ""
     product: str = ""
     load_profile: str = ""
@@ -26,7 +26,7 @@ class PlotPage_selectData(SubPage):
                 with ui.grid(columns=3).classes("w-full gap-3"):
                     ui.label("Select the filters for the measurement table").classes("text-lg col-span-3")
                     ui.date("Pick the date", on_change=self.update_table).props("type=date").bind_value(self, "date")
-                    ui.time("Enter the time", on_change=self.update_table).props("format=24h").bind_value(self, "time")
+                    ui.time("Enter the time", on_change=self.update_table).props("format24h").bind_value(self, "time")
                     ui.input("Enter the oven number", placeholder="Oven number", on_change=self.update_table).props("debounce=300").bind_value(self, "oven_nr")
                     ui.input("Enter the oven recipe", placeholder="Oven recipe", on_change=self.update_table).props("debounce=300").bind_value(self, "oven_Recipe")
                     ui.input("Enter the product name", placeholder="Product name", on_change=self.update_table).props("debounce=300").bind_value(self, "product")
@@ -60,6 +60,11 @@ class PlotPage_selectData(SubPage):
     
     def update_table(self):
         """clears plot container and redraws with fresh plot"""
+        
+        #check whether the container already exists
+        if not hasattr(self, "tableContainer"):
+            return
+        
         self.tableContainer.clear()
         
         # create filter composition object with the current filter values
@@ -82,7 +87,7 @@ class PlotPage_selectData(SubPage):
     def reset(self) -> None:
         self.date = None
         self.time = None
-        self.oven_nr = "1234"
+        self.oven_nr = ""
         self.oven_Recipe = ""
         self.product = ""
         self.load_profile = ""
