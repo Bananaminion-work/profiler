@@ -1,8 +1,11 @@
 from pathlib import Path
-from typing import Dict, Sequence, Any
 import uuid
 import pandas as pd
 from pandas import DataFrame
+from datetime import datetime
+
+from src.shared.meta_names import MetaNames
+from src.shared.metadata import Metadata
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -13,7 +16,6 @@ class MetadataRepository:
     def save_measurement_metadata(self, metadata)-> str:
         # Code to save measurement metadata to the database
         return""
-        pass
 
     def get_measurement_metadata(self, measurement_id):
         # Code to retrieve measurement metadata from the database
@@ -23,10 +25,10 @@ class MetadataRepository:
         # Code to delete measurement metadata from the database
         pass
     
-    def get_saved_measurements(self):
+    def get_saved_measurements(self) -> DataFrame:
         # Code to retrieve all saved measurements from the database
-        pass
-    
+        return DataFrame()
+      
     
     
 class MetadataRepoCsv(MetadataRepository):
@@ -34,7 +36,7 @@ class MetadataRepoCsv(MetadataRepository):
         super().__init__()
         self._pathToCsv = PROJECT_ROOT / "tests" / "fixtures" / "vps_metadata.csv"
     
-    def save_measurement_metadata(self, metadata) -> str:
+    def save_measurement_metadata(self, metadata:Metadata) -> str:
         
         #create unique id
         measurement_id = str(uuid.uuid4())
@@ -50,44 +52,45 @@ class MetadataRepoCsv(MetadataRepository):
         
         # convert datatypes from string to int, float or bool
         type_conversions = {
-            "ovenNr": int,
-            "loadProfile": float,
-            "testCooler_flag": bool,
-            "coolerCountOnTray": int
+            MetaNames.OVEN_NR   : int,
+            MetaNames.LOAD_PROFILE  : float,
+            MetaNames.TEST_COOLER_FLAG  : bool,
+            MetaNames.COOLER_COUNT_ON_TRAY  : int
         }
-        metaDf = metaDf.astype(type_conversions)
+        metaDf = metaDf.astype(type_conversions,errors='ignore')
         
         # move Values in the right order
         columnOrder = [
-            "measurement_id",
-            "date",
-            "startTime",
-            "dataSource",
-            "ovenNr",
-            "product",
-            "loadProfile",
-            "positionMeasurementCooler",
-            "testCooler_flag",
-            "coolerCountOnTray",
-            "nozzlefield",
-            "injection_1",
-            "injection_2",
-            "injection_3",
-            "injection_4",
-            "waiting_1",
-            "waiting_2",
-            "waiting_3",
-            "waiting_4",
-            "cooling_freq_1",
-            "cooling_freq_2",
-            "cooling_freq_3",
-            "cooling_freq_4",
-            "cooling_time_1",
-            "cooling_time_2",
-            "cooling_time_3",
-            "cooling_time_4",
-            "profileName",
-            "comment"
+            MetaNames.MEASUREMENT_ID,
+            MetaNames.DATE,
+            MetaNames.START_TIME,
+            MetaNames.DATA_SOURCE,
+            MetaNames.OVEN_RECIPE,
+            MetaNames.OVEN_NR,
+            MetaNames.PRODUCT,
+            MetaNames.LOAD_PROFILE,
+            MetaNames.POSITION_MEASUREMENT_COOLER,
+            MetaNames.TEST_COOLER_FLAG,
+            MetaNames.COOLER_COUNT_ON_TRAY,
+            MetaNames.NOZZLEFIELD,
+            MetaNames.PROFILE_NAME,
+            MetaNames.COMMENT,
+            MetaNames.INJECTION_1,
+            MetaNames.INJECTION_2,
+            MetaNames.INJECTION_3,
+            MetaNames.INJECTION_4,
+            MetaNames.WAITING_1,
+            MetaNames.WAITING_2,
+            MetaNames.WAITING_3,
+            MetaNames.WAITING_4,
+            MetaNames.COOLING_FREQ_1,
+            MetaNames.COOLING_FREQ_2,
+            MetaNames.COOLING_FREQ_3,
+            MetaNames.COOLING_FREQ_4,
+            MetaNames.COOLING_TIME_1,
+            MetaNames.COOLING_TIME_2,
+            MetaNames.COOLING_TIME_3,
+            MetaNames.COOLING_TIME_4
         ]
         metaDf = metaDf[columnOrder]
         
@@ -105,9 +108,58 @@ class MetadataRepoCsv(MetadataRepository):
     def delete_measurement_metadata(self, measurement_id):
         pass
     
-    def get_saved_measurements(self):
-        pass
+    def get_saved_measurements(self) -> DataFrame:
         
+        # read in the content of the csv as a dataframe and return it
+        if self._pathToCsv.exists():
+            metaDf = pd.read_csv(self._pathToCsv)
+            
+            # ceonvert the time columns
+            if MetaNames.DATE in metaDf.columns and MetaNames.START_TIME in metaDf.columns:
+                
+                #convert date
+                metaDf[MetaNames.DATE] = pd.to_datetime(
+                    metaDf[MetaNames.DATE],
+                    format = "%Y-%m-%d",
+                    errors='coerce'
+                    ).dt.date #type:ignore
+                
+                #convert time without date
+                metaDf[MetaNames.START_TIME] = pd.to_datetime(
+                    metaDf[MetaNames.START_TIME],
+                    format = "%H:%M:%S",
+                    errors='coerce'
+                    ).dt.time #type:ignore
+                        
+            
+            # convert the datatypes from string in the csv as needed
+            type_conversions = {
+                MetaNames.OVEN_NR: int,
+                MetaNames.LOAD_PROFILE: float,
+                MetaNames.TEST_COOLER_FLAG: bool,
+                MetaNames.COOLER_COUNT_ON_TRAY: int,
+                MetaNames.INJECTION_1: float,
+                MetaNames.INJECTION_2: float,
+                MetaNames.INJECTION_3: float,
+                MetaNames.INJECTION_4: float,
+                MetaNames.WAITING_1: float,
+                MetaNames.WAITING_2: float,
+                MetaNames.WAITING_3: float,
+                MetaNames.WAITING_4: float,
+                MetaNames.COOLING_FREQ_1: float,
+                MetaNames.COOLING_FREQ_2: float,
+                MetaNames.COOLING_FREQ_3: float,
+                MetaNames.COOLING_FREQ_4: float,
+                MetaNames.COOLING_TIME_1: float,
+                MetaNames.COOLING_TIME_2: float,
+                MetaNames.COOLING_TIME_3: float,
+                MetaNames.COOLING_TIME_4: float
+            }
+            metaDf = metaDf.astype(type_conversions)
+            
+            return metaDf
+        else:
+            return DataFrame()
     
     
     
@@ -123,3 +175,6 @@ class MetadataRepoDatabricks(MetadataRepository):
     
     def delete_measurement_metadata(self, measurement_id):
         pass
+    
+    def get_saved_measurements(self) -> DataFrame:
+            return DataFrame()

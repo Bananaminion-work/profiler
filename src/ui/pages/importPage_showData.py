@@ -1,12 +1,13 @@
 from nicegui import ui
-from pandas import DataFrame
 from src.ui.pages.base_pages import SubPage
+from src.shared.meta_names import MetaNames
 
 
 class ImportPage_showData(SubPage):
     
     pageName = "import-show"
-    oven_nr: str = "1234"
+    oven_Recipe: str = ""
+    oven_Nr: str = "1234"
     product: str = "PM6"
     load: str = "8"
     pos: str = "8"
@@ -90,16 +91,6 @@ class ImportPage_showData(SubPage):
                     self.plotContainer = ui.column().classes("w-full h-full")
                     # call function to draw plot (init)
                     self.update_plot_preview()
-            
-            ## section 3: vvt dropdown and table
-            #with ui.card().classes("w-full"):
-            #    ui.label("VVT - Violations").classes('text-lg')
-            #    self.tableContainer = ui.row().classes("w-full h-60 overflow-auto")
-            #    with ui.row().classes("w-full"):
-            #        ui.label("Choose VVT to be checked")
-            #        vvtOptions = self.controller.load_vvt_options()
-            #        vvtOptions.insert(0,"None")
-            #        ui.select(vvtOptions, value=vvtOptions[0], label="Select VVT", on_change=self.update_vvt_table).bind_value(self, "selectedVVT").classes("w-100")
                     
                     
             # section 3: vvt dropdown and table
@@ -130,7 +121,7 @@ class ImportPage_showData(SubPage):
                 ui.label("input Metadata to be saved to database").classes('text-lg')
             
                 with ui.grid(columns=2).classes("w-full gap-3"):
-                    ui.select(["1234", "2345", "3456", "4567"], value="1234", label="Select the oven-number").bind_value(self, "oven_nr")
+                    ui.select(["1234", "2345", "3456", "4567"], value="1234", label="Select the oven-number").bind_value(self, "oven_Nr")
                     ui.select(["VW-ECO", "VOLVO-ERAD", "BASE", "PM6"], value="PM6", label="Select the product").bind_value(self, "product")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Load of the profile type").bind_value(self, "load")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Position of measurement cooler").bind_value(self, "pos")
@@ -141,32 +132,33 @@ class ImportPage_showData(SubPage):
                 with ui.row().classes("w-full"):
                     ui.input("Nozzlefield", placeholder="Dreifachdüsenfeld").bind_value(self, "nozzlefield").classes("w-200")
                     ui.input("Profilename", placeholder="used profilename").bind_value(self, "profile_name").classes("w-200")
+                    ui.input("Oven recipe", placeholder="oven recipe").bind_value(self, "oven_Recipe").classes("w-200")
                 self._create_accordion()
                 ui.textarea("Comment", placeholder="enter your comment..").bind_value(self, "comment").classes("w-full")
 
-                ui.label("Choose ONLY ONE zeropoint per type to be saved in the database\n FÄLLT RAUS WEIL NUR EINER GEFUNDEN WIRD; REST ÜBER OFFSETNAVIGATION +-1s WENIGER IST MEHR")
-                
-                ui.select(
-                    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
-                    value="muss uebergeben werden",
-                    label="bulkhead",
-                ).classes("w-full").bind_value(self,"bulkheadZeropoint")
-                
-                ui.select(
-                    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
-                    value="muss uebergeben werden",
-                    label="First injection",
-                ).classes("w-full").bind_value(self,"firstInjectionZeropoint")
-                ui.select(
-                    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
-                    value="muss uebergeben werden",
-                    label="Above 235",
-                ).classes("w-full").bind_value(self,"above235Zeropoint")
-                ui.select(
-                    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
-                    value="muss uebergeben werden",
-                    label="Ventilate 2",
-                ).classes("w-full").bind_value(self,"ventilate2Zeropoint")
+                #ui.label("Choose ONLY ONE zeropoint per type to be saved in the database\n FÄLLT RAUS WEIL NUR EINER GEFUNDEN WIRD; REST ÜBER OFFSETNAVIGATION +-1s WENIGER IST MEHR")
+                #
+                #ui.select(
+                #    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
+                #    value="muss uebergeben werden",
+                #    label="bulkhead",
+                #).classes("w-full").bind_value(self,"bulkheadZeropoint")
+                #
+                #ui.select(
+                #    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
+                #    value="muss uebergeben werden",
+                #    label="First injection",
+                #).classes("w-full").bind_value(self,"firstInjectionZeropoint")
+                #ui.select(
+                #    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
+                #    value="muss uebergeben werden",
+                #    label="Above 235",
+                #).classes("w-full").bind_value(self,"above235Zeropoint")
+                #ui.select(
+                #    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
+                #    value="muss uebergeben werden",
+                #    label="Ventilate 2",
+                #).classes("w-full").bind_value(self,"ventilate2Zeropoint")
                     
                     
                 # separator and buttons
@@ -213,7 +205,8 @@ class ImportPage_showData(SubPage):
     def on_save_click(self) -> None:
         # fields that must have a value
         requiredFields = [
-            "oven_nr",
+            "oven_Recipe",
+            "oven_Nr",
             "product",
             "load",
             "pos",
@@ -247,40 +240,35 @@ class ImportPage_showData(SubPage):
                 ui.notify(f"Please fill in the required field: {field}", color="negative")
                 return
         
-        metadata = {
-            "ovenNr": self.oven_nr,
-            "product": self.product,
-            "loadProfile": self.load,
-            "positionMeasurementCooler": self.pos,
-            "coolerCountOnTray": self.count,
-            "testCooler_flag": self.prod_test,
-            "nozzlefield": self.nozzlefield,
-            "profileName": self.profile_name,
-            "comment": self.comment,
-            "injection_1": self.injection_1,
-            "injection_2": self.injection_2,
-            "injection_3": self.injection_3,
-            "injection_4": self.injection_4,
-            "waiting_1": self.waiting_1,
-            "waiting_2": self.waiting_2,
-            "waiting_3": self.waiting_3,
-            "waiting_4": self.waiting_4,
-            "cooling_freq_1": self.cooling_freq_1,
-            "cooling_freq_2": self.cooling_freq_2,
-            "cooling_freq_3": self.cooling_freq_3,
-            "cooling_freq_4": self.cooling_freq_4,
-            "cooling_time_1": self.cooling_time_1,
-            "cooling_time_2": self.cooling_time_2,
-            "cooling_time_3": self.cooling_time_3,
-            "cooling_time_4": self.cooling_time_4,
-            "prod_test": self.prod_test
-        }
         
-        chosenZeropoints={
-            "bulkhead": self.bulkheadZeropoint,
-            "first injection": self.firstInjectionZeropoint,
-            "above 235": self.above235Zeropoint,
-            "ventilate 2": self.ventilate2Zeropoint
+        # create a metadta dict with static names from shared/meta_names.py
+        metadata = {
+            MetaNames.OVEN_RECIPE                   : self.oven_Recipe,
+            MetaNames.OVEN_NR                       : self.oven_Nr,
+            MetaNames.PRODUCT                       : self.product,
+            MetaNames.LOAD_PROFILE                  : self.load,
+            MetaNames.POSITION_MEASUREMENT_COOLER   : self.pos,
+            MetaNames.COOLER_COUNT_ON_TRAY          : self.count,
+            MetaNames.TEST_COOLER_FLAG              : self.prod_test,
+            MetaNames.NOZZLEFIELD                   : self.nozzlefield,
+            MetaNames.PROFILE_NAME                  : self.profile_name,
+            MetaNames.COMMENT                       : self.comment,
+            MetaNames.INJECTION_1                   : self.injection_1,
+            MetaNames.INJECTION_2                   : self.injection_2,
+            MetaNames.INJECTION_3                   : self.injection_3,
+            MetaNames.INJECTION_4                   : self.injection_4,
+            MetaNames.WAITING_1                     : self.waiting_1,
+            MetaNames.WAITING_2                     : self.waiting_2,
+            MetaNames.WAITING_3                     : self.waiting_3,
+            MetaNames.WAITING_4                     : self.waiting_4,
+            MetaNames.COOLING_FREQ_1                : self.cooling_freq_1,
+            MetaNames.COOLING_FREQ_2                : self.cooling_freq_2,
+            MetaNames.COOLING_FREQ_3                : self.cooling_freq_3,
+            MetaNames.COOLING_FREQ_4                : self.cooling_freq_4,
+            MetaNames.COOLING_TIME_1                : self.cooling_time_1,
+            MetaNames.COOLING_TIME_2                : self.cooling_time_2,
+            MetaNames.COOLING_TIME_3                : self.cooling_time_3,
+            MetaNames.COOLING_TIME_4                : self.cooling_time_4
         }
         
         try:
@@ -294,7 +282,8 @@ class ImportPage_showData(SubPage):
         self.controller.handle_popup("confirm", "Are you sure to discard and return to home?", self.pageName)
 
     def reset(self) -> None:
-        self.oven_nr = "1234"
+        self.oven_Nr = "1234"
+        self.oven_Recipe = ""
         self.product = "PM6"
         self.load = "8"
         self.pos = "8"

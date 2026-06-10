@@ -1,8 +1,12 @@
 from nicegui import ui
 
 from src.shared.violation import Violation
+from src.shared.filter_composition import FilterComposition
+from src.shared.meta_names import MetaNames
 import pandas as pd
 from pandas import DataFrame
+from typing import cast
+
 
 
 class TableFactory:
@@ -37,3 +41,97 @@ class TableFactory:
             df['Time of Occurance'] = numericTimeDf + offset
         
         return df
+    
+    
+    
+    def update_measurement_table(self, content:DataFrame, filter: FilterComposition):
+        """creates a table with the content to display the saved measurements"""
+        
+        # filter the content before table is created
+        filteredDf = self.apply_filter(content,filter)
+        
+        filteredDf = filteredDf.fillna("")
+        
+        # create a dict for each column and make it sortable
+        columns = [
+            {
+                'name': col,
+                'label': col.replace('_',' ').title(),
+                'field': col,
+                'sortable': True,
+                'align': 'left'
+            }
+            for col in filteredDf.columns
+            # dont show the measurement_id column in the table
+            if col != "measurement_id"
+        ]
+        
+        # create rows
+        rows = filteredDf.to_dict(orient='records')
+        
+        print("[TableFactory|update_measurement_table] drawing table")
+        
+        # create table 
+        ui.table(
+            columns=columns,
+            rows=rows,
+            selection = 'multiple'
+            ).classes("w-full h-full")
+        
+        
+        
+    def apply_filter(self, content: DataFrame, filter: FilterComposition) -> DataFrame:
+        print("[TableFactory|apply_filter] Applying filter to measurement table content...")
+        
+        # return the df if filter is empty
+        if content.empty:
+            return content
+            
+        # create mask without filtering
+        mask = pd.Series(True, index=content.index)
+
+        # filter df for each attribute
+        
+        # ovennr
+        filter_oven_nr = getattr(filter, MetaNames.OVEN_NR, 0) 
+        if filter_oven_nr > 0:
+            
+            mask &= (content[MetaNames.OVEN_NR] == filter_oven_nr)
+
+        # product
+        filter_product = getattr(filter, MetaNames.PRODUCT, "")
+        if filter_product:
+            mask &= content[MetaNames.PRODUCT].astype(str).str.contains(filter_product, case=False, na=False)
+
+        # recipe
+        filter_recipe = getattr(filter, MetaNames.OVEN_RECIPE, "")
+        if filter_recipe:
+            mask &= content[MetaNames.OVEN_RECIPE].astype(str).str.contains(filter_recipe, case=False, na=False)
+        
+        # load profile
+        filter_profile = getattr(filter, MetaNames.LOAD_PROFILE, "")
+        if filter_profile:
+            mask &= content[MetaNames.LOAD_PROFILE].astype(str).str.contains(filter_profile, case=False, na=False)
+
+        # comment
+        filter_comment = getattr(filter, MetaNames.COMMENT, "")
+        if filter_comment:
+            mask &= content[MetaNames.COMMENT].astype(str).str.contains(filter_comment, case=False, na=False)
+            
+        # date
+        filter_date = getattr(filter, MetaNames.DATE, None)
+        if filter_date:
+            # convert string to datetime
+            targetDate = pd.to_datetime(filter_date, format="%Y-%m-%d").date()
+            mask &= (content[MetaNames.DATE] == targetDate)
+            
+        # time
+        filter_time = getattr(filter, MetaNames.START_TIME, None)
+        if filter_time:
+            # convert string to datetime.time
+            targetTime = pd.to_datetime(filter_time, format="%H:%M").time()
+            mask &= (content[MetaNames.START_TIME] >= targetTime)
+        
+
+        # return the df with only the rows that passed all tests
+        return cast(DataFrame, content.loc[mask])

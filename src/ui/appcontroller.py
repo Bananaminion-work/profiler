@@ -4,6 +4,7 @@ from nicegui import ui
 
 # import components
 from src.plot.plot_factory import PlotFactory
+from src.shared.filter_composition import FilterComposition
 from src.shared.violation import Violation
 from src.ui.ui_view import UiView
 from src.data.data_manager import DataManager
@@ -278,7 +279,15 @@ class AppController:
     
     
     
-    def handle_read_measurements_request(self):
-        """reads the metadata from the given source and returns it to display"""
+    def handle_measurement_table_request(self, filter: FilterComposition):
+        """reads the metadata source and coordinates the display of the measurement table"""
         
+        # get the metadata from the source
+        metaDf = self.database.list_saved_measurements()
         
+        if metaDf is None:
+            ui.notify("No measurements found.", color="negative")
+            
+        else:
+            # call factory to draw the table with the content
+            self.table.update_measurement_table(metaDf,filter)

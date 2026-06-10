@@ -2,17 +2,20 @@ from dataclasses import dataclass
 from datetime import datetime
 from dataclasses import asdict
 
+from src.shared.meta_names import MetaNames
+
 @dataclass
 class Metadata:
     date:str = ""
-    startTime:str = ""
-    dataSource:str = ""
-    ovenNr:int = 0
+    start_time:str = ""
+    data_source:str = ""
+    oven_nr:int = 0
+    oven_recipe:str = ""
     product:str = ""
-    loadProfile:float = 0.0
-    positionMeasurementCooler:str =""
-    testCooler_flag:bool = False
-    coolerCountOnTray:int = 0
+    load_profile:float = 0.0
+    position_measurement_cooler:str =""
+    test_cooler_flag:bool = False
+    cooler_count_on_tray:int = 0
     nozzlefield:str = ""
     injection_1:str = ""
     injection_2:str = ""
@@ -30,50 +33,51 @@ class Metadata:
     cooling_time_2:str = ""
     cooling_time_3:str = ""
     cooling_time_4:str = ""
-    profileName:str = ""
+    profile_name:str = ""
     comment:str = ""
     
     def set_user_input(self, metadata: dict[str,str]):
         
         # set all metadata attributes
-        self.ovenNr = int(metadata.get("ovenNr", 0))
-        self.product = metadata.get("product", "")
-        self.loadProfile = float(metadata.get("loadProfile", 0.0))
-        self.positionMeasurementCooler = metadata.get("positionMeasurementCooler", "")
+        self.oven_recipe = metadata.get(MetaNames.OVEN_RECIPE, "")
+        self.oven_nr = int(metadata.get(MetaNames.OVEN_NR, 0))
+        self.product = metadata.get(MetaNames.PRODUCT, "")
+        self.load_profile = float(metadata.get(MetaNames.LOAD_PROFILE, 0.0))
+        self.position_measurement_cooler = metadata.get(MetaNames.POSITION_MEASUREMENT_COOLER, "")
         
         # check if prod_test is "Test" or "Production" and set testCooler_flag accordingly
-        if metadata.get("prod_test", "False").lower() == "test":
-            self.testCooler_flag = True
+        if metadata.get(MetaNames.TEST_COOLER_FLAG, "False").lower() == "test":
+            self.test_cooler_flag = True
         else:
-            self.testCooler_flag = False
+            self.test_cooler_flag = False
         
-        self.coolerCountOnTray = int(metadata.get("coolerCountOnTray", 0))
-        self.nozzlefield = metadata.get("nozzlefield", "")
-        self.injection_1 = metadata.get("injection_1", "")
-        self.injection_2 = metadata.get("injection_2", "")
-        self.injection_3 = metadata.get("injection_3", "")
-        self.injection_4 = metadata.get("injection_4", "")
-        self.waiting_1 = metadata.get("waiting_1", "")
-        self.waiting_2 = metadata.get("waiting_2", "")
-        self.waiting_3 = metadata.get("waiting_3", "")
-        self.waiting_4 = metadata.get("waiting_4", "")
-        self.cooling_freq_1 = metadata.get("cooling_freq_1", "")
-        self.cooling_freq_2 = metadata.get("cooling_freq_2", "")
-        self.cooling_freq_3 = metadata.get("cooling_freq_3", "")
-        self.cooling_freq_4 = metadata.get("cooling_freq_4", "")
-        self.cooling_time_1 = metadata.get("cooling_time_1", "")
-        self.cooling_time_2 = metadata.get("cooling_time_2", "")
-        self.cooling_time_3 = metadata.get("cooling_time_3", "")
-        self.cooling_time_4 = metadata.get("cooling_time_4", "")
-        self.profileName = metadata.get("profileName", "")
-        self.comment = metadata.get("comment", "")
+        self.cooler_count_on_tray = int(metadata.get(MetaNames.COOLER_COUNT_ON_TRAY, 0))
+        self.nozzlefield = metadata.get(MetaNames.NOZZLEFIELD, "")
+        self.injection_1 = metadata.get(MetaNames.INJECTION_1, "")
+        self.injection_2 = metadata.get(MetaNames.INJECTION_2, "")
+        self.injection_3 = metadata.get(MetaNames.INJECTION_3, "")
+        self.injection_4 = metadata.get(MetaNames.INJECTION_4, "")
+        self.waiting_1 = metadata.get(MetaNames.WAITING_1, "")
+        self.waiting_2 = metadata.get(MetaNames.WAITING_2, "")
+        self.waiting_3 = metadata.get(MetaNames.WAITING_3, "")
+        self.waiting_4 = metadata.get(MetaNames.WAITING_4, "")
+        self.cooling_freq_1 = metadata.get(MetaNames.COOLING_FREQ_1, "")
+        self.cooling_freq_2 = metadata.get(MetaNames.COOLING_FREQ_2, "")
+        self.cooling_freq_3 = metadata.get(MetaNames.COOLING_FREQ_3, "")
+        self.cooling_freq_4 = metadata.get(MetaNames.COOLING_FREQ_4, "")
+        self.cooling_time_1 = metadata.get(MetaNames.COOLING_TIME_1, "")
+        self.cooling_time_2 = metadata.get(MetaNames.COOLING_TIME_2, "")
+        self.cooling_time_3 = metadata.get(MetaNames.COOLING_TIME_3, "")
+        self.cooling_time_4 = metadata.get(MetaNames.COOLING_TIME_4, "")
+        self.profile_name = metadata.get(MetaNames.PROFILE_NAME, "")
+        self.comment = metadata.get(MetaNames.COMMENT, "")
         
     def set_source(self, source:str):
-        self.dataSource = source
+        self.data_source = source
         
     def set_datetime(self,date: datetime):
         self.date = date.strftime("%Y-%m-%d")
-        self.startTime = date.strftime("%H:%M:%S")
+        self.start_time = date.strftime("%H:%M:%S")
         
     def get_metadata_dict(self) -> dict:
         return asdict(self)
