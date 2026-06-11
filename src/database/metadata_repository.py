@@ -1,5 +1,4 @@
 from pathlib import Path
-import uuid
 import pandas as pd
 from pandas import DataFrame
 import os
@@ -13,7 +12,7 @@ class MetadataRepository:
     def __init__(self) -> None:
         pass
         
-    def save_measurement_metadata(self, metadata)-> str:
+    def save_measurement_metadata(self, metadata, measurement_id: str) -> str:
         # Code to save measurement metadata to the database
         return""
 
@@ -36,16 +35,13 @@ class MetadataRepoCsv(MetadataRepository):
         super().__init__()
         self._pathToCsv = PROJECT_ROOT / "tests" / "fixtures" / "vps_metadata.csv"
     
-    def save_measurement_metadata(self, metadata:Metadata) -> str:
-        
-        #create unique id
-        measurement_id = str(uuid.uuid4())
+    def save_measurement_metadata(self, metadata:Metadata, measurement_id: str) -> str:
         
         # get metadata as dict
         metaDict = metadata.get_metadata_dict()
         
         # add measurement_id to dict
-        metaDict["measurement_id"] = measurement_id
+        metaDict[MetaNames.MEASUREMENT_ID] = measurement_id
         
         # convert dict to df
         metaDf = DataFrame([metaDict])
@@ -171,7 +167,7 @@ class MetadataRepoDatabricks(MetadataRepository):
     def __init__(self):
         super().__init__()
     
-    def save_measurement_metadata(self, metadata) -> str:
+    def save_measurement_metadata(self, metadata, measurement_id: str) -> str:
         return ""
     
     def get_measurement_metadata(self, measurement_id):

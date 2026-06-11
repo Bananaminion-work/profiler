@@ -1,4 +1,5 @@
 from dataclasses import asdict
+import uuid
 
 from pandas import DataFrame
 from src.database.measurement_repository import MeasurementRepository, MeasurementRepoCsv, MeasurementRepoDatabricks
@@ -41,28 +42,31 @@ class DatabaseManager:
     def save_measurement(self, measurement: DataComposition):
         """saves the measurement to the database"""
         
-        measurement_id :str = ""
+        # create unique id
+        measurement_id = str(uuid.uuid4())
         
+        # get metadata
         metadata = measurement.get_metadata()
         
+        # get medalliondata
         medallionData = measurement.get_medallion_data()
         bronze = medallionData["bronze"]
         silver = medallionData["silver"]
         gold = medallionData["gold"]
         
-        if isinstance(asdict(metadata), dict):
-            measurement_id = self._metadataRepository.save_measurement_metadata(metadata)
-            
-        else: 
+        # check if data objects are valid
+        if not(isinstance(bronze, Data) and isinstance(silver, Data) and isinstance(gold, Data)):
+            raise WrongInputError(f"Medallion data should be of type Data, got Bronze: {type(bronze)}, Silver: {type(silver)}, Gold: {type(gold)} instead.")
+        
+        # check if metadata is valid
+        if not isinstance(asdict(metadata), dict):
             raise WrongInputError(f"Metadata should be a dictionary, got {type(metadata)} instead.")
         
+        # save data to the database
+        self._measurementRepository.add_measurement(measurement_id,medallionData)
+        self._metadataRepository.save_measurement_metadata(metadata, measurement_id)
         
-        if measurement_id != "" and isinstance(bronze, Data) and isinstance(silver, Data) and isinstance(gold, Data):
-            self._measurementRepository.add_measurement(measurement_id,medallionData)
-            
-        else:
-            raise DataError(f"Measurement data is not as expected. Measurement ID: {measurement_id}, Bronze type: {type(bronze)}, Silver type: {type(silver)}, Gold type: {type(gold)}.")
-        
+    
     
     def load_vvt(self)-> DataFrame:
         """loads the vvt from the database"""
