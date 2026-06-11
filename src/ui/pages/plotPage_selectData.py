@@ -41,9 +41,7 @@ class PlotPage_selectData(SubPage):
             with ui.row().classes("justify-end w-full"):
                 ui.button(
                     "Show selected",
-                    on_click=lambda: self.controller.handle_navigation_request(
-                        "plot-show"
-                        )
+                    on_click=lambda: self.controller.handle_show_selected_request()
                     )
                 
                 ui.button(
@@ -92,3 +90,6 @@ class PlotPage_selectData(SubPage):
         self.product = ""
         self.load_profile = ""
         self.comment = ""
+        
+        # clear the ids in controller
+        self.controller.reset_measuremen_ids()

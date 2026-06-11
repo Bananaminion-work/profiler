@@ -1,3 +1,4 @@
+import pandas as pd
 from pandas import DataFrame
 from src.shared.data_models import Data
 from pathlib import Path
@@ -18,6 +19,9 @@ class MeasurementRepository:
     
     def get_measurements(self):
         return self._measurements
+    
+    def get_gold_data_by_id(self, measurement_ids: set)-> DataFrame:
+        return DataFrame()
     
     
     
@@ -66,6 +70,21 @@ class MeasurementRepoCsv(MeasurementRepository):
             raise WrongInputError("Measurement Data are none of type Data. Cannot add measurement to database.")
         
         
+        
+    def get_gold_data_by_id(self, measurement_ids: set)-> DataFrame:
+        """retrieves gold data for a given measurement id from the csv file"""
+
+        # get dataframe with all gold data
+        goldDf = pd.read_csv(self._goldPath)
+        
+        # filter for rows with the given ids
+        filteredGoldDf = goldDf[goldDf['measurement_id'].isin(measurement_ids)]
+        
+        # always return since its always a DataFrame even if its empty
+        return filteredGoldDf #type:ignore
+        
+        
+        
 
 class MeasurementRepoDatabricks(MeasurementRepository):
     def __init__(self):
@@ -73,3 +92,6 @@ class MeasurementRepoDatabricks(MeasurementRepository):
     
     def add_measurement(self, measurement_id: str, measurement: dict[str,Data]):
         pass
+    
+    def get_gold_data_by_id(self, measurement_ids: set)-> DataFrame:
+        return DataFrame()

@@ -1,6 +1,7 @@
 from typing import Any, cast
 
 from nicegui import ui
+from pandas import DataFrame
 
 # import components
 from src.plot.plot_factory import PlotFactory
@@ -17,6 +18,7 @@ from src.shared.metadata import Metadata
 from src.shared.upload_container import UploadContainer
 from src.shared.data_models import Data
 from src.shared.data_composition import DataComposition
+from src.shared.zeropoint_container import ZeropointContainer
 
 # import pages
 from src.ui.pages.importPage_getData import ImportPage_getData
@@ -50,6 +52,9 @@ class AppController:
     pageContainer : Any
     _layout : Any
     pages={}
+    selected_measurement_ids: set
+    current_gold_dataframe_for_plot: dict[str,DataFrame]
+    current_gold_zeropoints: dict[str,ZeropointContainer]
     
     # Functions:
     
@@ -72,6 +77,8 @@ class AppController:
         self.terminalContainer = terminalContainer
         self.terminalContent = terminalContainer
         self._layout = pageContainer.parent_slot.parent
+        self.selected_measurement_ids = set()
+        self.current_gold_dataframe_for_plot = {}
             
         # create pages dictionary
         self.create_pages()
@@ -131,6 +138,12 @@ class AppController:
     
     
     
+    def reset_measuremen_ids(self):
+        """clears the set of selected measurement ids, used when navigating back to home to ensure clean state for next selection"""
+        self.selected_measurement_ids.clear()
+    
+    
+    
     def create_pages(self):
         """initiates all pages, also used to clear input-cells after home-navigation
         """
@@ -150,8 +163,16 @@ class AppController:
         resets user input of the pages
         """
         if pageName == 'landing':
+            # reset pages
             self.reset_all_pages()
+            # reset terminal
             self.terminalContent.clear()
+            # clear ids, golddata and zeropoints
+            self.reset_measuremen_ids()
+            self.current_gold_dataframe_for_plot = {}
+            self.current_gold_zeropoints = {}
+            # clear current session
+            self.current_session_measurement = DataComposition()
 
         self.ui.switch_page(pageName)
         
@@ -245,6 +266,10 @@ class AppController:
         if not isinstance(self.current_session_measurement.get_metadata(), Metadata):
             raise WrongInputError(f"Expected a Metadata-object in current session, got {type(self.current_session_measurement.get_metadata())} instead.")
         
+        # TODO: check if there is another measurement already saved with same or similar metadata
+        # ask user for confirmation if they want to overwrite the existing measurement or not (popup)
+        
+        
         # save measurement to database
         self.database.save_measurement(self.current_session_measurement)
         ui.notify("Measurement saved successfully!", color="green")
@@ -290,4 +315,43 @@ class AppController:
             
         else:
             # call factory to draw the table with the content
-            self.table.update_measurement_table(metaDf,filter)
+            self.table.update_measurement_table(
+                metaDf,
+                filter,
+                selected_ids = self.selected_measurement_ids,
+                on_selection_change = self. set_selected_measurements
+                )
+            
+    
+    
+    def set_selected_measurements(self, selected_ids: set):
+        """updates the set of selected measurement ids based on user selection in the measurement table"""
+        
+        # uses python.set as datatype for easy addition and removal of ids, also ensures uniqueness
+        self.selected_measurement_ids = selected_ids
+        
+        
+        
+    def handle_show_selected_request(self):
+        
+        print(f"Selected measurement ids: {self.selected_measurement_ids}")
+        
+        # get gold-data with the selected ids from the database
+        self.current_gold_dataframe_for_plot = self.database.get_gold_data_by_id(self.selected_measurement_ids)
+        
+        # calculate zeropoints for the selected measurements and save them in dict
+        for df in self.current_gold_dataframe_for_plot.values():
+            
+            # calculate zeropoints with analyzer
+            zeropointList = self.analyzer.analyze_zeropoints(df)
+            
+            #set zeropoints for the measurement in dict with measurement_id as key
+            self.current_gold_zeropoints[df['measurement_id'].iloc[0]] = zeropointList
+        
+        # navigate to plot page
+        self.handle_navigation_request('plot-show')
+        
+        
+        
+    def handle_plot_measurements_request(self):
+        pass

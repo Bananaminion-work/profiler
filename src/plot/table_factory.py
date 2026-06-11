@@ -44,11 +44,11 @@ class TableFactory:
     
     
     
-    def update_measurement_table(self, content:DataFrame, filter: FilterComposition):
+    def update_measurement_table(self, content:DataFrame, filter: FilterComposition,selected_ids: set, on_selection_change):
         """creates a table with the content to display the saved measurements"""
         
         # filter the content before table is created
-        filteredDf = self.apply_filter(content,filter)
+        filteredDf = self.apply_filter(content,filter, selected_ids)
         
         filteredDf = filteredDf.fillna("")
         
@@ -70,16 +70,30 @@ class TableFactory:
         rows = filteredDf.to_dict(orient='records')
         
         # create table 
-        ui.table(
+        table = ui.table(
             columns=columns,
             rows=rows,
             selection = 'multiple',
             row_key = MetaNames.MEASUREMENT_ID
             ).classes("w-full h-full")
         
+        # set checkboxes if id is selected
+        if selected_ids:
+            table.selected = [
+                row for row in rows
+                if row[MetaNames.MEASUREMENT_ID] in selected_ids
+            ]
+            
+        def handle_click():
+            # get the ids from the selected rows
+            current_ids = {row[MetaNames.MEASUREMENT_ID] for row in table.selected}
+            on_selection_change(current_ids)
+            
+        table.on('selection', handle_click)
         
         
-    def apply_filter(self, content: DataFrame, filter: FilterComposition) -> DataFrame:
+        
+    def apply_filter(self, content: DataFrame, filter: FilterComposition, selected_ids: set) -> DataFrame:
         """applys filters with the given values of the FilterComposition-object to the given Dataframe
         
         returns the filtered DataFrame"""
@@ -133,6 +147,11 @@ class TableFactory:
             targetTime = pd.to_datetime(filter_time, format="%H:%M").time()
             mask &= (content[MetaNames.START_TIME] >= targetTime)
         
+        # always show selected ids
+        selectionMask = content[MetaNames.MEASUREMENT_ID].isin(selected_ids)
+        
+        # use filtermask and selection mask
+        mask = mask | selectionMask
 
         # return the df with only the rows that passed all tests
         return cast(DataFrame, content.loc[mask])
