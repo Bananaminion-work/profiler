@@ -319,7 +319,7 @@ class AppController:
                 metaDf,
                 filter,
                 selected_ids = self.selected_measurement_ids,
-                on_selection_change = self. set_selected_measurements
+                set_selected_ids_callback = self.set_selected_measurements
                 )
             
     
@@ -334,24 +334,50 @@ class AppController:
         
     def handle_show_selected_request(self):
         
-        print(f"Selected measurement ids: {self.selected_measurement_ids}")
+        if not self.selected_measurement_ids:
+            ui.notify("No measurements selected. Please select measurements from the table to show them in the plot.", color="negative")
+            return
         
         # get gold-data with the selected ids from the database
         self.current_gold_dataframe_for_plot = self.database.get_gold_data_by_id(self.selected_measurement_ids)
         
         # calculate zeropoints for the selected measurements and save them in dict
-        for df in self.current_gold_dataframe_for_plot.values():
+        for id, df in self.current_gold_dataframe_for_plot.items():
             
             # calculate zeropoints with analyzer
             zeropointList = self.analyzer.analyze_zeropoints(df)
             
             #set zeropoints for the measurement in dict with measurement_id as key
-            self.current_gold_zeropoints[df['measurement_id'].iloc[0]] = zeropointList
+            self.current_gold_zeropoints[id] = zeropointList
         
         # navigate to plot page
         self.handle_navigation_request('plot-show')
         
         
         
-    def handle_plot_measurements_request(self):
-        pass
+    def handle_plot_measurements_request(self, config:str, zeropoint:str):
+        """handles the request to draw the plot of the before selected measurements based on config and zeropoint"""
+        
+        #check if there is data
+        if not hasattr(self, 'current_gold_dataframe_for_plot') or not self.current_gold_dataframe_for_plot:
+            ui.notify("There is no data to be displayed.", color="negative")
+            return None
+        
+        #create dict with zeropoints for the plot based on the selected zeropoint
+        zeropointsDict = {}
+        for id, zeropointContainer in self.current_gold_zeropoints.items():
+            
+            # set offset as 0 if chosen none
+            if zeropoint == "none":
+                zeropointsDict[id] = 0
+            
+            # set zeropoint from calculation
+            else:
+                zeropointsDict[id] = zeropointContainer.get_zeropoints()[zeropoint]
+        
+        # call plot factory to draw plot
+        return self.plot.create_plot_multiple(
+            self.current_gold_dataframe_for_plot,
+            zeropointsDict,
+            config
+        )

@@ -44,7 +44,7 @@ class TableFactory:
     
     
     
-    def update_measurement_table(self, content:DataFrame, filter: FilterComposition,selected_ids: set, on_selection_change):
+    def update_measurement_table(self, content:DataFrame, filter: FilterComposition,selected_ids: set, set_selected_ids_callback):
         """creates a table with the content to display the saved measurements"""
         
         # filter the content before table is created
@@ -87,7 +87,8 @@ class TableFactory:
         def handle_click():
             # get the ids from the selected rows
             current_ids = {row[MetaNames.MEASUREMENT_ID] for row in table.selected}
-            on_selection_change(current_ids)
+            # use callback method from controller to update the selected ids
+            set_selected_ids_callback(current_ids)
             
         table.on('selection', handle_click)
         

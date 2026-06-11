@@ -77,6 +77,8 @@ class ImportPage_showData(SubPage):
                         on_change=self.update_vvt_selection
                     ).bind_value(self,"chosenZeropoint_show").classes("w-100")
                     
+                    
+                    
             # section 2: Plot
             with ui.card().classes("w-full h-[65vh] relative") as plotCard:
                     #fullscreen button 
@@ -91,6 +93,7 @@ class ImportPage_showData(SubPage):
                     self.plotContainer = ui.column().classes("w-full h-full")
                     # call function to draw plot (init)
                     self.update_plot_preview()
+                    
                     
                     
             # section 3: vvt dropdown and table
@@ -134,31 +137,8 @@ class ImportPage_showData(SubPage):
                     ui.input("Profilename", placeholder="used profilename").bind_value(self, "profile_name").classes("w-200")
                     ui.input("Oven recipe", placeholder="oven recipe").bind_value(self, "oven_Recipe").classes("w-200")
                 self._create_accordion()
-                ui.textarea("Comment", placeholder="enter your comment..").bind_value(self, "comment").classes("w-full")
-
-                #ui.label("Choose ONLY ONE zeropoint per type to be saved in the database\n FÄLLT RAUS WEIL NUR EINER GEFUNDEN WIRD; REST ÜBER OFFSETNAVIGATION +-1s WENIGER IST MEHR")
-                #
-                #ui.select(
-                #    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
-                #    value="muss uebergeben werden",
-                #    label="bulkhead",
-                #).classes("w-full").bind_value(self,"bulkheadZeropoint")
-                #
-                #ui.select(
-                #    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
-                #    value="muss uebergeben werden",
-                #    label="First injection",
-                #).classes("w-full").bind_value(self,"firstInjectionZeropoint")
-                #ui.select(
-                #    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
-                #    value="muss uebergeben werden",
-                #    label="Above 235",
-                #).classes("w-full").bind_value(self,"above235Zeropoint")
-                #ui.select(
-                #    ["muss uebergeben werden", "2", "3", "4", "5", "6", "7", "8"],
-                #    value="muss uebergeben werden",
-                #    label="Ventilate 2",
-                #).classes("w-full").bind_value(self,"ventilate2Zeropoint")
+                ui.textarea("Comment", placeholder="enter your comment..").bind_value(self, "comment").classes("w-full") 
+                    
                     
                     
                 # separator and buttons

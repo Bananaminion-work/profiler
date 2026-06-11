@@ -2,7 +2,7 @@ from pathlib import Path
 import uuid
 import pandas as pd
 from pandas import DataFrame
-from datetime import datetime
+import os
 
 from src.shared.meta_names import MetaNames
 from src.shared.metadata import Metadata
@@ -94,19 +94,23 @@ class MetadataRepoCsv(MetadataRepository):
         ]
         metaDf = metaDf[columnOrder]
         
-        # save df to csv
-        if self._pathToCsv.exists():
-            metaDf.to_csv(self._pathToCsv, mode='a', header=False, index=False)
-            return measurement_id
-        else:
-            return ""
+        needsHeader = not self._pathToCsv.exists() or os.path.getsize(self._pathToCsv) == 0
         
+        # save df to csv
+        metaDf.to_csv(self._pathToCsv, mode='a', header=needsHeader, index=False)
+        return measurement_id
+    
+    
     
     def get_measurement_metadata(self, measurement_id):
         pass
     
+    
+    
     def delete_measurement_metadata(self, measurement_id):
         pass
+    
+    
     
     def get_saved_measurements(self) -> DataFrame:
         

@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 from pandas import DataFrame
 from src.shared.data_models import Data
@@ -53,22 +55,41 @@ class MeasurementRepoCsv(MeasurementRepository):
             goldDf['measurement_id'] = measurement_id
             
             # cretae long format Df for meallion data
-            longBronzeDf = bronzeDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="variable", value_name="value")
-            longSilverDf = silverDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="variable", value_name="value")
-            longGoldDf = goldDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="variable", value_name="value")
+            longBronzeDf = bronzeDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
+            longSilverDf = silverDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
+            longGoldDf = goldDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
             
-            # save longs to csv
-            if self._bronzePath.exists() and self._silverPath.exists() and self._goldPath.exists():
-                longBronzeDf.to_csv(self._bronzePath, mode='a', header=False, index=False)
-                longSilverDf.to_csv(self._silverPath, mode='a', header=False, index=False)
-                longGoldDf.to_csv(self._goldPath, mode='a', header=False, index=False)
+            # helpingfunction to check if csv needs header
+            def needs_header(filepath):
+                return not filepath.exists() or os.path.getsize(filepath) == 0
+            
+            # chekc if folder exists
+            if self._bronzePath.parent.exists():
+                
+                # save longs to csv
+                longBronzeDf.to_csv(self._bronzePath, mode='a', header=needs_header(self._bronzePath), index=False)
+                longSilverDf.to_csv(self._silverPath, mode='a', header=needs_header(self._silverPath), index=False)
+                longGoldDf.to_csv(self._goldPath, mode='a', header=needs_header(self._goldPath), index=False)
                 
             else:
-                raise FileNotFoundError("One or more of the csv files for storing measurements do not exist.")
+                raise FileNotFoundError("The folder for storing measurement csv files does not exist.")
             
         else:
             raise WrongInputError("Measurement Data are none of type Data. Cannot add measurement to database.")
+            
+            # save longs to csv
+        #    if self._bronzePath.exists() and self._silverPath.exists() and self._goldPath.exists():
+        #        longBronzeDf.to_csv(self._bronzePath, mode='a', header=False, index=False)
+        #        longSilverDf.to_csv(self._silverPath, mode='a', header=False, index=False)
+        #        longGoldDf.to_csv(self._goldPath, mode='a', header=False, index=False)
+        #        
+        #    else:
+        #        raise FileNotFoundError("One or more of the csv files for storing measurements do not exist.")
+        #    
+        #else:
+        #    raise WrongInputError("Measurement Data are none of type Data. Cannot add measurement to database.")
         
+            
         
         
     def get_gold_data_by_id(self, measurement_ids: set)-> DataFrame:
