@@ -42,16 +42,42 @@ class ImportPage_showData(SubPage):
     selectedVVT: str = ""
 
     def _create_accordion(self) -> None:
-        groups = [
-            ("Injections",        "Injection",         ["injection_1",    "injection_2",    "injection_3",    "injection_4"]),
-            ("Waiting-time",      "Waiting-time",      ["waiting_1",      "waiting_2",      "waiting_3",      "waiting_4"]),
-            ("Cooling-frequency", "Cooling-frequency", ["cooling_freq_1", "cooling_freq_2", "cooling_freq_3", "cooling_freq_4"]),
-            ("Cooling-time",      "Cooling-time",      ["cooling_time_1", "cooling_time_2", "cooling_time_3", "cooling_time_4"]),
-        ]
-        for title, prefix, attrs in groups:
-            with ui.expansion(title, icon="expand_more"):
-                for i, attr in enumerate(attrs, 1):
-                    ui.input(f"{prefix} {i}:", placeholder="enter value...").classes("w-full").bind_value(self, attr)
+        #groups = [
+        #    ("Injections",        "Injection",         ["injection_1",    "injection_2",    "injection_3",    "injection_4"]),
+        #    ("Waiting-time",      "Waiting-time",      ["waiting_1",      "waiting_2",      "waiting_3",      "waiting_4"]),
+        #    ("Cooling-frequency", "Cooling-frequency", ["cooling_freq_1", "cooling_freq_2", "cooling_freq_3", "cooling_freq_4"]),
+        #    ("Cooling-time",      "Cooling-time",      ["cooling_time_1", "cooling_time_2", "cooling_time_3", "cooling_time_4"]),
+        #]
+        #for title, prefix, attrs in groups:
+        #    with ui.expansion(title, icon="expand_more"):
+        #        for i, attr in enumerate(attrs, 1):
+        #            ui.input(f"{prefix} {i}:", placeholder="enter value...").classes("w-full").bind_value(self, attr)
+        
+        # create first accordion
+        with ui.expansion("Injections & Holding Times (1-4)", icon="colorize").classes("w-full"):
+            
+            # create 4 rows for the 4 phases
+            with ui.row().classes("w-full no-wrap gap-4 p-2"):
+                for i in range(1,5):
+                    with ui.card().classes("p-3 gap-2 bg-slate-50"):
+                        ui.label(f"Phase {i}").classes("text-weight-bold text-primary")
+                        # volume
+                        ui.input(f"Volume of injection {i}:").classes("w-full").bind_value(self, f"injection_{i}")
+                        # holdingTime
+                        ui.input(f"Holding Time {i}:").classes("w-full").bind_value(self, f"waiting_{i}")
+                    
+        # create second accordion
+        with ui.expansion("Coolingprocess (1-4)", icon="ac_unit").classes("w-full"):
+            
+            # create 4 rows for the 4 phases
+            with ui.row().classes("w-full no-wrap gap-4 p-2"):
+                for i in range(1,5):
+                    with ui.card().classes("p-3 gap-2 bg-slate-50"):
+                        ui.label(f"Phase {i}").classes("text-weight-bold text-primary")
+                        # volume
+                        ui.input(f"Cooling Frequency {i}:").classes("w-full").bind_value(self, f"cooling_freq_{i}")
+                        # holdingTime
+                        ui.input(f"Cooling Time {i}:").classes("w-full").bind_value(self, f"cooling_time_{i}")
 
     def build_content(self) -> None:
         
@@ -203,21 +229,9 @@ class ImportPage_showData(SubPage):
             "nozzlefield",
             "profile_name",
             "injection_1",
-            "injection_2",
-            "injection_3",
-            "injection_4",
             "waiting_1",
-            "waiting_2",
-            "waiting_3",
-            "waiting_4",
             "cooling_freq_1",
-            "cooling_freq_2",
-            "cooling_freq_3",
-            "cooling_freq_4",
             "cooling_time_1",
-            "cooling_time_2",
-            "cooling_time_3",
-            "cooling_time_4"
         ]
         
         for field in requiredFields:
