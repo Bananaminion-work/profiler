@@ -7,9 +7,11 @@ from src.database.metadata_repository import MetadataRepository, MetadataRepoCsv
 from src.database.vvt_repositorys import VvtRepoCsv, VvtRepoDatabricks, VvtRepository
 from src.shared.data_composition import DataComposition
 from nicegui import ui
+import pandas as pd
 
 from src.shared.data_models import Data, GoldData
 from src.shared.exceptions import DataError, WrongInputError
+from src.shared.meta_names import MetaNames
 
 class DatabaseManager:
     
@@ -103,3 +105,50 @@ class DatabaseManager:
             measurementsDict[id] = cleanDf
             
         return measurementsDict
+    
+    
+    
+    def is_duplicate(self,metadata: dict )-> bool:
+        """checks if a measurement with the "same" metadata already exists in the database
+        
+        to change the range where a measurement is a duplicate change the timeRange variable of the method."""
+        
+        timeRange = 3600
+        
+        # get all saved measurements
+        try:
+            metaDf = self.list_saved_measurements()
+        except FileNotFoundError as e:
+            ui.notify(f"Error while fetching saved measurements: {e}", color="red")
+            return False
+        
+        # if metadata is empty return false
+        if metaDf.empty:
+            return False
+        
+        # check if date an ovennumber are the same (convert to strings befor combining)
+        maskDate = (metaDf[MetaNames.DATE].astype(str).str.strip() == str(metadata[MetaNames.DATE]).strip())
+        maskOven = (metaDf[MetaNames.OVEN_NR].astype(str).str.strip() == str(metadata[MetaNames.OVEN_NR]).strip())
+        
+        # save duplicates
+        potential_duplicates = metaDf[maskDate & maskOven]
+        
+        # if none were found
+        if potential_duplicates.empty:
+            return False
+        
+        # convert new meta-time to datetime for easier comparison
+        new_meta_time = f"{metadata[MetaNames.DATE]} {metadata[MetaNames.START_TIME]}"
+        new_meta_time = pd.to_datetime(new_meta_time)
+        
+        # convert old times to datetime and compare with new meta time
+        existing_times = pd.to_datetime(potential_duplicates[MetaNames.DATE].astype(str) + " " + potential_duplicates[MetaNames.START_TIME].astype(str))
+        
+        # calculate time difference        
+        diff = abs(new_meta_time - existing_times).dt.total_seconds().abs()
+        
+        # if time is less than (set seconds), consider it a duplicate
+        if (diff < timeRange).any():
+            return True
+        
+        return False

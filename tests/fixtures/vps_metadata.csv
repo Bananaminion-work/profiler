@@ -3,3 +3,4 @@ measurement_id,date,start_time,data_source,oven_recipe,oven_nr,product,load_prof
 21f169ce-805d-4033-9c56-cbea81ed3b5a,2025-12-02,13:19:10,Rehm-recorder,rezept,1234,PM6,8.0,8,True,8,düse,profil,messung von sören mit abweichung um vvt zu triggern,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
 f5bc0441-27aa-4c2a-b616-a8a863c2adda,2025-11-27,10:31:15,Rehm-recorder,rezept,1234,VOLVO-ERAD,8.0,8,True,8,düse,profil,Messung aus ungarn unverändert aber mit komischem Vakuum,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
 f5e5d393-111f-41d6-b696-d65d73e617b7,2025-12-02,13:19:10,Rehm-recorder,a,1234,PM6,8.0,8,True,8,a,a,a,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
+213dd39c-6782-43fe-9d63-925912fcf946,2025-12-02,13:19:10,Rehm-recorder,b,1234,PM6,8.0,8,True,8,b,b,duplicate-test,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4

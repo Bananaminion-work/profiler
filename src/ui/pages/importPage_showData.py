@@ -251,12 +251,27 @@ class ImportPage_showData(SubPage):
             MetaNames.COOLING_TIME_4                : self.cooling_time_4
         }
         
-        try:
-            self.controller.handle_save_request(metadata)
+        saved_directly = self.controller.handle_save_request(metadata)
         
-        except:
-            raise Exception("The function to handle the save request did not get called successfully.")
+        if not saved_directly:
+            self._show_duplicate_dialog()
+      
+    
+    
+    
+    def _show_duplicate_dialog(self):
+        """Zeichnet das Warn-Popup"""
+        with ui.dialog() as dialog, ui.card():
+            ui.label("A measurement with similar metadata (±1 hour) already exists.")
+            ui.label("Do you really want to save it anyway?")
             
+            with ui.row().classes('w-full justify-end mt-4'):
+                ui.button("Cancel", on_click=dialog.close).props('flat')
+                ui.button("Yes, save it", on_click=lambda: [self.controller._save_measurement_to_database(), dialog.close()]).props('color=negative')
+                
+        dialog.open()
+    
+    
 
     def on_discard_click(self) -> None:
         self.controller.handle_popup("confirm", "Are you sure to discard and return to home?", self.pageName)

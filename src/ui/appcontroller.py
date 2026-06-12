@@ -254,9 +254,22 @@ class AppController:
         
         
     def handle_save_request(self, metadata: dict[str,str]):
-                
+        
         # set metadata for current session measurement
         self.current_session_measurement.get_metadata().set_user_input(metadata)
+        
+        # get meta-object from current session measurement for easier handling
+        metaObject = self.current_session_measurement.get_metadata()
+        
+        if self.database.is_duplicate(metaObject.get_metadata_dict()):
+            return False
+        
+        self._save_measurement_to_database()
+        return True
+        
+        
+        
+    def _save_measurement_to_database(self):
         
         # check if current session objects are valid
         for data in self.current_session_measurement.get_medallion_data().values():
@@ -264,11 +277,7 @@ class AppController:
                 raise WrongInputError(f"Expected a Data object in medallion array, got {type(data)} instead.")
             
         if not isinstance(self.current_session_measurement.get_metadata(), Metadata):
-            raise WrongInputError(f"Expected a Metadata-object in current session, got {type(self.current_session_measurement.get_metadata())} instead.")
-        
-        # TODO: check if there is another measurement already saved with same or similar metadata
-        # ask user for confirmation if they want to overwrite the existing measurement or not (popup)
-        
+            raise WrongInputError(f"Expected a Metadata-object in current session, got {type(self.current_session_measurement.get_metadata())} instead.")        
         
         # save measurement to database
         self.database.save_measurement(self.current_session_measurement)
