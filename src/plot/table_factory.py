@@ -19,6 +19,9 @@ class TableFactory:
         if violations is not None and len(violations) > 0:
             tableContent = DataFrame([violation.to_dict() for violation in violations])
             
+            # round the numbers to be displayed
+            tableContent[Violation.ACTUAL_VALUE] = tableContent[Violation.ACTUAL_VALUE].round(2)
+            
             # apply the offset to the time column of the tableContent df
             tableContent = self.apply_offset(tableContent, offset)
         

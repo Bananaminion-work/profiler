@@ -7,6 +7,13 @@ from typing import Optional
 @dataclass
 class Violation:
     
+    VVT_NAME = "VVT Name"
+    VIOLATED_RULE = "Violated Rule"
+    CHANNEL = "Channel"
+    ACTUAL_VALUE = "Actual Value"
+    THRESHOLD = "Threshold"
+    TIME = "Time of Occurance"
+    
     vvtName : str
     violatedRule : str
     actualValue : float
@@ -27,12 +34,12 @@ class Violation:
         
         # create mapping for column names
         keyMapping = {
-            "vvtName": "VVT Name",
-            "violatedRule": "Violated Rule",
-            "channel": "Channel",
-            "actualValue": "Actual Value",
-            "threshold": "Threshold",
-            "time": "Time of Occurance"
+            "vvtName": self.VVT_NAME,
+            "violatedRule": self.VIOLATED_RULE,
+            "channel": self.CHANNEL,
+            "actualValue": self.ACTUAL_VALUE,
+            "threshold": self.THRESHOLD,
+            "time": self.TIME
         }
         
         # std dict

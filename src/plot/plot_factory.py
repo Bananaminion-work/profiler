@@ -43,7 +43,7 @@ class PlotFactory():
         data.index = data.index - offset
         
         # create dict to use config for single and multiple
-        dataDict = {"import": data}
+        dataDict = {"new": data}
         
         # creates the go.Figure object
         return config.build_figure(dataDict)

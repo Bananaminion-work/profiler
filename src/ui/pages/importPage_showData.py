@@ -99,23 +99,25 @@ class ImportPage_showData(SubPage):
             # section 3: vvt dropdown and table
             with ui.card().classes("w-full"):
                 
-                # create table container with label
-                ui.label("VVT - Violations").classes('text-lg')
-                self.tableContainer = ui.row().classes("w-full h-60 overflow-auto")
-                
                 # create dropdown to select vvt use on change event
                 with ui.row().classes("w-full"):
                     
                     ui.label("Choose VVT to be checked")
+                    
+                    # load options
                     vvtOptions = self.controller.load_vvt_options()
-                    vvtOptions.insert(0,"None")
+                    #set first option as value
+                    self.selectedVVT = vvtOptions[0] if vvtOptions else ""
                     
                     ui.select(
                         vvtOptions,
-                        value=vvtOptions[0],
                         label="Select VVT",
                         on_change=self.update_vvt_table
                         ).bind_value(self, "selectedVVT").classes("w-100")
+                    
+                # create table container with label
+                ui.label("VVT - Violations").classes('text-lg')
+                self.tableContainer = ui.row().classes("w-full h-60 overflow-auto")
                     
                     
             
@@ -148,7 +150,9 @@ class ImportPage_showData(SubPage):
                     ui.button("Save", on_click=self.on_save_click)
                     ui.button("Discard", color="negative", on_click=self.on_discard_click)
                     
-        self.update_plot_preview
+        # init plot and table
+        self.update_plot_preview()
+        self.update_vvt_table()
         
     def update_plot_preview(self):
         """clears plot container and redraws with fresh plot"""
@@ -165,6 +169,10 @@ class ImportPage_showData(SubPage):
                 
     def update_vvt_table(self):
         """clears the vvt table container and redraws the table with the violations for the selected vvt"""
+        
+        if not hasattr(self, "tableContainer"):
+            return
+        
         self.tableContainer.clear()
         
         with self.tableContainer:

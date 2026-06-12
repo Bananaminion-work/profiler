@@ -95,7 +95,11 @@ class ZeropointCalculator:
         # append rollingMean to dataframe for filtering
         dfSelection['RollingMean'] = rollingMean
         
-        # search for rows 
+        # vakuum war unter 50 , ist nicht mehr zwingend
+        # rolling mean war positiv, und ist jetzt unter 30
+        
+        # TODO: 
+                
         foundRows = dfSelection[
             (dfSelection['CH1'] > 205) &
             (dfSelection['VacuumActualV in mBar'] < 50) &

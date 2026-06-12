@@ -8,7 +8,6 @@ from src.shared.violation import Violation
 class ViolationDetector:
     
     _vvt : DataFrame
-    _dfToAnalyze : DataFrame
     conditionHandlers: dict[str, Callable]
     
     def __init__(self, vvt: DataFrame):
@@ -23,12 +22,12 @@ class ViolationDetector:
         self.conditionHandlers = {
             "max": self.handle_max,
             "min": self.handle_min,
-            "duration_above_while_process": self.handle_min_duration_above,
-            "min_duration_above": self.handle_min_duration_above,
-            "max_duration_above": self.handle_max_duration_above,
-            "min_duration_below": self.handle_min_duration_below,
-            "max_duration_below": self.handle_max_duration_below,
-            "rate_in_range": self.rate_in_range
+            "min_duration_above": self.handle_duration,
+            "max_duration_above": self.handle_duration,
+            "min_duration_below": self.handle_duration,
+            "max_duration_below": self.handle_duration,
+            "rate_in_range": self.rate_in_range,
+            "main_vacuum_minimum": self.handle_main_vacuum_minimum
         }
     
     def detect_violations(self, df: DataFrame, vvt:str):
@@ -40,8 +39,26 @@ class ViolationDetector:
         # create empty list to store violations
         foundViolations = []
         
-        # filter for rules of the selected vvt
-        rules = self._vvt[self._vvt['vvt_name'] == vvt]
+        # create base rules
+        baseRules = self._vvt[self._vvt['vvt_name'] == 'VPS-Process']
+        
+        # if only baserules are selected, only load them
+        if vvt == 'VPS-Process':
+            rules = baseRules 
+        
+        # if any other vvt is selected, load these as well
+        else:
+            specificRules = self._vvt[self._vvt['vvt_name'] == vvt]
+            
+            # and merge them with base
+            combined_rules = pd.concat([specificRules, baseRules])
+            
+            # drops dublicates, only uses the first so specific overrides base rules
+            rules = combined_rules.drop_duplicates(subset=['rule_id'], keep ='first').copy() #type:ignore
+            
+            # change position for better ux
+            rules['is_base'] = rules['vvt_name'] == 'VPS-Process'
+            rules = rules.sort_values(by='is_base', ascending=False).drop(columns='is_base')
         
         # iterate through rules and ignore index
         for _idx, rule in rules.iterrows():
@@ -49,14 +66,38 @@ class ViolationDetector:
             channel = rule['channel']
             condition = rule['condition']
             
+            # save scope if set, otherwise default to 'all'
+            scope = rule.get('scope', 'all')
+            
             if channel not in df.columns:
                 ui.notify(f"Channel with the name {channel} is not in the given Dataframe to analyze.")
                 continue
-
+            
+            # get handler according to the condition to check
             currentHandler = self.conditionHandlers.get(condition)
             
             if currentHandler:
-                violations = currentHandler(df=df, **rule.to_dict())
+                
+                df_to_check = df
+                
+                if scope == 'process':
+                    df_to_check = self.crop_dataframe_while_process(df)
+                    
+                    if df_to_check.empty:
+                        ui.notify(f"No process phases found in the measurement data, cannot apply rules with process scope for channel {channel}.")
+                        continue
+                    
+                elif scope == 'outlet_bulkhead_open':
+                    df_to_check = self.crop_dataframe_bulkhead_open(df)
+                    
+                    if df_to_check.empty:
+                        ui.notify(f"No outlet_bulkhead_open phases found in the measurement data, cannot apply rules with outlet_bulkhead_open scope for channel {channel}.")
+                        continue
+                
+                # analyze violations
+                violations = currentHandler(df=df_to_check, **rule.to_dict())
+                
+                # append violations if any were found
                 if violations:
                     foundViolations.extend(violations)
                     
@@ -97,120 +138,6 @@ class ViolationDetector:
                 )
             
             return violations
-    
-    def handle_min_duration_above(self,df: DataFrame,vvt_name: str, rule_name:str, channel:str, threshold:float, param1:int, **kwargs):
-        """checks if the channel is above the threshold for at least the duration in param1
-        
-        returns a violation object if rule is not met"""
-        
-        # get rows where channel is above threshold
-        entrysAbove = df[df[channel] > threshold]
-
-        duration = len(entrysAbove)
-        
-        # if duration is below minimum duration defined in param1
-        if duration < param1:
-            violation = Violation(
-                        vvtName=vvt_name,
-                        violatedRule=rule_name,
-                        channel=channel,
-                        actualValue=duration,
-                        threshold=threshold,
-                        time=None
-                    )
-            return [violation]
-            
-        else:
-            return []
-        
-        
-    def handle_max_duration_above(self,df: DataFrame,vvt_name: str, rule_name:str, channel:str, threshold:float, param1:int, **kwargs):
-        """checks if the channel is above the threshold for max of the duration in param1
-        
-        returns a violation object if rule is not met"""
-        
-        # get rows where channel is above threshold
-        entrysAbove = df[df[channel] > threshold]
-        
-        duration = len(entrysAbove)
-        
-        # if duration is above maximum duration defined in param1
-        if duration > param1:
-            violation = Violation(
-                        vvtName=vvt_name,
-                        violatedRule=rule_name,
-                        channel=channel,
-                        actualValue=duration,
-                        threshold=threshold,
-                        time=None
-                    )
-            return [violation]
-            
-        else:
-            return []
-        
-        
-    def handle_min_duration_below(self,df: DataFrame,vvt_name: str, rule_name:str, channel:str, threshold:float, param1:int, **kwargs):
-        """checks if the channel is below the threshold for at least the duration in param1
-        
-        returns a violation object if rule is not met"""
-        
-        # get rows where channel is below threshold
-        entrysBelow = df[df[channel] < threshold]
-        
-        duration = len(entrysBelow)
-        
-        # if duration is below minimum duration defined in param1
-        if duration < param1:
-            violation = Violation(
-                        vvtName=vvt_name,
-                        violatedRule=rule_name,
-                        channel=channel,
-                        actualValue=duration,
-                        threshold=threshold,
-                        time=None
-                    )
-            return [violation]
-            
-        else:
-            return []
-        
-                
-    def handle_max_duration_below(self,df: DataFrame,vvt_name: str, rule_name:str, channel:str, threshold:float, param1:int, **kwargs):
-        """checks if the channel is below the threshold for max of the duration in param1
-        
-        returns a violation object if rule is not met"""
-        
-        # get rows where channel is below threshold
-        entrysBelow = df[df[channel] < threshold]
-        
-        duration = len(entrysBelow)
-        
-        # if duration is above maximum duration defined in param1
-        if duration > param1:
-            violation =  Violation(
-                        vvtName=vvt_name,
-                        violatedRule=rule_name,
-                        channel=channel,
-                        actualValue=duration,
-                        threshold=threshold,
-                        time=None
-                    )
-            return [violation]
-            
-        else:
-            return []
-        
-        
-    
-    def duration_above_while_process(self,df: DataFrame,vvt_name: str, rule_name:str, channel:str, threshold:float, param1:int, **kwargs):
-        
-        dfSelection = self.crop_dataframe_while_process(df)
-        
-        if isinstance(dfSelection, DataFrame) and not dfSelection.empty:
-            return self.handle_min_duration_above(dfSelection,vvt_name, rule_name, channel, threshold, param1)
-        else:
-            return []
     
             
     
@@ -275,6 +202,26 @@ class ViolationDetector:
             dfSelection = DataFrame()
             
         return dfSelection
+    
+    
+    
+    def crop_dataframe_bulkhead_open(self,df: DataFrame):
+        
+        # check if column exists
+        if 'PrcChbOutletBulkheadOpen' not  in df.columns:
+            ui.notify(f"Column 'PrcChbOutletBulkheadOpen' not found in measurement data, cannot apply rules with outlet_bulkhead_open scope.")
+            return DataFrame()
+        
+        # find index where bulhead changes from 0 to 1
+        bulkheadOpenIdx = df.index[df['PrcChbOutletBulkheadOpen'].diff() == 1]
+        
+        if len(bulkheadOpenIdx) > 0:
+            
+            first = bulkheadOpenIdx[0]
+            return df.loc[[first]]
+        
+        else:
+            return DataFrame()
         
         
     def create_violations_from_dataframe(self, df: DataFrame,vvt_name:str, rule_name:str, channel:str, threshold:float):
@@ -299,3 +246,98 @@ class ViolationDetector:
                 continue
         
         return violations
+    
+    
+    
+    
+    def handle_duration(self, df: DataFrame, vvt_name: str, rule_name:str, channel:str, threshold:float, param1:int, condition:str, **kwargs):
+        """handles all duration conditions by checking the condition and calling the corresponding handler"""
+        
+        # create empty df
+        relevantRows = DataFrame()
+        
+        # create boolean if violation occured
+        violated = False
+        
+        # check if condition is above or below and filter df accordingly
+        if "above" in condition:
+            relevantRows = df[df[channel] > threshold]
+        elif "below" in condition:
+            relevantRows = df[df[channel] < threshold]
+        
+        # get duration of relevant rows
+        duration = len(relevantRows)
+        
+        # check if condition is min or max and compare duration to param1
+        if "min" in condition and duration < param1:
+            violated = True
+        elif "max" in condition and duration > param1:
+            violated = True
+            
+        # create violation object if violated
+        if violated:
+            violation = Violation(
+                        vvtName=vvt_name,
+                        violatedRule=rule_name,
+                        channel=channel,
+                        actualValue=duration,
+                        threshold=param1,
+                        time=None
+                    )
+            return [violation]
+            
+        else:
+            return []
+        
+        
+    
+    def handle_main_vacuum_minimum(self, df: DataFrame, vvt_name:str, rule_name:str, channel:str, threshold:float, **kwargs):
+        
+        # check if positioning channel is in dataframe
+        if "PrcChbOutletBulkheadOpen" not in df.columns:
+            ui.notify(f"Column 'PrcChbOutletBulkheadOpen' not found in measurement data, cannot apply main_vacuum_minimum condition.")
+            return []
+        
+        # find index where bulkhead is 1 for the first time
+        bulheadRows = df[df["PrcChbOutletBulkheadOpen"].diff() == 1]
+        if bulheadRows.empty:
+            ui.notify(f"No rows with 'PrcChbOutletBulkheadOpen' equal to 1 found in measurement data, cannot apply main_vacuum_minimum condition.")
+            return []
+        
+        # get first index where bulkhead is open
+        bulkheadIdx = bulheadRows.index[0]
+        
+        # only use data from 0 to index where bulkhead is first time 1
+        dfSelection = df.loc[:bulkheadIdx].copy()
+        
+        # create gradient of vacuum channel
+        dfSelection['gradient'] = dfSelection[channel].diff()
+        
+        # find index where gradient of vacuum is -20 or less
+        gradientIdx = dfSelection.index[dfSelection['gradient'] <= -20]
+        
+        if gradientIdx.empty:
+            ui.notify(f"No significant decrease in vacuum channel {channel} found before bulkhead opening, cannot apply main_vacuum_minimum condition.")
+            return []
+        
+        # start from the last index to walk backwards
+        startIdx = gradientIdx[-1]
+        
+        # check value of vacuum from above index on to be minimum the threshold
+        dfSelection = dfSelection.loc[:startIdx]
+        minVacuumMet = dfSelection[channel].min() <= threshold
+        
+        # create one violation object if there is no value <= threshold
+        if not minVacuumMet:
+            violation = Violation(
+                        vvtName=vvt_name,
+                        violatedRule=rule_name,
+                        channel=channel,
+                        actualValue=dfSelection[channel].min(),
+                        threshold=threshold,
+                        time=None
+                    )
+            return [violation]
+        
+        else:
+            return []
