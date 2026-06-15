@@ -1,6 +1,6 @@
 from nicegui import ui
 from pandas import DataFrame
-from src.shared.exceptions import CalculationError
+from src.shared.channel_names import ChannelNames
 from src.shared.zeropoint_container import ZeropointContainer
 
 
@@ -10,41 +10,67 @@ class ZeropointCalculator:
     zeros : ZeropointContainer
     
     def __init__(self):
-        self.zeros = ZeropointContainer()
         self.df = DataFrame()
     
     def calculate_zeropoints(self, df: DataFrame):
+        
+        # create new zeropointcontainer
+        newZeros = ZeropointContainer()
         
         # set dataframe globally to access it in other methods
         self.df = df
         
         # calc and set bulkhead-zeropoint
-        self.zeros.set_bulkhead(self.caclulate_bulkhead_zeropoint())
-        self.zeros.set_first_injection(self.calculate_first_injection_zeropoint())
-        self.zeros.set_above235(self.calculate_above235_zeropoint())
-        self.zeros.set_ventilate2(self.calculate_ventilate2_zeropoint())
+        newZeros.set_inlet_bulkhead(self.caclulate_inlet_bulkhead_zeropoint())
+        newZeros.set_outlet_bulkhead(self.caclulate_outlet_bulkhead_zeropoint())
+        newZeros.set_first_injection(self.calculate_first_injection_zeropoint())
+        newZeros.set_above235(self.calculate_above235_zeropoint())
+        newZeros.set_ventilate2(self.calculate_ventilate2_zeropoint())
         
-        return self.zeros
-    
-    
-    
-    def caclulate_bulkhead_zeropoint(self)->int:
+        self.df = DataFrame() # reset dataframe to release memory
         
-        """calculates the offset to ReadTime of the last found row where bulkhead is 1, searching only in the first 300 rows"""
+        return newZeros
+    
+    
+    
+    def caclulate_inlet_bulkhead_zeropoint(self)->int:
+        
+        """calculates the offset to ReadTime of the last found row where inlet bulkhead is 1, searching only in the first 300 rows"""
         
         # only the first 300 rows + reset index to directly access the offset of the zeropoint
-        dfBefore300 = self.df.iloc[:300].reset_index(drop=True)
+        dfBefore300 = self.df.iloc[:300].reset_index(drop=True).copy()
 
         # save rows there bulkhead is 1
-        foundRows = dfBefore300[dfBefore300["PrcChbInletBulkheadOpen"] == 1]
+        foundRows = dfBefore300[dfBefore300[ChannelNames.INLET_BULKHEAD_OPEN] == 1]
         
         # if no rows found, raise error
         if foundRows.empty:
-            ui.notify("No Bulkhead-zeropoint was found")
+            ui.notify("No inlet-bulkhead-zeropoint was found")
             return 0
         
         # return the offset of the last found row as int
         return int(foundRows.index[len(foundRows)-1])
+    
+    
+    
+    def caclulate_outlet_bulkhead_zeropoint(self)->int:
+        
+        """calculates the offset to ReadTime of the last found row where outlet bulkhead is 1, searching only in the first 300 rows"""
+        
+        # reset index to directly access the offset of the zeropoint
+        df = self.df.reset_index(drop=True).copy()
+
+        # save rows there bulkhead is 1
+        foundRows = df[df[ChannelNames.OUTLET_BULKHEAD_OPEN] == 1]
+        
+        # if no rows found, raise error
+        if foundRows.empty:
+            ui.notify("No outlet-bulkhead-zeropoint was found")
+            return 0
+        
+        # return the offset of the last found row as int
+        return int(foundRows.index[len(foundRows)-1])
+    
     
     
     
@@ -54,13 +80,16 @@ class ZeropointCalculator:
         
         rowOffset = 10
         
-        dfSection = self.df.iloc[rowOffset:].reset_index(drop=True)
-        foundRows = dfSection[dfSection["St_MediumPump"] == 1]
+        # take all rows from the offset onwards and reset index to directly access the offset of the zeropoint
+        dfSection = self.df.iloc[rowOffset:].reset_index(drop=True).copy()
+        # save rows where St_MediumPump is 1, this indicates an injection
+        foundRows = dfSection[dfSection[ChannelNames.MEDIUM_PUMP] == 1]
         
         if foundRows.empty:
             ui.notify("No first injection zeropoint was found")
             return 0
         
+        # take the first occurance and add the offset to get the correct offset to ReadTime
         return int(foundRows.index[0]+rowOffset)
     
     
@@ -69,8 +98,8 @@ class ZeropointCalculator:
         """calculates tho offset to ReadTime of the first row where temperature (CH1) is above 235°C"""
         
         # take all rows + reset index to directly access the offset of the zeropoint
-        dfSelection = self.df.reset_index(drop=True)
-        foundRows = dfSelection[dfSelection["CH1"] > 235]
+        dfSelection = self.df.reset_index(drop=True).copy()
+        foundRows = dfSelection[dfSelection[ChannelNames.CH1] > 235]
         
         
         if foundRows.empty:
@@ -80,30 +109,37 @@ class ZeropointCalculator:
         return int(foundRows.index[0])
     
     
-    
-    def calculate_ventilate2_zeropoint(self):
-        """calculates the offset to ReadTime of the last entry where ventilation is done
-        (pressure-gradient of the last 5 entries averaged <30) 
-        and actual gradient is < 10 while CH1 is over 205°C"""
+    ###### ALTE VARIANTE AUS EXCEL - PROBLEMATISCH
+    def calculate_ventilate2_zeropoint_OLD(self):
+        """"""
+        
+        minVacuum = 100
+        edgeShift = 3
         
         # copy whole dataframe, access index directly as numeric offset
-        dfSelection = self.df.reset_index(drop=True)
+        dfSelection = self.df.reset_index(drop=True).copy()
+        
+        #calculate gradient
+        dfSelection["gradient"] = dfSelection[ChannelNames.VACUUM].diff()
         
         # calculate rolling mean for pressure
-        rollingMean = dfSelection['VacuumActualV in mBar'].diff().rolling(5).mean()
+        dfSelection['RollingMean'] = dfSelection[ChannelNames.VACUUM].diff().rolling(5).mean()        
         
-        # append rollingMean to dataframe for filtering
-        dfSelection['RollingMean'] = rollingMean
+        # check whether vaccum was at minVacuum before
+        dfSelection['MinVacuumHistory'] = dfSelection[ChannelNames.VACUUM].cummin()
         
-        # vakuum war unter 50 , ist nicht mehr zwingend
-        # rolling mean war positiv, und ist jetzt unter 30
+        # check whether the gradient was very high before
+        dfSelection['MaxGradient'] = dfSelection['RollingMean'].cummax()
         
-        # TODO: 
-                
+        # edge detection for rolling mean dependant on the edgeShift
+        vacuumSettled = dfSelection["gradient"].abs() < 3
+        
+        # connect conditions
         foundRows = dfSelection[
-            (dfSelection['CH1'] > 205) &
-            (dfSelection['VacuumActualV in mBar'] < 50) &
-            (dfSelection['RollingMean'] < 30)
+            (dfSelection[ChannelNames.CH1] > 205) &
+            (dfSelection["MinVacuumHistory"] < minVacuum) &
+            (dfSelection["MaxGradient"] > 100 ) &
+            vacuumSettled
         ]
         
         if foundRows.empty:
@@ -111,4 +147,36 @@ class ZeropointCalculator:
             return 0
         
         #return first found row
+        return int(foundRows.index[0])
+    
+    
+    
+    def calculate_ventilate2_zeropoint(self):
+        """"""
+        minVaccum = 100
+        
+        # copy df
+        dfSelection = self.df.reset_index(drop=True).copy()
+        
+        # calc gradient
+        dfSelection["gradient"] = dfSelection[ChannelNames.VACUUM].diff()
+        
+        # check whether vaccum was at minVacuum before
+        dfSelection['MinVacuumHistory'] = dfSelection[ChannelNames.VACUUM].cummin()
+        
+        # check if vacuum is static
+        vacuumSettled = dfSelection["gradient"].abs() < 3
+        
+        # merge conditions
+        foundRows = dfSelection[
+            (dfSelection[ChannelNames.CH1] > 205) &
+            (dfSelection['MinVacuumHistory'] < minVaccum) &
+            (dfSelection[ChannelNames.VACUUM]> 850) &
+            vacuumSettled
+        ]
+        
+        if foundRows.empty:
+            ui.notify("No ventilate2 zeropoint was found")
+            return 0
+        
         return int(foundRows.index[0])

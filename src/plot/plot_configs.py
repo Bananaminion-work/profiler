@@ -59,7 +59,7 @@ class StandardConfig(BasePlotConfig):
                         y=df[column],
                         mode='lines',
                         # name of the legend
-                        name=f"{m_id[:4]} | {column}" 
+                        name=f"{m_id[:4]} | {column}"
                     )
                 )
         

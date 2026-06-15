@@ -5,14 +5,18 @@ class ZeropointContainer:
     def __init__(self):
         self.zeropoints = {
             'none':0,
-            'bulkhead':0,
+            'inlet bulkhead':0,
+            'outlet bulkhead':0,
             'first injection':0,
             'above 235':0,
             'ventilate 2':0
         }
         
-    def set_bulkhead(self, bulkhead: int):
-        self.zeropoints['bulkhead'] = bulkhead
+    def set_inlet_bulkhead(self, bulkhead: int):
+        self.zeropoints['inlet bulkhead'] = bulkhead
+        
+    def set_outlet_bulkhead(self, outlet_bulkhead: int):
+        self.zeropoints['outlet bulkhead'] = outlet_bulkhead
         
     def set_first_injection(self, first_injection: int):
         self.zeropoints['first injection'] = first_injection
@@ -23,8 +27,8 @@ class ZeropointContainer:
     def set_ventilate2(self, ventilate2: int):
         self.zeropoints['ventilate 2'] = ventilate2
         
-    def get_bulkheads(self) -> int:
-        return self.zeropoints['bulkhead']
+    def get_inlet_bulkhead(self) -> int:
+        return self.zeropoints['inlet bulkhead']
 
     def get_first_injection(self) -> int:
         return self.zeropoints['first injection']

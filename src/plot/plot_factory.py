@@ -57,11 +57,21 @@ class PlotFactory():
         # uses the chosen config
         config = self.configsDict[configName]
         
+        # dict for the copys
+        dataDictCopy = {}
+        
         # apply the offsets to the data
         for key, data in dataDict.items():
+            
+            # create copy of df
+            shiftedDf = data.copy()
+            
             if key in offsetsDict:
                 offset = offsetsDict[key]
-                data.index = data.index - offset
+                shiftedDf.index = shiftedDf.index - offset
         
+            dataDictCopy[key] = shiftedDf
+            
+            
         # creates the go.Figure object
-        return config.build_figure(dataDict)
+        return config.build_figure(dataDictCopy)

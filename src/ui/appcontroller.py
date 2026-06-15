@@ -6,6 +6,8 @@ from pandas import DataFrame
 # import components
 from src.plot.plot_factory import PlotFactory
 from src.shared.filter_composition import FilterComposition
+from src.shared.oven_numbers import OvenNumbers
+from src.shared.product_names import ProductNames
 from src.shared.violation import Violation
 from src.ui.ui_view import UiView
 from src.data.data_manager import DataManager
@@ -295,6 +297,35 @@ class AppController:
     
     
     
+    def load_zeropoint_options(self)-> list[str]:
+        """returns a list with the keys of possible zeropoints"""
+        return list(ZeropointContainer().get_zeropoints().keys())
+    
+    
+    
+    def load_oven_options(self):
+        """returns a list of the possible oven numbers from shared-dataclass"""
+        return OvenNumbers.to_list()
+    
+    
+    
+    def load_product_options(self):
+        """returns a list of the possible products from shared-dataclass"""
+        return ProductNames.to_list()
+    
+    
+    
+    
+    def load_measurement_options(self):
+        """returns a list of the current measurements being displayed in the multiple-plot"""
+        if hasattr(self, 'current_gold_dataframe_for_plot'):
+            return list(self.current_gold_dataframe_for_plot.keys())
+        else:
+            return []
+        
+        
+    
+    
     def handle_violation_table_update_request(self, vvtName:str, zeropoint:str):
     
         # get gold dataframe and violations from analyzer
@@ -310,7 +341,32 @@ class AppController:
         
         # let specialist create table with violation-list and zeropoint-logic
         self.table.update_violation_table(violations, currentOffset)
+        
+        
     
+    def handle_violation_table_update_request_by_id(self, vvtName:str, zeropoint:str, selectedMeasurement:str):
+        
+        # check if selected id is in current gold data
+        if not hasattr(self, 'current_gold_dataframe_for_plot') or selectedMeasurement not in self.current_gold_dataframe_for_plot:
+            ui.notify("Selected measurement not found in current data.", color="negative")
+            return
+        
+        # get gold dataframe and violations from analyzer
+        gold = self.current_gold_dataframe_for_plot[selectedMeasurement]
+        violations = self.analyzer.analyze_violations(gold,vvtName)
+        
+        # if none is selected set offset to 0
+        if not zeropoint == "none":
+            currentOffset = 0
+        
+        # get value of zeropoint from current session measurement
+        else:
+            zeroContainer = self.current_session_measurement.get_zeropoint_container()
+            currentOffset = zeroContainer.get_zeropoints()[zeropoint]
+            
+            
+        # call specialist to update table with violation-list and zeropoint-logic
+        self.table.update_violation_table(violations, currentOffset)
     
     
     def handle_measurement_table_request(self, filter: FilterComposition):
@@ -386,7 +442,7 @@ class AppController:
         
         # call plot factory to draw plot
         return self.plot.create_plot_multiple(
-            self.current_gold_dataframe_for_plot,
+            self.current_gold_dataframe_for_plot.copy(),
             zeropointsDict,
             config
         )

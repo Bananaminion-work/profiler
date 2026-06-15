@@ -42,16 +42,6 @@ class ImportPage_showData(SubPage):
     selectedVVT: str = ""
 
     def _create_accordion(self) -> None:
-        #groups = [
-        #    ("Injections",        "Injection",         ["injection_1",    "injection_2",    "injection_3",    "injection_4"]),
-        #    ("Waiting-time",      "Waiting-time",      ["waiting_1",      "waiting_2",      "waiting_3",      "waiting_4"]),
-        #    ("Cooling-frequency", "Cooling-frequency", ["cooling_freq_1", "cooling_freq_2", "cooling_freq_3", "cooling_freq_4"]),
-        #    ("Cooling-time",      "Cooling-time",      ["cooling_time_1", "cooling_time_2", "cooling_time_3", "cooling_time_4"]),
-        #]
-        #for title, prefix, attrs in groups:
-        #    with ui.expansion(title, icon="expand_more"):
-        #        for i, attr in enumerate(attrs, 1):
-        #            ui.input(f"{prefix} {i}:", placeholder="enter value...").classes("w-full").bind_value(self, attr)
         
         # create first accordion
         with ui.expansion("Injections & Holding Times (1-4)", icon="colorize").classes("w-full"):
@@ -79,6 +69,8 @@ class ImportPage_showData(SubPage):
                         # holdingTime
                         ui.input(f"Cooling Time {i}:").classes("w-full").bind_value(self, f"cooling_time_{i}")
 
+
+
     def build_content(self) -> None:
         
         
@@ -96,9 +88,15 @@ class ImportPage_showData(SubPage):
                         on_change=self.update_plot_config
                     ).bind_value(self,"config").classes("w-100")
                     
+                    # load options
+                    zeropointOptions = self.controller.load_zeropoint_options()
+                    # add "none" as option on the first postion
+                    if "none" not in zeropointOptions:
+                        zeropointOptions.insert(0, "none")
+                    
                     ui.select(
-                        options=["none", "bulkhead", "first injection", "above 235", "ventilate 2"],
-                        value="none",
+                        options=zeropointOptions,
+                        value=zeropointOptions[0],
                         label="choose zeropoint for plot",
                         on_change=self.update_vvt_selection
                     ).bind_value(self,"chosenZeropoint_show").classes("w-100")
@@ -152,8 +150,16 @@ class ImportPage_showData(SubPage):
                 ui.label("input Metadata to be saved to database").classes('text-lg')
             
                 with ui.grid(columns=2).classes("w-full gap-3"):
-                    ui.select(["1234", "2345", "3456", "4567"], value="1234", label="Select the oven-number").bind_value(self, "oven_Nr")
-                    ui.select(["VW-ECO", "VOLVO-ERAD", "BASE", "PM6"], value="PM6", label="Select the product").bind_value(self, "product")
+                    
+                    # get options for dropdowns from controller
+                    ovenOptions = self.controller.load_oven_options()
+                    self.oven_Nr = ovenOptions[0] if ovenOptions else "" # set first option as default value
+                    
+                    productOptions = self.controller.load_product_options()
+                    self.product = productOptions[0] if productOptions else "" # set first option as default value
+                    
+                    ui.select(ovenOptions, label="Select the oven-number").bind_value(self, "oven_Nr")
+                    ui.select(productOptions, label="Select the product").bind_value(self, "product")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Load of the profile type").bind_value(self, "load")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Position of measurement cooler").bind_value(self, "pos")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Amount of coolers").bind_value(self, "count")

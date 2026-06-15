@@ -2,6 +2,7 @@ from typing import Callable
 from nicegui import ui
 import pandas as pd
 from pandas import DataFrame
+from src.shared.channel_names import ChannelNames
 from src.shared.violation import Violation
 
 
@@ -184,9 +185,9 @@ class ViolationDetector:
     def crop_dataframe_while_process(self,df: DataFrame):
         
         # get index where PrcChbInletBulkheadOpen changes from 1 to zero
-        chamberCloseIdx = df.index[df['PrcChbInletBulkheadOpen'].diff() == -1]
+        chamberCloseIdx = df.index[df[ChannelNames.INLET_BULKHEAD_OPEN].diff() == -1]
         # get index where PrcChbOutletBulkheadOpen changes from 0 to 1
-        chamberOpenIdx = df.index[df['PrcChbOutletBulkheadOpen'].diff() == 1]
+        chamberOpenIdx = df.index[df[ChannelNames.OUTLET_BULKHEAD_OPEN].diff() == 1]
         
         # check if more than one index was found and only choose one
         if len(chamberCloseIdx) > 0 and len(chamberOpenIdx) > 0:
@@ -208,12 +209,12 @@ class ViolationDetector:
     def crop_dataframe_bulkhead_open(self,df: DataFrame):
         
         # check if column exists
-        if 'PrcChbOutletBulkheadOpen' not  in df.columns:
-            ui.notify(f"Column 'PrcChbOutletBulkheadOpen' not found in measurement data, cannot apply rules with outlet_bulkhead_open scope.")
+        if ChannelNames.OUTLET_BULKHEAD_OPEN not  in df.columns:
+            ui.notify(f"Column '{ChannelNames.OUTLET_BULKHEAD_OPEN}' not found in measurement data, cannot apply rules with outlet_bulkhead_open scope.")
             return DataFrame()
         
         # find index where bulhead changes from 0 to 1
-        bulkheadOpenIdx = df.index[df['PrcChbOutletBulkheadOpen'].diff() == 1]
+        bulkheadOpenIdx = df.index[df[ChannelNames.OUTLET_BULKHEAD_OPEN].diff() == 1]
         
         if len(bulkheadOpenIdx) > 0:
             
@@ -294,14 +295,14 @@ class ViolationDetector:
     def handle_main_vacuum_minimum(self, df: DataFrame, vvt_name:str, rule_name:str, channel:str, threshold:float, **kwargs):
         
         # check if positioning channel is in dataframe
-        if "PrcChbOutletBulkheadOpen" not in df.columns:
-            ui.notify(f"Column 'PrcChbOutletBulkheadOpen' not found in measurement data, cannot apply main_vacuum_minimum condition.")
+        if ChannelNames.OUTLET_BULKHEAD_OPEN not in df.columns:
+            ui.notify(f"Column '{ChannelNames.OUTLET_BULKHEAD_OPEN}' not found in measurement data, cannot apply main_vacuum_minimum condition.")
             return []
         
         # find index where bulkhead is 1 for the first time
-        bulheadRows = df[df["PrcChbOutletBulkheadOpen"].diff() == 1]
+        bulheadRows = df[df[ChannelNames.OUTLET_BULKHEAD_OPEN].diff() == 1]
         if bulheadRows.empty:
-            ui.notify(f"No rows with 'PrcChbOutletBulkheadOpen' equal to 1 found in measurement data, cannot apply main_vacuum_minimum condition.")
+            ui.notify(f"No rows with '{ChannelNames.OUTLET_BULKHEAD_OPEN}' equal to 1 found in measurement data, cannot apply main_vacuum_minimum condition.")
             return []
         
         # get first index where bulkhead is open
