@@ -12,7 +12,7 @@ from src.ui.pages.base_pages import SubPage
 class ImportPage_getData(SubPage):
     pageName = "import-get"
     path: str = ""
-    source: str = "Solderstar"
+    source: str = ""
     uploadWidget: ui.upload
     uploaded_file_name: str = ""
     uploaded_content: Optional[bytes] = None
@@ -23,8 +23,13 @@ class ImportPage_getData(SubPage):
                 ui.label("Please use the upload-button to upload the zip-file of your measurement:").classes("text-lg")
                 ui.separator()
                 ui.label("Please select your source of Data:")
+                
+                # create options and set the default
+                sourceOptions = ["Rehm-recorder", "Solderstar",  "Datapaq"]
+                self.source = sourceOptions[0]
+                
                 ui.radio(
-                    ["Solderstar", "Rehm-recorder", "Datapaq"],
+                    options=sourceOptions
                 ).bind_value(self, "source")
 
                 self.uploadWidget = ui.upload(

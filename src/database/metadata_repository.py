@@ -48,7 +48,6 @@ class MetadataRepoCsv(MetadataRepository):
         
         # convert datatypes from string to int, float or bool
         type_conversions = {
-            MetaNames.OVEN_NR   : int,
             MetaNames.LOAD_PROFILE  : float,
             MetaNames.TEST_COOLER_FLAG  : bool,
             MetaNames.COOLER_COUNT_ON_TRAY  : int
@@ -134,26 +133,9 @@ class MetadataRepoCsv(MetadataRepository):
             
             # convert the datatypes from string in the csv as needed
             type_conversions = {
-                MetaNames.OVEN_NR: int,
                 MetaNames.LOAD_PROFILE: float,
                 MetaNames.TEST_COOLER_FLAG: bool,
-                MetaNames.COOLER_COUNT_ON_TRAY: int,
-                MetaNames.INJECTION_1: float,
-                MetaNames.INJECTION_2: float,
-                MetaNames.INJECTION_3: float,
-                MetaNames.INJECTION_4: float,
-                MetaNames.WAITING_1: float,
-                MetaNames.WAITING_2: float,
-                MetaNames.WAITING_3: float,
-                MetaNames.WAITING_4: float,
-                MetaNames.COOLING_FREQ_1: float,
-                MetaNames.COOLING_FREQ_2: float,
-                MetaNames.COOLING_FREQ_3: float,
-                MetaNames.COOLING_FREQ_4: float,
-                MetaNames.COOLING_TIME_1: float,
-                MetaNames.COOLING_TIME_2: float,
-                MetaNames.COOLING_TIME_3: float,
-                MetaNames.COOLING_TIME_4: float
+                MetaNames.COOLER_COUNT_ON_TRAY: int
             }
             metaDf = metaDf.astype(type_conversions)
             

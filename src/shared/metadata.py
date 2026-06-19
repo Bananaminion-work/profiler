@@ -9,7 +9,7 @@ class Metadata:
     date:str = ""
     start_time:str = ""
     data_source:str = ""
-    oven_nr:int = 0
+    oven_nr:str = ""
     oven_recipe:str = ""
     product:str = ""
     load_profile:float = 0.0
@@ -40,7 +40,7 @@ class Metadata:
         
         # set all metadata attributes
         self.oven_recipe = metadata.get(MetaNames.OVEN_RECIPE, "")
-        self.oven_nr = int(metadata.get(MetaNames.OVEN_NR, 0))
+        self.oven_nr = metadata.get(MetaNames.OVEN_NR, "")
         self.product = metadata.get(MetaNames.PRODUCT, "")
         self.load_profile = float(metadata.get(MetaNames.LOAD_PROFILE, 0.0))
         self.position_measurement_cooler = metadata.get(MetaNames.POSITION_MEASUREMENT_COOLER, "")
