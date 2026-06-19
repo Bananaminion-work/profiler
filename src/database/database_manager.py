@@ -9,8 +9,8 @@ from src.shared.data_composition import DataComposition
 from nicegui import ui
 import pandas as pd
 
-from src.shared.data_models import Data, GoldData
-from src.shared.exceptions import DataError, WrongInputError
+from src.shared.data_models import Data
+from src.shared.exceptions import WrongInputError
 from src.shared.meta_names import MetaNames
 
 class DatabaseManager:

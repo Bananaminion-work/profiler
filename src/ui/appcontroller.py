@@ -356,12 +356,12 @@ class AppController:
         violations = self.analyzer.analyze_violations(gold,vvtName)
         
         # if none is selected set offset to 0
-        if not zeropoint == "none":
+        if zeropoint == "none":
             currentOffset = 0
         
         # get value of zeropoint from current session measurement
         else:
-            zeroContainer = self.current_session_measurement.get_zeropoint_container()
+            zeroContainer = self.current_gold_zeropoints[selectedMeasurement]
             currentOffset = zeroContainer.get_zeropoints()[zeropoint]
             
             

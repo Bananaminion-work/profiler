@@ -76,18 +76,6 @@ class MeasurementRepoCsv(MeasurementRepository):
             
         else:
             raise WrongInputError("Measurement Data are none of type Data. Cannot add measurement to database.")
-            
-            # save longs to csv
-        #    if self._bronzePath.exists() and self._silverPath.exists() and self._goldPath.exists():
-        #        longBronzeDf.to_csv(self._bronzePath, mode='a', header=False, index=False)
-        #        longSilverDf.to_csv(self._silverPath, mode='a', header=False, index=False)
-        #        longGoldDf.to_csv(self._goldPath, mode='a', header=False, index=False)
-        #        
-        #    else:
-        #        raise FileNotFoundError("One or more of the csv files for storing measurements do not exist.")
-        #    
-        #else:
-        #    raise WrongInputError("Measurement Data are none of type Data. Cannot add measurement to database.")
         
             
         
