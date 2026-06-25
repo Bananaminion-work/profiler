@@ -80,10 +80,16 @@ class ImportPage_showData(SubPage):
             # section 1: Config
             with ui.card().classes("w-full"):
                 ui.label("Choose config and zeropoint").classes('text-lg')
+                
+                # get options
+                configs = self.controller.load_plot_configs()
+                if "standard" not in configs:
+                    configs.insert(0, "standard")
+                
                 with ui.row().classes("w-full"):
                     ui.select(
-                        ["standard", "standard2", "3", "4", "5", "6", "7", "8"],
-                        value="standard",
+                        configs,
+                        value=configs[0],
                         label="choose config for plot",
                         on_change=self.update_plot_config
                     ).bind_value(self,"config").classes("w-100")
@@ -188,6 +194,10 @@ class ImportPage_showData(SubPage):
         
     def update_plot_preview(self):
         """clears plot container and redraws with fresh plot"""
+        
+        if not hasattr(self, 'plotContainer'):
+            return  # controller is not set yet, do nothing
+        
         self.plotContainer.clear()
         
         plotContent = self.controller.handle_plot_request_single(self.config,self.chosenZeropoint_show)

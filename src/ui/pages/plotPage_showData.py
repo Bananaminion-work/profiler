@@ -14,12 +14,18 @@ class PlotPage_showData(SubPage):
             with ui.row().classes("items-center"):
                 ui.label("Modify plots:")
                 
-                ui.select(
-                    ["standard", "standard2", "3", "4", "5", "6", "7", "8"],
-                    value="standard",
-                    label="choose config for plot",
-                    on_change = self.update_plot
-                ).bind_value(self,"config").classes("w-100")
+                 # get options
+                configs = self.controller.load_plot_configs()
+                if "standard" not in configs:
+                    configs.insert(0, "standard")
+                
+                with ui.row().classes("w-full"):
+                    ui.select(
+                        configs,
+                        value=configs[0],
+                        label="choose config for plot",
+                        on_change=self.update_plot
+                    ).bind_value(self,"config").classes("w-100")
                 
                 
                 

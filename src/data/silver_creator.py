@@ -40,6 +40,8 @@ class SilverCreator():
     def rename_attributes_for_legend(self):
         
         renameColumns = {
+            
+            # STANDARD MAPPING FROM REHM-RECORDER
             'ReadTime'                                  : ChannelNames.READ_TIME,
             'TempMeasureCh1SS'                          : ChannelNames.CH1,
             'TempMeasureCh2SS'                          : ChannelNames.CH2,
@@ -76,7 +78,13 @@ class SilverCreator():
             'St_PrcChbOutletBulkheadBreak'              : ChannelNames.OUTLET_BULKHEAD_BREAK,
             'UnLoadUnitSensor2'                         : ChannelNames.UNLOAD_UNIT_SENSOR2,
             'InletChamberSensor2'                       : ChannelNames.INLET_CHAMBER_SENSOR2,
-            'InletChamberSensor1'                       : ChannelNames.INLET_CHAMBER_SENSOR1
+            'InletChamberSensor1'                       : ChannelNames.INLET_CHAMBER_SENSOR1,
+            
+            # MAPPING FOR MOCK DATA GENERATION
+            'InletBulkhead'                             : ChannelNames.INLET_BULKHEAD_OPEN,
+            'OutletBulkhead'                            : ChannelNames.OUTLET_BULKHEAD_OPEN,
+            'Vacuum'                                    : ChannelNames.VACUUM,
+            'Oxygen'                                    : ChannelNames.O2,
         }
         
         self.silverDataFrame.rename(columns=renameColumns, inplace=True)

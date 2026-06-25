@@ -155,3 +155,236 @@ class StandardConfig2(BasePlotConfig):
         )
         
         return fig
+    
+    
+    
+class SampleConfig(BasePlotConfig):
+    
+    configName = "Sample Config"
+    
+    def build_figure(self, dataDict: dict[str, pd.DataFrame]) -> go.Figure:
+        
+        fig = go.Figure()
+        
+        # define line styles
+        dash_styles = ['solid', 'dash', 'dot', 'dashdot', 'longdash', 'longdashdot']
+        
+        # helpingfunction to find out which y-axis is the right one
+        def get_yaxis_for_column(col_name: str) -> str:
+            col_lower = col_name.lower()
+            if 'gradient' in col_lower or "average" in col_lower:
+                return 'y3'
+            elif 'vacuum' in col_lower:
+                return 'y2'
+            elif 'ch' in col_lower:
+                return 'y1'
+            else:
+                return 'y4'
+
+        for index, (m_id, df) in enumerate(dataDict.items()):
+            current_dash = dash_styles[index % len(dash_styles)]
+            
+            for column in df.columns:
+                target_yaxis = get_yaxis_for_column(column)
+                
+                # ---> NEU: Mathematische Normierung (Min-Max Scaling auf 0-100%) <---
+                min_val = df[column].min()
+                max_val = df[column].max()
+                
+                # Division durch 0 abfangen (falls eine Kurve komplett flach ist)
+                if max_val != min_val:
+                    # Normierungs-Formel: (Wert - Min) / (Max - Min) * 100
+                    normalized_y = (df[column] - min_val) / (max_val - min_val) * 100
+                else:
+                    # Wenn die Kurve flach ist, setzen wir sie einfach auf 0%
+                    normalized_y = (df[column] * 0) 
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=df.index,
+                        y=normalized_y,               # <--- HIER die normierten Daten plotten!
+                        mode='lines',
+                        line=dict(dash=current_dash),
+                        name=f"{m_id[:4]} | {column}",
+                        yaxis=target_yaxis
+                    )
+                )
+        
+        # Configure the layout
+        fig.update_layout(
+            title_text='Normierter Prozess-Plot (Geheimhaltung)',
+            
+            xaxis=dict(
+                title='Time',
+                domain=[0.1, 0.9],
+                # Optional: Versteckt die echten Sekunden/Zeitstempel auf der X-Achse
+                # showticklabels=False 
+            ),
+            
+            # Alle Achsen zeigen jetzt 0-100% an, anstatt der echten Einheiten!
+            yaxis=dict(
+                title='Temperature [%]',
+                side='left',
+                range=[-5, 105] # Ein kleiner Puffer oben und unten sieht besser aus
+            ),
+            
+            yaxis2=dict(
+                title='Vacuum [%]',
+                side='right',
+                overlaying='y',
+                range=[-5, 105]
+            ),
+            
+            yaxis3=dict(
+                title='Gradient [%]',
+                side='right',
+                overlaying='y',
+                anchor='free',
+                position=1.0,
+                range=[-5, 105]
+            ),
+            
+            yaxis4=dict(
+                title='Other Channels [%]',
+                side='left',
+                overlaying='y',
+                anchor='free',
+                position=0.0,
+                range=[-5, 105]
+            ),
+            
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.2,
+                xanchor="center",
+                x=0.5
+            ),
+            
+            autosize=True,
+            margin=dict(l=20, r=20, t=50, b=100) 
+        )
+        
+        return fig
+    
+class SampleConfig2(BasePlotConfig):
+    
+    configName = "Sample Config 2"
+    
+    def build_figure(self, dataDict: dict[str, pd.DataFrame]) -> go.Figure:
+        
+        fig = go.Figure()
+        
+        # define line styles
+        dash_styles = ['solid', 'dash', 'dot', 'dashdot', 'longdash', 'longdashdot']
+        
+        # helpingfunction to find out which y-axis is the right one
+        def get_yaxis_for_column(col_name: str) -> str:
+            col_lower = col_name.lower()
+            if 'gradient' in col_lower or "average" in col_lower:
+                return 'y3'
+            elif 'vacuum' in col_lower:
+                return 'y2'
+            elif 'ch' in col_lower:
+                return 'y1'
+            else:
+                return 'y4'
+
+        for index, (m_id, df) in enumerate(dataDict.items()):
+            current_dash = dash_styles[index % len(dash_styles)]
+            
+            # ---------------------------------------------------------
+            # NEU: Mathematische Normierung der X-ACHSE (Zeit) auf 0-100%
+            # ---------------------------------------------------------
+            min_x = df.index.min()
+            max_x = df.index.max()
+            
+            if max_x != min_x:
+                normalized_x = (df.index - min_x) / (max_x - min_x) * 100
+            else:
+                # Multiplikation mit 0 behält den Pandas-Datentyp bei (verhindert Fehler!)
+                normalized_x = (df.index * 0)
+            
+            for column in df.columns:
+                target_yaxis = get_yaxis_for_column(column)
+                
+                # ---------------------------------------------------------
+                # Mathematische Normierung der Y-ACHSE (Werte) auf 0-100%
+                # ---------------------------------------------------------
+                min_val = df[column].min()
+                max_val = df[column].max()
+                
+                # Division durch 0 abfangen (falls eine Kurve komplett flach ist)
+                if max_val != min_val:
+                    # Normierungs-Formel: (Wert - Min) / (Max - Min) * 100
+                    normalized_y = (df[column] - min_val) / (max_val - min_val) * 100
+                else:
+                    # Wenn die Kurve flach ist, setzen wir sie einfach auf 0%
+                    normalized_y = (df[column] * 0) 
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=normalized_x,               # <--- HIER das normierte X nutzen!
+                        y=normalized_y,               # <--- HIER das normierte Y nutzen!
+                        mode='lines',
+                        line=dict(dash=current_dash),
+                        name=f"{m_id[:4]} | {column}",
+                        yaxis=target_yaxis
+                    )
+                )
+        
+        # Configure the layout
+        fig.update_layout(
+            title_text='Normierter Prozess-Plot (Geheimhaltung)',
+            
+            xaxis=dict(
+                title='Time [%]',            # <--- Achsentitel auf % geändert
+                domain=[0.1, 0.9],
+                range=[-5, 105]              # <--- X-Achse zwingend auf 0 bis 100% (+ 5% Puffer)
+            ),
+            
+            # Alle Y-Achsen zeigen jetzt 0-100% an
+            yaxis=dict(
+                title='Temperature [%]',
+                side='left',
+                range=[-5, 105] 
+            ),
+            
+            yaxis2=dict(
+                title='Vacuum [%]',
+                side='right',
+                overlaying='y',
+                range=[-5, 105]
+            ),
+            
+            yaxis3=dict(
+                title='Gradient [%]',
+                side='right',
+                overlaying='y',
+                anchor='free',
+                position=1.0,
+                range=[-5, 105]
+            ),
+            
+            yaxis4=dict(
+                title='Other Channels [%]',
+                side='left',
+                overlaying='y',
+                anchor='free',
+                position=0.0,
+                range=[-5, 105]
+            ),
+            
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.2,
+                xanchor="center",
+                x=0.5
+            ),
+            
+            autosize=True,
+            margin=dict(l=20, r=20, t=50, b=100) 
+        )
+        
+        return fig

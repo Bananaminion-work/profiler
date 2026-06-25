@@ -75,3 +75,8 @@ class PlotFactory():
             
         # creates the go.Figure object
         return config.build_figure(dataDictCopy)
+    
+    
+    
+    def get_available_configs(self) -> list[str]:
+        return list(self.configsDict.keys())

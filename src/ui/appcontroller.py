@@ -324,6 +324,12 @@ class AppController:
             return []
         
         
+        
+    def load_plot_configs(self)-> list[str]:
+        """returns a list of the available plot-configs from the plot-factory"""
+        return self.plot.get_available_configs()
+        
+        
     
     
     def handle_violation_table_update_request(self, vvtName:str, zeropoint:str):

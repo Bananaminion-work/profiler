@@ -153,7 +153,14 @@ class ZeropointCalculator:
     
     def calculate_ventilate2_zeropoint(self):
         """"""
-        minVaccum = 100
+        minVacuum = 100
+        tempThreshold = 205
+        
+        # check if necessary columns are present in the dataframe
+        required_columns = [ChannelNames.CH1, ChannelNames.VACUUM]
+        if not all(col in self.df.columns for col in required_columns):
+            ui.notify("Required columns for ventilate2 zeropoint calculation are missing in the dataframe.")
+            return 0
         
         # copy df
         dfSelection = self.df.reset_index(drop=True).copy()
@@ -161,7 +168,7 @@ class ZeropointCalculator:
         # calc gradient
         dfSelection["gradient"] = dfSelection[ChannelNames.VACUUM].diff()
         
-        # check whether vaccum was at minVacuum before
+        # save the minimum vacuum value up to the current row
         dfSelection['MinVacuumHistory'] = dfSelection[ChannelNames.VACUUM].cummin()
         
         # check if vacuum is static
@@ -169,8 +176,8 @@ class ZeropointCalculator:
         
         # merge conditions
         foundRows = dfSelection[
-            (dfSelection[ChannelNames.CH1] > 205) &
-            (dfSelection['MinVacuumHistory'] < minVaccum) &
+            (dfSelection[ChannelNames.CH1] > tempThreshold) &
+            (dfSelection['MinVacuumHistory'] < minVacuum) &
             (dfSelection[ChannelNames.VACUUM]> 850) &
             vacuumSettled
         ]
