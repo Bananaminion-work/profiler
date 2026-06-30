@@ -8,7 +8,6 @@ from src.plot.plot_factory import PlotFactory
 from src.shared.filter_composition import FilterComposition
 from src.shared.oven_numbers import OvenNumbers
 from src.shared.product_names import ProductNames
-from src.shared.violation import Violation
 from src.ui.ui_view import UiView
 from src.data.data_manager import DataManager
 from src.database.database_manager import DatabaseManager
@@ -21,6 +20,7 @@ from src.shared.upload_container import UploadContainer
 from src.shared.data_models import Data
 from src.shared.data_composition import DataComposition
 from src.shared.zeropoint_container import ZeropointContainer
+from src.shared.plot_presets import PlotPresets
 
 # import pages
 from src.ui.pages.importPage_getData import ImportPage_getData
@@ -48,15 +48,15 @@ class AppController:
     
     # Attributes:
     
-    current_session_measurement : DataComposition
+    #current_session_measurement : DataComposition
     terminalContent : Any
     terminalContainer : Any
     pageContainer : Any
     _layout : Any
     pages={}
     selected_measurement_ids: set
-    current_gold_dataframe_for_plot: dict[str,DataFrame]
-    current_gold_zeropoints: dict[str,ZeropointContainer]
+    #current_gold_dataframe_for_plot: dict[str,DataFrame]
+    #current_gold_zeropoints: dict[str,ZeropointContainer]
     
     # Functions:
     
@@ -66,13 +66,6 @@ class AppController:
         creates the UiView
         creates framework for visual output
         """
-        #with ui.column().classes("w-full max-w-[1920px] mx-auto") as root:
-        #    self.pageContainer = ui.column().classes("w-full min-h-[720px]")
-        #    ui.separator()
-        #    self.terminalContainer = ui.column().classes("w-full h-24 border p-2 overflow-auto")
-        #    
-        #self.terminalContent = self.terminalContainer
-        #self._layout = root
         
         # assign containers to instance of AppController -> multiple users get their own instance of AppController
         self.pageContainer = pageContainer
@@ -80,7 +73,7 @@ class AppController:
         self.terminalContent = terminalContainer
         self._layout = pageContainer.parent_slot.parent
         self.selected_measurement_ids = set()
-        self.current_gold_dataframe_for_plot = {}
+        #self.data.current_gold_data_for_plot  = {}
             
         # create pages dictionary
         self.create_pages()
@@ -104,7 +97,8 @@ class AppController:
         self.table = TableFactory()
         
         # instanciate current session measurement with empty data
-        self.current_session_measurement = DataComposition()
+        #self.current_session_measurement = DataComposition()
+        self.data.current_import_measurement = DataComposition()
         
         # show initial page
         self.handle_navigation_request('landing')
@@ -132,7 +126,7 @@ class AppController:
         
         does type-cheking for you"""
         
-        goldData = self.current_session_measurement.get_medallion_data().get("gold")
+        goldData = self.data.current_import_measurement.get_medallion_data().get("gold")
         if isinstance(goldData, Data):
             return goldData.get_dataframe()
         else:
@@ -171,10 +165,10 @@ class AppController:
             self.terminalContent.clear()
             # clear ids, golddata and zeropoints
             self.reset_measuremen_ids()
-            self.current_gold_dataframe_for_plot = {}
-            self.current_gold_zeropoints = {}
+            self.data.current_gold_data_for_plot  = {}
+            self.data.current_gold_zeropoints = {}
             # clear current session
-            self.current_session_measurement = DataComposition()
+            self.data.current_import_measurement = DataComposition()
 
         self.ui.switch_page(pageName)
         
@@ -191,9 +185,9 @@ class AppController:
         medallionObjects, dateTime = self.data.create_data_from_measurement(uploadContainer, source)
         
         if isinstance(medallionObjects, dict):
-            self.current_session_measurement.set_medallion_data(medallionObjects)
+            self.data.current_import_measurement.set_medallion_data(medallionObjects)
             
-            self.current_session_measurement.get_metadata().set_datetime(dateTime)
+            self.data.current_import_measurement.get_metadata().set_datetime(dateTime)
         else:
             raise WrongInputError(f"Expected a dict of Data objects, got {type(medallionObjects)} instead.")
         
@@ -212,10 +206,10 @@ class AppController:
         zeropointList = self.analyzer.analyze_zeropoints(goldData)
         
         #save zeropoints in current session
-        self.current_session_measurement.set_zeropoint_container(zeropointList)
+        self.data.current_import_measurement.set_zeropoint_container(zeropointList)
         
         # store the source in metadata
-        self.current_session_measurement.get_metadata().set_source(source)
+        self.data.current_import_measurement.get_metadata().set_source(source)
         
     
     
@@ -242,26 +236,29 @@ class AppController:
         
         
         
-    def handle_plot_request_single(self, config:str, zeropoint:str):
-        """takes in plot-config and the chosen zeropoint and creates the plot in the calling ui-space"""
+    def handle_plot_request_single(self, config:str, zeropoint:str, scope:str):
+        """takes in plot-config, the chosen zeropoint, and the chosen scope and creates the plot in the calling ui-space"""
         
         # get offset for the chosen zeropoint from current session measurement
-        offsetList = self.current_session_measurement.get_zeropoint_container().get_zeropoints()
+        offsetList = self.data.current_import_measurement.get_zeropoint_container().get_zeropoints()
         offset = offsetList[zeropoint]
         
+        # apply scope to the gold-dataframe for the plot based on the chosen scope
+        df_for_plot = self.data.scope_data_single(scope)
+        
         # copy gold-data and apply offset, create plot with offset
-        goldData = self.goldDataframe.copy()
-        return self.plot.create_plot_single(goldData, config, offset)
+        #goldData = self.goldDataframe.copy()
+        return self.plot.create_plot_single(df_for_plot, config, offset)
         
         
         
     def handle_save_request(self, metadata: dict[str,str]):
         
         # set metadata for current session measurement
-        self.current_session_measurement.get_metadata().set_user_input(metadata)
+        self.data.current_import_measurement.get_metadata().set_user_input(metadata)
         
         # get meta-object from current session measurement for easier handling
-        metaObject = self.current_session_measurement.get_metadata()
+        metaObject = self.data.current_import_measurement.get_metadata()
         
         if self.database.is_duplicate(metaObject.get_metadata_dict()):
             return False
@@ -274,19 +271,19 @@ class AppController:
     def _save_measurement_to_database(self):
         
         # check if current session objects are valid
-        for data in self.current_session_measurement.get_medallion_data().values():
+        for data in self.data.current_import_measurement.get_medallion_data().values():
             if not isinstance(data, Data):
                 raise WrongInputError(f"Expected a Data object in medallion array, got {type(data)} instead.")
             
-        if not isinstance(self.current_session_measurement.get_metadata(), Metadata):
-            raise WrongInputError(f"Expected a Metadata-object in current session, got {type(self.current_session_measurement.get_metadata())} instead.")        
+        if not isinstance(self.data.current_import_measurement.get_metadata(), Metadata):
+            raise WrongInputError(f"Expected a Metadata-object in current session, got {type(self.data.current_import_measurement.get_metadata())} instead.")        
         
         # save measurement to database
-        self.database.save_measurement(self.current_session_measurement)
+        self.database.save_measurement(self.data.current_import_measurement)
         ui.notify("Measurement saved successfully!", color="green")
         
         # reset current session after saving
-        self.current_session_measurement = DataComposition()
+        self.data.current_import_measurement = DataComposition()
         self.handle_navigation_request('landing')
     
     
@@ -315,13 +312,19 @@ class AppController:
     
     
     
+    def load_scope_options(self):
+        """returns a list of the available presets from the plot-factory"""
+        return PlotPresets.get_options()
+    
+    
+    
     
     def load_measurement_options(self):
         """returns a list of the current measurements being displayed in the multiple-plot"""
-        if hasattr(self, 'current_gold_dataframe_for_plot'):
-            return list(self.current_gold_dataframe_for_plot.keys())
-        else:
+        if not self.data.current_gold_data_for_plot:
             return []
+        else:
+            return list(self.data.current_gold_data_for_plot.keys())
         
         
         
@@ -340,7 +343,7 @@ class AppController:
         
         # get value of zeropoint from current session measurement
         if not zeropoint == "none":
-            currentOffset = self.current_session_measurement.get_zeropoint_container().get_zeropoints()[zeropoint]
+            currentOffset = self.data.current_import_measurement.get_zeropoint_container().get_zeropoints()[zeropoint]
         
         else:
             currentOffset = 0
@@ -353,12 +356,15 @@ class AppController:
     def handle_violation_table_update_request_by_id(self, vvtName:str, zeropoint:str, selectedMeasurement:str):
         
         # check if selected id is in current gold data
-        if not hasattr(self, 'current_gold_dataframe_for_plot') or selectedMeasurement not in self.current_gold_dataframe_for_plot:
-            ui.notify("Selected measurement not found in current data.", color="negative")
+        if not self.data.current_gold_data_for_plot or not selectedMeasurement:
+            return
+        
+        if selectedMeasurement not in self.data.current_gold_data_for_plot:
+            ui.notify(f"Selected measurement id '{selectedMeasurement}' not found in current gold data.", color="negative")
             return
         
         # get gold dataframe and violations from analyzer
-        gold = self.current_gold_dataframe_for_plot[selectedMeasurement]
+        gold = self.data.current_gold_data_for_plot[selectedMeasurement]
         violations = self.analyzer.analyze_violations(gold,vvtName)
         
         # if none is selected set offset to 0
@@ -367,7 +373,7 @@ class AppController:
         
         # get value of zeropoint from current session measurement
         else:
-            zeroContainer = self.current_gold_zeropoints[selectedMeasurement]
+            zeroContainer = self.data.current_gold_zeropoints[selectedMeasurement]
             currentOffset = zeroContainer.get_zeropoints()[zeropoint]
             
             
@@ -410,33 +416,32 @@ class AppController:
             return
         
         # get gold-data with the selected ids from the database
-        self.current_gold_dataframe_for_plot = self.database.get_gold_data_by_id(self.selected_measurement_ids)
+        self.data.current_gold_data_for_plot  = self.database.get_gold_data_by_id(self.selected_measurement_ids)
         
         # calculate zeropoints for the selected measurements and save them in dict
-        for id, df in self.current_gold_dataframe_for_plot.items():
+        for id, df in self.data.current_gold_data_for_plot .items():
             
             # calculate zeropoints with analyzer
             zeropointList = self.analyzer.analyze_zeropoints(df)
             
             #set zeropoints for the measurement in dict with measurement_id as key
-            self.current_gold_zeropoints[id] = zeropointList
+            self.data.current_gold_zeropoints[id] = zeropointList
         
         # navigate to plot page
         self.handle_navigation_request('plot-show')
         
         
         
-    def handle_plot_measurements_request(self, config:str, zeropoint:str):
+    def handle_plot_measurements_request(self, config:str, zeropoint:str, preset:str):
         """handles the request to draw the plot of the before selected measurements based on config and zeropoint"""
         
         #check if there is data
-        if not hasattr(self, 'current_gold_dataframe_for_plot') or not self.current_gold_dataframe_for_plot:
-            ui.notify("There is no data to be displayed.", color="negative")
+        if not self.data.current_gold_data_for_plot:
             return None
         
         #create dict with zeropoints for the plot based on the selected zeropoint
         zeropointsDict = {}
-        for id, zeropointContainer in self.current_gold_zeropoints.items():
+        for id, zeropointContainer in self.data.current_gold_zeropoints.items():
             
             # set offset as 0 if chosen none
             if zeropoint == "none":
@@ -446,9 +451,15 @@ class AppController:
             else:
                 zeropointsDict[id] = zeropointContainer.get_zeropoints()[zeropoint]
         
+        # apply scope to the dataframes for the plot based on the chosen config
+        df_for_plot = {}
+        
+        # apply scope to each dataframe 
+        df_for_plot = self.data.scope_data_multiple(preset)
+        
         # call plot factory to draw plot
         return self.plot.create_plot_multiple(
-            self.current_gold_dataframe_for_plot.copy(),
+            df_for_plot,
             zeropointsDict,
             config
         )

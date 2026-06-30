@@ -7,7 +7,6 @@ from src.shared.zeropoint_container import ZeropointContainer
 class ZeropointCalculator:
     
     df : DataFrame
-    zeros : ZeropointContainer
     
     def __init__(self):
         self.df = DataFrame()
@@ -37,6 +36,10 @@ class ZeropointCalculator:
         
         """calculates the offset to ReadTime of the last found row where inlet bulkhead is 1, searching only in the first 300 rows"""
         
+        if not self.df[ChannelNames.INLET_BULKHEAD_OPEN].any():
+            ui.notify("No inlet-bulkhead-zeropoint was found")
+            return 0
+        
         # only the first 300 rows + reset index to directly access the offset of the zeropoint
         dfBefore300 = self.df.iloc[:300].reset_index(drop=True).copy()
 
@@ -56,6 +59,10 @@ class ZeropointCalculator:
     def caclulate_outlet_bulkhead_zeropoint(self)->int:
         
         """calculates the offset to ReadTime of the last found row where outlet bulkhead is 1, searching only in the first 300 rows"""
+        
+        if not self.df[ChannelNames.OUTLET_BULKHEAD_OPEN].any():
+            ui.notify("No outlet-bulkhead-zeropoint was found")
+            return 0
         
         # reset index to directly access the offset of the zeropoint
         df = self.df.reset_index(drop=True).copy()
@@ -78,6 +85,10 @@ class ZeropointCalculator:
         
         """calculates the offset to ReadTime of the first injection from the 10. row onwards, where St_MediumPump is 1"""
         
+        if not self.df[ChannelNames.MEDIUM_PUMP].any():
+            ui.notify("No first injection zeropoint was found")
+            return 0
+        
         rowOffset = 10
         
         # take all rows from the offset onwards and reset index to directly access the offset of the zeropoint
@@ -97,6 +108,10 @@ class ZeropointCalculator:
     def calculate_above235_zeropoint(self):
         """calculates tho offset to ReadTime of the first row where temperature (CH1) is above 235°C"""
         
+        if not self.df[ChannelNames.CH1].any():
+            ui.notify("No zeropoint above 235°C was found")
+            return 0
+        
         # take all rows + reset index to directly access the offset of the zeropoint
         dfSelection = self.df.reset_index(drop=True).copy()
         foundRows = dfSelection[dfSelection[ChannelNames.CH1] > 235]
@@ -109,50 +124,11 @@ class ZeropointCalculator:
         return int(foundRows.index[0])
     
     
-    ###### ALTE VARIANTE AUS EXCEL - PROBLEMATISCH
-    def calculate_ventilate2_zeropoint_OLD(self):
-        """"""
-        
-        minVacuum = 100
-        edgeShift = 3
-        
-        # copy whole dataframe, access index directly as numeric offset
-        dfSelection = self.df.reset_index(drop=True).copy()
-        
-        #calculate gradient
-        dfSelection["gradient"] = dfSelection[ChannelNames.VACUUM].diff()
-        
-        # calculate rolling mean for pressure
-        dfSelection['RollingMean'] = dfSelection[ChannelNames.VACUUM].diff().rolling(5).mean()        
-        
-        # check whether vaccum was at minVacuum before
-        dfSelection['MinVacuumHistory'] = dfSelection[ChannelNames.VACUUM].cummin()
-        
-        # check whether the gradient was very high before
-        dfSelection['MaxGradient'] = dfSelection['RollingMean'].cummax()
-        
-        # edge detection for rolling mean dependant on the edgeShift
-        vacuumSettled = dfSelection["gradient"].abs() < 3
-        
-        # connect conditions
-        foundRows = dfSelection[
-            (dfSelection[ChannelNames.CH1] > 205) &
-            (dfSelection["MinVacuumHistory"] < minVacuum) &
-            (dfSelection["MaxGradient"] > 100 ) &
-            vacuumSettled
-        ]
-        
-        if foundRows.empty:
-            ui.notify("No ventilate2 zeropoint was found")
-            return 0
-        
-        #return first found row
-        return int(foundRows.index[0])
-    
-    
     
     def calculate_ventilate2_zeropoint(self):
-        """"""
+        """calculkates the offset to ReadTime of the defined ventilation done - zeropoint"""
+        
+        
         minVacuum = 100
         tempThreshold = 205
         

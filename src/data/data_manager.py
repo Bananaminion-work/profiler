@@ -1,9 +1,10 @@
-from src.shared.data_models import Data, GoldData
+from src.data.data_store import DataStore
+from src.shared.data_composition import DataComposition
+from src.shared.data_models import Data
 from src.data.creator import Creator
 from pandas import DataFrame
 from datetime import datetime
 from src.shared.upload_container import UploadContainer
-
 
 class DataManager():
     
@@ -13,13 +14,49 @@ class DataManager():
     
     def __init__(self):
         self._creator = Creator()
+        self._store = DataStore()
         
     def create_data_from_measurement(self,uploadContainer: UploadContainer, source:str):
         self._measurementObjects,self._dateTime = self._creator.create_data_objects(uploadContainer, source)
         return self._measurementObjects,self._dateTime
         
-    def create_final_data(self,chosenZeropoints: dict[str,DataFrame]):
-        pass
-        
     def get_measurement_objects(self)->dict[str,Data]:
         return self._measurementObjects
+    
+    def scope_data_single(self, preset:str):
+        """Return a DataFrame with the data for the given preset, or an empty DataFrame if no measurement is loaded"""
+        return self._store.get_scoped_data_single(preset)
+    
+    def scope_data_multiple(self, preset:str)->dict[str, DataFrame]:
+        """Return a dict of DataFrames with the data for the given preset, or an empty DataFrame if no measurement is loaded"""
+        return self._store.get_scoped_data_multiple(preset)
+    
+    
+    
+    @property
+    def current_import_measurement(self) -> DataComposition:
+        return self._store.current_import_measurement
+    
+    @property
+    def current_gold_data_for_plot(self) -> dict[str, DataFrame]:
+        return self._store.current_gold_data_for_plot
+    
+    @property
+    def current_gold_zeropoints(self):
+        return self._store.current_gold_zeropoints
+    
+    @current_import_measurement.setter
+    def current_import_measurement(self, composition: DataComposition):
+        self._store.current_import_measurement = composition
+        
+    @current_gold_data_for_plot.setter
+    def current_gold_data_for_plot(self, data: dict[str, DataFrame]):
+        self._store.current_gold_data_for_plot = data
+        
+    @current_gold_zeropoints.setter
+    def current_gold_zeropoints(self, zeropoints):
+        self._store.current_gold_zeropoints = zeropoints
+        
+    
+        
+    

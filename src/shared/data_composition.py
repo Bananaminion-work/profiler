@@ -1,7 +1,7 @@
-from src.shared.data_models import Data, Metadata, GoldData
+from src.shared.data_models import Data, Metadata
 from src.shared.exceptions import WrongInputError
 from src.shared.zeropoint_container import ZeropointContainer
-from src.shared.violation import Violation
+from pandas import DataFrame
 
 
 class DataComposition:
@@ -41,5 +41,5 @@ class DataComposition:
     def get_zeropoint_container(self) -> ZeropointContainer:
         return self._zeropoints
     
-    def set_final_gold_object(self, gold: Data):
-        pass
+    def get_gold_data(self) -> DataFrame:
+        return self._medallionData["gold"].get_dataframe()

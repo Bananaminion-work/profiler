@@ -38,6 +38,7 @@ class ImportPage_showData(SubPage):
     above235Zeropoint: str = ""
     ventilate2Zeropoint: str = ""
     chosenZeropoint_show: str = "none"
+    chosenScope: str = "Default"
     activeZeropoint: str = ""
     selectedVVT: str = ""
 
@@ -78,7 +79,7 @@ class ImportPage_showData(SubPage):
             
             
             # section 1: Config
-            with ui.card().classes("w-full"):
+            with ui.row().classes("items-center"):
                 ui.label("Choose config and zeropoint").classes('text-lg')
                 
                 # get options
@@ -107,6 +108,19 @@ class ImportPage_showData(SubPage):
                         on_change=self.update_vvt_selection
                     ).bind_value(self,"chosenZeropoint_show").classes("w-100")
                     
+                    
+                    # load options
+                    scopeOptions = self.controller.load_scope_options()
+                    # add "none" as option on the first postion
+                    if "none" not in scopeOptions:
+                        scopeOptions.insert(0, "none")
+                    
+                    ui.select(
+                        options=scopeOptions,
+                        value=scopeOptions[0],
+                        label="choose scope for plot",
+                        on_change=self.update_plot_config
+                    ).bind_value(self,"chosenScope").classes("w-100")
                     
                     
             # section 2: Plot
@@ -200,7 +214,7 @@ class ImportPage_showData(SubPage):
         
         self.plotContainer.clear()
         
-        plotContent = self.controller.handle_plot_request_single(self.config,self.chosenZeropoint_show)
+        plotContent = self.controller.handle_plot_request_single(self.config,self.chosenZeropoint_show,self.chosenScope)
         
         if plotContent is not None:
             # with function enables the call of handle-method on the container object

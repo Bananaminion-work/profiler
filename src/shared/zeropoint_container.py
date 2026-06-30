@@ -1,43 +1,45 @@
+from src.shared.zeropoint_names import ZeropointNames
+
 class ZeropointContainer:
     
     zeropoints:dict[str,int]
     
     def __init__(self):
         self.zeropoints = {
-            'none':0,
-            'inlet bulkhead':0,
-            'outlet bulkhead':0,
-            'first injection':0,
-            'above 235':0,
-            'ventilate 2':0
+            ZeropointNames.NONE: 0,
+            ZeropointNames.INLET_BULKHEAD: 0,
+            ZeropointNames.OUTLET_BULKHEAD: 0,
+            ZeropointNames.FIRST_INJECTION: 0,
+            ZeropointNames.ABOVE_235: 0,
+            ZeropointNames.VENTILATE_2: 0
         }
         
     def set_inlet_bulkhead(self, bulkhead: int):
-        self.zeropoints['inlet bulkhead'] = bulkhead
+        self.zeropoints[ZeropointNames.INLET_BULKHEAD] = bulkhead
         
     def set_outlet_bulkhead(self, outlet_bulkhead: int):
-        self.zeropoints['outlet bulkhead'] = outlet_bulkhead
+        self.zeropoints[ZeropointNames.OUTLET_BULKHEAD] = outlet_bulkhead
         
     def set_first_injection(self, first_injection: int):
-        self.zeropoints['first injection'] = first_injection
+        self.zeropoints[ZeropointNames.FIRST_INJECTION] = first_injection
         
     def set_above235(self, above235: int):
-        self.zeropoints['above 235'] = above235
+        self.zeropoints[ZeropointNames.ABOVE_235] = above235
         
     def set_ventilate2(self, ventilate2: int):
-        self.zeropoints['ventilate 2'] = ventilate2
+        self.zeropoints[ZeropointNames.VENTILATE_2] = ventilate2
         
     def get_inlet_bulkhead(self) -> int:
-        return self.zeropoints['inlet bulkhead']
+        return self.zeropoints[ZeropointNames.INLET_BULKHEAD]
 
     def get_first_injection(self) -> int:
-        return self.zeropoints['first injection']
+        return self.zeropoints[ZeropointNames.FIRST_INJECTION]
     
     def get_above235(self) -> int:
-        return self.zeropoints['above 235']
+        return self.zeropoints[ZeropointNames.ABOVE_235]
     
     def get_ventilate2(self) -> int:
-        return self.zeropoints['ventilate 2']
+        return self.zeropoints[ZeropointNames.VENTILATE_2]
     
     def get_zeropoints(self)-> dict[str,int]:
         return self.zeropoints

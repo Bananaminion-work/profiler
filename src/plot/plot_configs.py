@@ -339,7 +339,7 @@ class SampleConfig2(BasePlotConfig):
             
             xaxis=dict(
                 title='Time [%]',            # <--- Achsentitel auf % geändert
-                domain=[0.1, 0.9],
+                domain=[0.05, 0.95],         # <--- X-Achse etwas komprimiert, damit die Y-Achsen nicht abgeschnitten werden
                 range=[-5, 105]              # <--- X-Achse zwingend auf 0 bis 100% (+ 5% Puffer)
             ),
             

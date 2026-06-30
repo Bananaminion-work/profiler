@@ -5,14 +5,15 @@ from nicegui import ui
 class PlotPage_showData(SubPage):
     pageName = "plot-show"
     config: str = "standard"
-    chosenZeropoint_show: str = "none"
+    chosenZeropoint: str = "none"
+    chosenScope: str = "Default"
 
     def build_content(self) -> None:
         with ui.column().classes("w-full gap-4"):
             
             # section 1: plot modification options
             with ui.row().classes("items-center"):
-                ui.label("Modify plots:")
+                ui.label("Modify plot:").classes('text-lg')
                 
                  # get options
                 configs = self.controller.load_plot_configs()
@@ -29,18 +30,33 @@ class PlotPage_showData(SubPage):
                 
                 
                 
-                # load options
-                zeropointOptions = self.controller.load_zeropoint_options()
-                # add "none" as option on the first postion
-                if "none" not in zeropointOptions:
-                    zeropointOptions.insert(0, "none")
-                
-                ui.select(
-                    options=zeropointOptions,
-                    value=zeropointOptions[0],
-                    label="choose zeropoint for plot",
-                    on_change=self.update_plot_and_vvt
-                ).bind_value(self,"chosenZeropoint_show").classes("w-100")
+                    # load options
+                    zeropointOptions = self.controller.load_zeropoint_options()
+                    # add "none" as option on the first postion
+                    if "none" not in zeropointOptions:
+                        zeropointOptions.insert(0, "none")
+                    
+                    ui.select(
+                        options=zeropointOptions,
+                        value=zeropointOptions[0],
+                        label="choose zeropoint for plot",
+                        on_change=self.update_plot_and_vvt
+                    ).bind_value(self,"chosenZeropoint_show").classes("w-100")
+                    
+                    
+                    
+                    # load options
+                    scopeOptions = self.controller.load_scope_options()
+                    # add "none" as option on the first postion
+                    if "none" not in scopeOptions:
+                        scopeOptions.insert(0, "none")
+                    
+                    ui.select(
+                        options=scopeOptions,
+                        value=scopeOptions[0],
+                        label="choose scope for plot",
+                        on_change=self.update_plot_and_vvt
+                    ).bind_value(self,"chosenScope").classes("w-100")
             
             
             
@@ -116,7 +132,8 @@ class PlotPage_showData(SubPage):
         # call controller to get plotcontent
         plotContent = self.controller.handle_plot_measurements_request(
                 self.config,
-                self.chosenZeropoint_show
+                self.chosenZeropoint_show,
+                self.chosenScope
             )
         
         # draw go.figure objekt in container
