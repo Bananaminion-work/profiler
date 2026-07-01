@@ -152,3 +152,8 @@ class DatabaseManager:
             return True
         
         return False
+    
+    
+    def get_measurement_metadata(self, measurement_id)-> DataFrame:
+        """Returns the metadata for a given id as a DataFrame"""
+        return self._metadataRepository.get_measurement_metadata(measurement_id)

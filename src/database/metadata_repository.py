@@ -5,6 +5,7 @@ import os
 
 from src.shared.meta_names import MetaNames
 from src.shared.metadata import Metadata
+from typing import cast
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -16,9 +17,9 @@ class MetadataRepository:
         # Code to save measurement metadata to the database
         return""
 
-    def get_measurement_metadata(self, measurement_id):
+    def get_measurement_metadata(self, measurement_id) -> DataFrame:
         # Code to retrieve measurement metadata from the database
-        pass
+        return DataFrame()
 
     def delete_measurement_metadata(self, measurement_id):
         # Code to delete measurement metadata from the database
@@ -98,7 +99,13 @@ class MetadataRepoCsv(MetadataRepository):
     
     
     def get_measurement_metadata(self, measurement_id):
-        pass
+        
+        metaDf = self.get_saved_measurements()
+        
+        if metaDf.empty or "measurement_id" not in metaDf.columns:
+            return DataFrame()
+        
+        return cast(DataFrame, metaDf[metaDf["measurement_id"] == measurement_id])
     
     
     
@@ -153,7 +160,7 @@ class MetadataRepoDatabricks(MetadataRepository):
         return ""
     
     def get_measurement_metadata(self, measurement_id):
-        pass
+        return DataFrame()
     
     def delete_measurement_metadata(self, measurement_id):
         pass

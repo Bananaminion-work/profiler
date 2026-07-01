@@ -90,6 +90,3 @@ class PlotPage_selectData(SubPage):
         self.product = ""
         self.load_profile = ""
         self.comment = ""
-        
-        # clear the ids in controller
-        self.controller.reset_measuremen_ids()

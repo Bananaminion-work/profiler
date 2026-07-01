@@ -93,7 +93,7 @@ class PlotPage_showData(SubPage):
                     self.selectedVVT = vvtOptions[0] if vvtOptions else ""
                     
                     measurements = self.controller.load_measurement_options()
-                    self.selectedMeasurementId = measurements[0] if measurements else ""
+                    self.selectedMeasurementId = list(measurements.keys())[0] if measurements else ""
                     
                     ui.select(
                         vvtOptions,
@@ -174,4 +174,6 @@ class PlotPage_showData(SubPage):
         """resets the page to default state, e.g. after loading new data"""
         self.config = "standard"
         self.chosenZeropoint_show = "none"
+        self.selectedMeasurementId = ""
+        self.selectedVVT = ""
         self.update_plot()

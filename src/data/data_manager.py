@@ -45,6 +45,14 @@ class DataManager():
     def current_gold_zeropoints(self):
         return self._store.current_gold_zeropoints
     
+    @property
+    def measurement_ids(self) -> set:
+        return self._store.measurement_ids
+    
+    @property
+    def measurement_name_mapping(self) -> dict[str,str]:
+        return self._store.measurement_name_mapping
+    
     @current_import_measurement.setter
     def current_import_measurement(self, composition: DataComposition):
         self._store.current_import_measurement = composition
@@ -57,6 +65,11 @@ class DataManager():
     def current_gold_zeropoints(self, zeropoints):
         self._store.current_gold_zeropoints = zeropoints
         
-    
+    @measurement_ids.setter
+    def measurement_ids(self, ids: set):
+        self._store.measurement_ids = ids
         
+    @measurement_name_mapping.setter
+    def measurement_name_mapping(self, mapping: dict[str,str]):
+        self._store.measurement_name_mapping = mapping
     

@@ -36,7 +36,7 @@ class StandardConfig(BasePlotConfig):
                         y=df[column],
                         mode='lines',
                         # name of the legend
-                        name=f"{m_id[:4]} | {column}"
+                        name=f"{m_id} | {column}"
                     )
                 )
         
@@ -94,7 +94,7 @@ class StandardConfig2(BasePlotConfig):
                         y=df[column],
                         mode='lines',
                         line=dict(dash=current_dash), # different line styles for each measurement!
-                        name=f"{m_id[:4]} | {column}",
+                        name=f"{m_id} | {column}",
                         yaxis=target_yaxis            # assignment to the correct Y-axis!
                     )
                 )

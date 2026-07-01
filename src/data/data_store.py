@@ -10,6 +10,8 @@ class DataStore:
         self.current_import_measurement = DataComposition()
         self.current_gold_data_for_plot: dict[str, DataFrame] = {}
         self.current_gold_zeropoints = {}
+        self.measurement_ids: set = set()
+        self.measurement_name_mapping: dict[str,str] = {}
         
     ##### Attribute access #####
     

@@ -6,6 +6,7 @@ from pandas import DataFrame
 # import components
 from src.plot.plot_factory import PlotFactory
 from src.shared.filter_composition import FilterComposition
+from src.shared.meta_names import MetaNames
 from src.shared.oven_numbers import OvenNumbers
 from src.shared.product_names import ProductNames
 from src.ui.ui_view import UiView
@@ -54,7 +55,7 @@ class AppController:
     pageContainer : Any
     _layout : Any
     pages={}
-    selected_measurement_ids: set
+    #selected_measurement_ids: set
     #current_gold_dataframe_for_plot: dict[str,DataFrame]
     #current_gold_zeropoints: dict[str,ZeropointContainer]
     
@@ -72,7 +73,7 @@ class AppController:
         self.terminalContainer = terminalContainer
         self.terminalContent = terminalContainer
         self._layout = pageContainer.parent_slot.parent
-        self.selected_measurement_ids = set()
+        #self.selected_measurement_ids = set()
         #self.data.current_gold_data_for_plot  = {}
             
         # create pages dictionary
@@ -134,12 +135,6 @@ class AppController:
     
     
     
-    def reset_measuremen_ids(self):
-        """clears the set of selected measurement ids, used when navigating back to home to ensure clean state for next selection"""
-        self.selected_measurement_ids.clear()
-    
-    
-    
     def create_pages(self):
         """initiates all pages, also used to clear input-cells after home-navigation
         """
@@ -161,12 +156,16 @@ class AppController:
         if pageName == 'landing':
             # reset pages
             self.reset_all_pages()
+            
             # reset terminal
             self.terminalContent.clear()
+            
             # clear ids, golddata and zeropoints
-            self.reset_measuremen_ids()
             self.data.current_gold_data_for_plot  = {}
             self.data.current_gold_zeropoints = {}
+            self.data.measurement_name_mapping = {}
+            self.data.measurement_ids.clear()
+            
             # clear current session
             self.data.current_import_measurement = DataComposition()
 
@@ -319,12 +318,12 @@ class AppController:
     
     
     
-    def load_measurement_options(self):
+    def load_measurement_options(self) -> dict[str,str]:
         """returns a list of the current measurements being displayed in the multiple-plot"""
-        if not self.data.current_gold_data_for_plot:
-            return []
+        if not self.data.measurement_name_mapping:
+            return {}
         else:
-            return list(self.data.current_gold_data_for_plot.keys())
+            return self.data.measurement_name_mapping
         
         
         
@@ -360,6 +359,8 @@ class AppController:
             return
         
         if selectedMeasurement not in self.data.current_gold_data_for_plot:
+            print(f"Suche nach ID: {selectedMeasurement}")
+            print(f"vorhandene IDS: {list(self.data.current_gold_data_for_plot.keys())}")
             ui.notify(f"Selected measurement id '{selectedMeasurement}' not found in current gold data.", color="negative")
             return
         
@@ -395,7 +396,7 @@ class AppController:
             self.table.update_measurement_table(
                 metaDf,
                 filter,
-                selected_ids = self.selected_measurement_ids,
+                selected_ids = self.data.measurement_ids,
                 set_selected_ids_callback = self.set_selected_measurements
                 )
             
@@ -405,27 +406,47 @@ class AppController:
         """updates the set of selected measurement ids based on user selection in the measurement table"""
         
         # uses python.set as datatype for easy addition and removal of ids, also ensures uniqueness
-        self.selected_measurement_ids = selected_ids
+        self.data.measurement_ids = selected_ids
         
         
         
     def handle_show_selected_request(self):
         
-        if not self.selected_measurement_ids:
+        if not self.data.measurement_ids:
             ui.notify("No measurements selected. Please select measurements from the table to show them in the plot.", color="negative")
             return
         
         # get gold-data with the selected ids from the database
-        self.data.current_gold_data_for_plot  = self.database.get_gold_data_by_id(self.selected_measurement_ids)
+        self.data.current_gold_data_for_plot  = self.database.get_gold_data_by_id(self.data.measurement_ids)
         
         # calculate zeropoints for the selected measurements and save them in dict
-        for id, df in self.data.current_gold_data_for_plot .items():
+        for id, df in self.data.current_gold_data_for_plot.items():
             
             # calculate zeropoints with analyzer
             zeropointList = self.analyzer.analyze_zeropoints(df)
             
             #set zeropoints for the measurement in dict with measurement_id as key
             self.data.current_gold_zeropoints[id] = zeropointList
+            
+        # build name mapping for display
+        for id in self.data.measurement_ids:
+            # get metadata for the id
+            metaDf = self.database.get_measurement_metadata(id)
+            
+            # if there is metadata we build a new name
+            if not metaDf.empty:
+                oven = metaDf[MetaNames.OVEN_NR].values[0]
+                date = metaDf[MetaNames.DATE].values[0]
+                product = metaDf[MetaNames.PRODUCT].values[0]
+                
+                displayName = f"{oven} | {date} | {product}"
+                
+            # in case there is no metadata:    
+            else:
+                displayName = f"Messung: {id[:4]}"
+            
+            # save the display name in the mapping dict
+            self.data.measurement_name_mapping[id] = displayName
         
         # navigate to plot page
         self.handle_navigation_request('plot-show')
@@ -457,9 +478,19 @@ class AppController:
         # apply scope to each dataframe 
         df_for_plot = self.data.scope_data_multiple(preset)
         
+        # create display-names
+        mapping = self.data.measurement_name_mapping
+        
+        # create new dicts
+        displayDfDict = {mapping.get(id,id): df for id, df in df_for_plot.items()}
+        displayZeroDict = {
+            str(mapping.get(id,id)): int(offset) 
+            for id, offset in zeropointsDict.items()
+            }
+        
         # call plot factory to draw plot
         return self.plot.create_plot_multiple(
-            df_for_plot,
-            zeropointsDict,
+            displayDfDict,
+            displayZeroDict,
             config
         )
