@@ -93,7 +93,7 @@ class AppController:
         self.plot = PlotFactory()
         
         #create DatabaseManager
-        self.database = DatabaseManager("csv")
+        self.database = DatabaseManager("databricks")
         
         # create Analyzer
         self.analyzer = Analyzer(DataFrame())
