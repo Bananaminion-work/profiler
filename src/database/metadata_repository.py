@@ -146,7 +146,7 @@ class MetadataRepoDatabricks(MetadataRepository):
         super().__init__()
         self.client = databricksClient
         self._metadataTable = TableNames.METADATA
-        self.create_metadata_table_if_not_exists()
+        #self.create_metadata_table_if_not_exists()
     
     def save_measurement_metadata(self, metadata, measurement_id: str) -> str:
         

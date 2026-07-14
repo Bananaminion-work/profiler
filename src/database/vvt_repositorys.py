@@ -43,7 +43,7 @@ class VvtRepoDatabricks(VvtRepository):
     def __init__(self,databaseClient):
         self.client = databaseClient
         self._vvtTable = TableNames.VVT
-        self._initialize_vvt_table()
+        #self._initialize_vvt_table()
     
     def load_vvt(self) -> DataFrame:
         query = f"SELECT * FROM {self._vvtTable}"
