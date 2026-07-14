@@ -1,7 +1,9 @@
+import importlib
+from pathlib import Path
+import os
 from typing import Any, cast
-
 from nicegui import ui
-from pandas import DataFrame
+import inspect
 
 # import components
 from src.plot.plot_factory import PlotFactory
@@ -24,6 +26,7 @@ from src.shared.zeropoint_container import ZeropointContainer
 from src.shared.plot_presets import PlotPresets
 
 # import pages
+import src.ui.pages
 from src.ui.pages.importPage_getData import ImportPage_getData
 from src.ui.pages.importPage_showData import ImportPage_showData
 from src.ui.pages.landing import LandingPage
@@ -136,16 +139,51 @@ class AppController:
     
     
     def create_pages(self):
-        """initiates all pages, also used to clear input-cells after home-navigation
+        """creates all pages and stores them in a dictionary for easy access by name
         """
     
-        self.pages['landing'] = LandingPage(self)
-        self.pages['import-get'] = ImportPage_getData(self)
-        self.pages['import-show'] = ImportPage_showData(self)
-        self.pages['plot-select'] = PlotPage_selectData(self)
-        self.pages['plot-show'] = PlotPage_showData(self)
-        self.pages['popup-confirm'] = Popup_confirm(self)
-        self.pages['popup-warning'] = Popup_warning(self)
+        #self.pages['landing']       = LandingPage(self)
+        #self.pages['import-get']    = ImportPage_getData(self)
+        #self.pages['import-show']   = ImportPage_showData(self)
+        #self.pages['plot-select']   = PlotPage_selectData(self)
+        #self.pages['plot-show']     = PlotPage_showData(self)
+        #self.pages['popup-confirm'] = Popup_confirm(self)
+        #self.pages['popup-warning'] = Popup_warning(self)
+        
+        #create empty dictionary for pages
+        self.pages = {}
+        
+        # get direktory
+        pagesDir = Path(__file__).parent / "pages"
+        
+        # find all python files in the pages directory and import them
+        for file in pagesDir.glob("*.py"):
+            
+            # ignore basepages and __init__.py
+            if file.name.startswith("base_pages") or file.name == "__init__.py":
+                continue
+            
+            #create module name
+            moduleName = f"src.ui.pages.{file.stem}"
+            
+            #import the module
+            module = importlib.import_module(moduleName)
+            
+            try:
+            
+                # for any found class
+                for _,obj in inspect.getmembers(module, inspect.isclass):
+                    
+                    # check if the page has a PageName and instaciate
+                    if hasattr(obj, 'pageName') and obj.__module__ == moduleName:
+                        self.pages[obj.pageName] = obj(self)
+            
+                        print(f"gefundene Seiten: {obj.pageName} -> {obj.__name__}")
+                        
+            except Exception as e:
+                print(f"Failed to create Page ({moduleName}): {e}")
+                    
+        print(f"Alle Seiten wurden erfolgreich erstellt: {list(self.pages.keys())}")
 
 
 
