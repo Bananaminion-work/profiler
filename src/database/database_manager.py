@@ -2,6 +2,7 @@ from dataclasses import asdict
 import uuid
 
 from pandas import DataFrame
+from src.database.databricks_client import DatabricksClient
 from src.database.measurement_repository import MeasurementRepository, MeasurementRepoCsv, MeasurementRepoDatabricks
 from src.database.metadata_repository import MetadataRepository, MetadataRepoCsv, MetadataRepoDatabricks
 from src.database.vvt_repositorys import VvtRepoCsv, VvtRepoDatabricks, VvtRepository
@@ -27,9 +28,10 @@ class DatabaseManager:
             self._measurementRepository = MeasurementRepoCsv()
             self._metadataRepository = MetadataRepoCsv()
         elif source == "databricks":
-            self._vvtRepository = VvtRepoDatabricks()
-            self._measurementRepository = MeasurementRepoDatabricks()
-            self._metadataRepository = MetadataRepoDatabricks()
+            self.databricksClient = DatabricksClient()
+            self._vvtRepository = VvtRepoDatabricks(self.databricksClient)
+            self._measurementRepository = MeasurementRepoDatabricks(self.databricksClient)
+            self._metadataRepository = MetadataRepoDatabricks(self.databricksClient)
         else:
             raise ValueError(f"Invalid source '{source}' for VVT repository.")
     

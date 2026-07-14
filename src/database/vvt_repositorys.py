@@ -38,8 +38,8 @@ class VvtRepoCsv(VvtRepository):
     
 class VvtRepoDatabricks(VvtRepository):
     
-    def __init__(self):
-        pass
+    def __init__(self,databaseClient):
+        self.client = databaseClient
     
     def load_vvt(self) -> DataFrame:
         return pd.DataFrame()

@@ -153,8 +153,9 @@ class MetadataRepoCsv(MetadataRepository):
     
     
 class MetadataRepoDatabricks(MetadataRepository):
-    def __init__(self):
+    def __init__(self, databricksClient):
         super().__init__()
+        self.client = databricksClient
     
     def save_measurement_metadata(self, metadata, measurement_id: str) -> str:
         return ""

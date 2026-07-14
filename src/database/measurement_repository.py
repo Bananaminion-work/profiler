@@ -6,6 +6,7 @@ from src.shared.data_models import Data
 from pathlib import Path
 
 from src.shared.exceptions import WrongInputError
+from src.shared.table_names import TableNames
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -96,11 +97,27 @@ class MeasurementRepoCsv(MeasurementRepository):
         
 
 class MeasurementRepoDatabricks(MeasurementRepository):
-    def __init__(self):
+    def __init__(self, databricksClient):
         super().__init__()
+        self.client = databricksClient
+        self._bronzeTable = TableNames.BRONZE
+        self._silverTable = TableNames.SILVER
+        self._goldTable = TableNames.GOLD
     
     def add_measurement(self, measurement_id: str, measurement: dict[str,Data]):
         pass
     
     def get_gold_data_by_id(self, measurement_ids: set)-> DataFrame:
-        return DataFrame()
+        
+        # return empty DataFrame if no measurement_ids are provided
+        if not measurement_ids:
+            return DataFrame() 
+        
+        # create a string of measurement_ids for the SQL query
+        ids_str = ', '.join(measurement_ids)
+        
+        # create a query to fetch gold data for the given measurement_ids
+        query = f"SELECT * FROM {self._goldTable} WHERE measurement_id IN ({ids_str})"
+        
+        # use client to get data from Databricks
+        return self.client.get_data(query)
