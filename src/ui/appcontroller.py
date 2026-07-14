@@ -4,6 +4,8 @@ import importlib
 from pathlib import Path
 import inspect
 
+from pandas import DataFrame
+
 # import components
 from src.plot.plot_factory import PlotFactory
 from src.shared.filter_composition import FilterComposition
@@ -94,7 +96,7 @@ class AppController:
         self.database = DatabaseManager("csv")
         
         # create Analyzer
-        self.analyzer = Analyzer(self.database.load_vvt())
+        self.analyzer = Analyzer(DataFrame())
         
         # create TableFactory
         self.table = TableFactory()
