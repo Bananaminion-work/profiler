@@ -1,3 +1,5 @@
+import os
+
 from nicegui import ui
 from src.app.ui_shell import UiShell
 
@@ -12,4 +14,7 @@ from src.app.ui_shell import UiShell
 # databricks test:
 controller = UiShell()
 
-ui.run(host="0.0.0.0", port=8000, title="Temp-Profiler", reload=False)
+# databricks port
+cloutPort = int(os.environ.get("PORT", 8000))
+
+ui.run(host="0.0.0.0", port=cloutPort, title="Temp-Profiler", reload=False)
