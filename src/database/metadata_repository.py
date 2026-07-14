@@ -1,4 +1,6 @@
+from datetime import datetime
 from pathlib import Path
+from attrs import fields
 import pandas as pd
 from pandas import DataFrame
 import os
@@ -144,6 +146,7 @@ class MetadataRepoDatabricks(MetadataRepository):
         super().__init__()
         self.client = databricksClient
         self._metadataTable = TableNames.METADATA
+        self.create_metadata_table_if_not_exists()
     
     def save_measurement_metadata(self, metadata, measurement_id: str) -> str:
         
@@ -241,18 +244,52 @@ class MetadataRepoDatabricks(MetadataRepository):
             
                     
     def create_metadata_table_if_not_exists(self):
-         
-         #aus klasse metadata bekommt man eine dict mit allen attributen und deren werten. 
-         #diese dict kann man hier nutzen um die spaltennamen und datentypen zu bekommen. 
-         # dann kann man die tabelle in databricks erstellen, falls sie noch nicht existiert. 
-         # die spaltennamen und datentypen müssen mit den attributen der metadata klasse übereinstimmen. 
-         # die tabelle sollte die spalten haben, die in der metadata klasse definiert sind, und die datentypen sollten den datentypen der attributen entsprechen.
-         
-         query = f"""
-         CREATE TABLE IF NOT EXISTS {self._metadataTable} (
-             
-             hier bestehende liste nutzen
-             
-         )
-         """
-         self.client.execute(query)
+        #create types
+        sqlTypes = {
+            MetaNames.MEASUREMENT_ID: "STRING",
+            MetaNames.DATE: "DATE",
+            MetaNames.START_TIME: "STRING", 
+            MetaNames.OVEN_NR: "INT",
+            MetaNames.LOAD_PROFILE: "DOUBLE",
+            MetaNames.TEST_COOLER_FLAG: "BOOLEAN",
+            MetaNames.COOLER_COUNT_ON_TRAY: "INT",
+        }
+        
+        #create list of float values
+        floatColumns = [
+            MetaNames.INJECTION_1, MetaNames.INJECTION_2, MetaNames.INJECTION_3, MetaNames.INJECTION_4,
+            MetaNames.WAITING_1, MetaNames.WAITING_2, MetaNames.WAITING_3, MetaNames.WAITING_4,
+            MetaNames.COOLING_FREQ_1, MetaNames.COOLING_FREQ_2, MetaNames.COOLING_FREQ_3, MetaNames.COOLING_FREQ_4,
+            MetaNames.COOLING_TIME_1, MetaNames.COOLING_TIME_2, MetaNames.COOLING_TIME_3, MetaNames.COOLING_TIME_4
+        ]
+        
+        # apply type
+        for col in floatColumns:
+            sqlTypes[col] = "DOUBLE"
+            
+        # order the columns
+        columnOrder = [
+            MetaNames.MEASUREMENT_ID, MetaNames.DATE, MetaNames.START_TIME,
+            MetaNames.DATA_SOURCE, MetaNames.OVEN_RECIPE, MetaNames.OVEN_NR,
+            MetaNames.PRODUCT, MetaNames.LOAD_PROFILE, MetaNames.POSITION_MEASUREMENT_COOLER,
+            MetaNames.TEST_COOLER_FLAG, MetaNames.COOLER_COUNT_ON_TRAY, MetaNames.NOZZLEFIELD,
+            MetaNames.PROFILE_NAME, MetaNames.COMMENT
+        ] + floatColumns
+        
+        # create sql block
+        columnsSql = []
+        for col in columnOrder:
+            colType = sqlTypes.get(col, "STRING")  # default to STRING if not found
+            columnsSql.append(f"{col} {colType}")
+        
+        # create sql string    
+        columnsSqlStr = ",\n".join(columnsSql)
+        
+        # create query
+        query = f"""
+        CREATE TABLE IF NOT EXISTS {self._metadataTable} (
+            {columnsSqlStr}
+        )
+        """
+        
+        self.client.execute_query(query)

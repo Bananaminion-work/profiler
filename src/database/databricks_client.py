@@ -10,11 +10,16 @@ class DatabricksClient:
     def __init__(self):
         
         # get contents of .env file
-        load_dotenv(os.path.join(Path(__file__).parent.parent.parent, '.env'))
+        load_dotenv(os.path.join(Path(__file__).parent.parent, '.env'))
         
         self.token = os.environ.get('DATABRICKS_TOKEN')
         self.http_path = os.environ.get('HTTP_PATH')
         self.host = os.environ.get('DATABRICKS_HOST')
+        
+        if not self.token or not self.http_path or not self.host:
+            print("krtischer fehler, .env nicht richtig")
+            print(f"versucht zu verbinden zu: host={self.host}, http_path={self.http_path}")
+            return
         
     def get_data(self, query:str)-> DataFrame:
         
@@ -41,6 +46,7 @@ class DatabricksClient:
             
         except Exception as e:
             ui.notify(f"Error while fetching data from Databricks: {e}", color="red")
+            print(f"Error while fetching data from Databricks: {e}")
             return DataFrame()
         
         
@@ -60,6 +66,7 @@ class DatabricksClient:
                 
         except Exception as e:
             ui.notify(f"Error while executing query on Databricks: {e}", color="red")
+            print(f"Error while executing query on Databricks: {e}")
             
             
             
@@ -75,11 +82,24 @@ class DatabricksClient:
                 # execute the batch insert
                 cursor = connection.cursor()
                 
-                # create the insert query
-                query = f"INSERT INTO {table_name} VALUES (?, ?, ?, ?)"
+                # count the columns
+                num_columns = len(records[0])
+                placeholders = ', '.join(['?'] * num_columns)
                 
-                # execute the batch insert
-                cursor.executemany(query, records)
+                # create the insert query
+                query = f"INSERT INTO {table_name} VALUES ({placeholders})"
+                
+                # chunking 
+                chunkSize = 5000
+                totalRecords = len(records)
+                
+                # upload in chunks to avoid memory issues
+                for i in range(0, totalRecords, chunkSize):
+                    chunk = records[i:i + chunkSize]
+                    cursor.executemany(query, chunk)
+                    print(f"Uploaded {min(i + chunkSize, totalRecords)} of {totalRecords} records to {table_name}.")
+                
+                ui.notify(f"Successfully uploaded {totalRecords} records to {table_name}.", color="green")
                 
         except Exception as e:
             ui.notify(f"Error while executing batch insert on Databricks: {e}", color="red")
