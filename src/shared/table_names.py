@@ -1,8 +1,8 @@
 class TableNames():
-    BRONZE          = "vps_bronze_measurements"
-    SILVER          = "vps_silver_measurements"
-    GOLD            = "vps_gold_measurements"
+    BRONZE          = "bmlpdp_x_me_emea_d.x_usr_dea6rt.vps_bronze_measurements"
+    SILVER          = "bmlpdp_x_me_emea_d.x_usr_dea6rt.vps_silver_measurements"
+    GOLD            = "bmlpdp_x_me_emea_d.x_usr_dea6rt.vps_gold_measurements"
     
-    METADATA        = "vps_metadata"
+    METADATA        = "bmlpdp_x_me_emea_d.x_usr_dea6rt.vps_metadata"
     
-    VVT             = "vps_vvt_limits"
+    VVT             = "bmlpdp_x_me_emea_d.x_usr_dea6rt.vps_vvt_limits"

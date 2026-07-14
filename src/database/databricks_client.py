@@ -29,6 +29,7 @@ class DatabricksClient:
                 cursor = connection.cursor()
                 cursor.execute(query)
                 results = cursor.fetchall()
+                
                 # get column names from cursor description and create DataFrame
                 if cursor.description is not None:
                     columns = [desc[0] for desc in cursor.description]
@@ -41,3 +42,44 @@ class DatabricksClient:
         except Exception as e:
             ui.notify(f"Error while fetching data from Databricks: {e}", color="red")
             return DataFrame()
+        
+        
+        
+        
+    def execute_query(self, query:str):
+        try:
+            # use contents of .env
+            with sql.connect(
+                server_hostname=self.host,
+                http_path=self.http_path,
+                access_token=self.token
+            ) as connection:
+                # execute the query
+                cursor = connection.cursor()
+                cursor.execute(query)
+                
+        except Exception as e:
+            ui.notify(f"Error while executing query on Databricks: {e}", color="red")
+            
+            
+            
+    def execute_batch_insert(self, table_name:str, records:list):
+        
+        try:
+            # use contents of .env
+            with sql.connect(
+                server_hostname=self.host,
+                http_path=self.http_path,
+                access_token=self.token
+            ) as connection:
+                # execute the batch insert
+                cursor = connection.cursor()
+                
+                # create the insert query
+                query = f"INSERT INTO {table_name} VALUES (?, ?, ?, ?)"
+                
+                # execute the batch insert
+                cursor.executemany(query, records)
+                
+        except Exception as e:
+            ui.notify(f"Error while executing batch insert on Databricks: {e}", color="red")

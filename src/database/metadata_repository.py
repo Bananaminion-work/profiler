@@ -7,6 +7,8 @@ from src.shared.meta_names import MetaNames
 from src.shared.metadata import Metadata
 from typing import cast
 
+from src.shared.table_names import TableNames
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 class MetadataRepository:
@@ -57,36 +59,21 @@ class MetadataRepoCsv(MetadataRepository):
         
         # move Values in the right order
         columnOrder = [
-            MetaNames.MEASUREMENT_ID,
-            MetaNames.DATE,
-            MetaNames.START_TIME,
-            MetaNames.DATA_SOURCE,
-            MetaNames.OVEN_RECIPE,
-            MetaNames.OVEN_NR,
-            MetaNames.PRODUCT,
-            MetaNames.LOAD_PROFILE,
-            MetaNames.POSITION_MEASUREMENT_COOLER,
-            MetaNames.TEST_COOLER_FLAG,
-            MetaNames.COOLER_COUNT_ON_TRAY,
-            MetaNames.NOZZLEFIELD,
-            MetaNames.PROFILE_NAME,
-            MetaNames.COMMENT,
-            MetaNames.INJECTION_1,
-            MetaNames.INJECTION_2,
-            MetaNames.INJECTION_3,
-            MetaNames.INJECTION_4,
-            MetaNames.WAITING_1,
-            MetaNames.WAITING_2,
-            MetaNames.WAITING_3,
-            MetaNames.WAITING_4,
-            MetaNames.COOLING_FREQ_1,
-            MetaNames.COOLING_FREQ_2,
-            MetaNames.COOLING_FREQ_3,
-            MetaNames.COOLING_FREQ_4,
-            MetaNames.COOLING_TIME_1,
-            MetaNames.COOLING_TIME_2,
-            MetaNames.COOLING_TIME_3,
-            MetaNames.COOLING_TIME_4
+            MetaNames.MEASUREMENT_ID,            MetaNames.DATE,
+            MetaNames.START_TIME,            MetaNames.DATA_SOURCE,
+            MetaNames.OVEN_RECIPE,            MetaNames.OVEN_NR,
+            MetaNames.PRODUCT,            MetaNames.LOAD_PROFILE,
+            MetaNames.POSITION_MEASUREMENT_COOLER,            MetaNames.TEST_COOLER_FLAG,
+            MetaNames.COOLER_COUNT_ON_TRAY,            MetaNames.NOZZLEFIELD,
+            MetaNames.PROFILE_NAME,            MetaNames.COMMENT,
+            MetaNames.INJECTION_1,            MetaNames.INJECTION_2,
+            MetaNames.INJECTION_3,            MetaNames.INJECTION_4,
+            MetaNames.WAITING_1,            MetaNames.WAITING_2,
+            MetaNames.WAITING_3,            MetaNames.WAITING_4,
+            MetaNames.COOLING_FREQ_1,            MetaNames.COOLING_FREQ_2,
+            MetaNames.COOLING_FREQ_3,            MetaNames.COOLING_FREQ_4,
+            MetaNames.COOLING_TIME_1,            MetaNames.COOLING_TIME_2,
+            MetaNames.COOLING_TIME_3,            MetaNames.COOLING_TIME_4
         ]
         metaDf = metaDf[columnOrder]
         
@@ -156,15 +143,116 @@ class MetadataRepoDatabricks(MetadataRepository):
     def __init__(self, databricksClient):
         super().__init__()
         self.client = databricksClient
+        self._metadataTable = TableNames.METADATA
     
     def save_measurement_metadata(self, metadata, measurement_id: str) -> str:
-        return ""
+        
+        # get metadata as dict
+        metaDict = metadata.get_metadata_dict()
+        metaDict[MetaNames.MEASUREMENT_ID] = measurement_id
+        # convert dict to df
+        metaDf = DataFrame([metaDict])
+        
+        # convert datatypes from string as needed
+        type_conversions = {
+            MetaNames.LOAD_PROFILE: float,
+            MetaNames.TEST_COOLER_FLAG: bool,
+            MetaNames.COOLER_COUNT_ON_TRAY: int
+        }
+        metaDf = metaDf.astype(type_conversions, errors='ignore')
+        
+        # order columns of df
+        columnOrder = [
+            MetaNames.MEASUREMENT_ID,            MetaNames.DATE,
+            MetaNames.START_TIME,            MetaNames.DATA_SOURCE,
+            MetaNames.OVEN_RECIPE,            MetaNames.OVEN_NR,
+            MetaNames.PRODUCT,            MetaNames.LOAD_PROFILE,
+            MetaNames.POSITION_MEASUREMENT_COOLER,            MetaNames.TEST_COOLER_FLAG,
+            MetaNames.COOLER_COUNT_ON_TRAY,            MetaNames.NOZZLEFIELD,
+            MetaNames.PROFILE_NAME,            MetaNames.COMMENT,
+            MetaNames.INJECTION_1,            MetaNames.INJECTION_2,
+            MetaNames.INJECTION_3,            MetaNames.INJECTION_4,
+            MetaNames.WAITING_1,            MetaNames.WAITING_2,
+            MetaNames.WAITING_3,            MetaNames.WAITING_4,
+            MetaNames.COOLING_FREQ_1,            MetaNames.COOLING_FREQ_2,
+            MetaNames.COOLING_FREQ_3,            MetaNames.COOLING_FREQ_4,
+            MetaNames.COOLING_TIME_1,            MetaNames.COOLING_TIME_2,
+            MetaNames.COOLING_TIME_3,            MetaNames.COOLING_TIME_4
+        ]
+        metaDf = metaDf[columnOrder]
+        
+        # save to databricks table
+        records = list(metaDf.itertuples(index=False, name=None))
+        self.client.upload_dataframe(self._metadataTable, records)
+        
+        # return measurement_id if successful so other data is correct
+        return measurement_id
+
     
     def get_measurement_metadata(self, measurement_id):
-        return DataFrame()
+        
+        
+        #create the query
+        query = f"SELECT * FROM {self._metadataTable} WHERE measurement_id = '{measurement_id}'"
+        metaDf = self.client.get_data(query)
+        
+        # convert time and date
+        if not metaDf.empty and MetaNames.DATE in metaDf.columns and MetaNames.START_TIME in metaDf.columns:
+            # if date and starttime is set, convert them to datetime objects
+            metaDf[MetaNames.DATE] = pd.to_datetime(
+                metaDf[MetaNames.DATE],
+                format = "%Y-%m-%d",
+                errors='coerce'
+                ).dt.date #type:ignore
+            metaDf[MetaNames.START_TIME] = pd.to_datetime(
+                metaDf[MetaNames.START_TIME],
+                format = "%H:%M:%S",
+                errors='coerce'
+                ).dt.time #type:ignore
+        return metaDf
     
     def delete_measurement_metadata(self, measurement_id):
-        pass
+        
+        #create query
+        query = f"DELETE FROM {self._metadataTable} WHERE measurement_id = '{measurement_id}'"
+        self.client.execute_query(query)
     
     def get_saved_measurements(self) -> DataFrame:
-            return DataFrame()
+            
+        # create query
+        query = f"SELECT * FROM {self._metadataTable}"
+        metaDf = self.client.get_data(query)
+        
+        # convert time and date
+        if not metaDf.empty and MetaNames.DATE in metaDf.columns and MetaNames.START_TIME in metaDf.columns:
+            # if date and starttime is set, convert them to datetime objects
+            metaDf[MetaNames.DATE] = pd.to_datetime(
+                metaDf[MetaNames.DATE],
+                format = "%Y-%m-%d",
+                errors='coerce'
+                ).dt.date #type:ignore
+            metaDf[MetaNames.START_TIME] = pd.to_datetime(
+                metaDf[MetaNames.START_TIME],
+                format = "%H:%M:%S",
+                errors='coerce'
+                ).dt.time #type:ignore
+        return metaDf
+            
+            
+                    
+    def create_metadata_table_if_not_exists(self):
+         
+         #aus klasse metadata bekommt man eine dict mit allen attributen und deren werten. 
+         #diese dict kann man hier nutzen um die spaltennamen und datentypen zu bekommen. 
+         # dann kann man die tabelle in databricks erstellen, falls sie noch nicht existiert. 
+         # die spaltennamen und datentypen müssen mit den attributen der metadata klasse übereinstimmen. 
+         # die tabelle sollte die spalten haben, die in der metadata klasse definiert sind, und die datentypen sollten den datentypen der attributen entsprechen.
+         
+         query = f"""
+         CREATE TABLE IF NOT EXISTS {self._metadataTable} (
+             
+             hier bestehende liste nutzen
+             
+         )
+         """
+         self.client.execute(query)

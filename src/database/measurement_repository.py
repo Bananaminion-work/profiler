@@ -1,5 +1,6 @@
 import os
 
+from nicegui import ui
 import pandas as pd
 from pandas import DataFrame
 from src.shared.data_models import Data
@@ -25,6 +26,9 @@ class MeasurementRepository:
     
     def get_gold_data_by_id(self, measurement_ids: set)-> DataFrame:
         return DataFrame()
+    
+    def delete_measurement(self, measurement_id):
+        pass
     
     
     
@@ -92,6 +96,18 @@ class MeasurementRepoCsv(MeasurementRepository):
         
         # always return since its always a DataFrame even if its empty
         return filteredGoldDf #type:ignore
+    
+    
+    
+    
+    def delete_measurement(self, measurement_id):
+        
+        # delete measurement from all medallion csv files
+        for path in [self._bronzePath, self._silverPath, self._goldPath]:
+            if path.exists():
+                df = pd.read_csv(path)
+                df = df[df['measurement_id'] != measurement_id]
+                df.to_csv(path, index=False)
         
         
         
@@ -103,9 +119,67 @@ class MeasurementRepoDatabricks(MeasurementRepository):
         self._bronzeTable = TableNames.BRONZE
         self._silverTable = TableNames.SILVER
         self._goldTable = TableNames.GOLD
+        
+        # create table if not exists
+        self.create_tables_if_not_exists()
     
     def add_measurement(self, measurement_id: str, measurement: dict[str,Data]):
-        pass
+        
+        
+        # get medallion-data-objects
+        bronze = measurement.get("bronze")
+        silver = measurement.get("silver")
+        gold = measurement.get("gold")
+        
+        # failiurehandling
+        if not (isinstance(bronze, Data) and isinstance(silver, Data) and isinstance(gold, Data)):
+            ui.notify("Failed to add measurement to database. Medallion data should be of type Data.", color="red")
+            print (f"Medallion data should be of type Data, got Bronze: {type(bronze)}, Silver: {type(silver)}, Gold: {type(gold)} instead.")
+            return
+        
+        #  copy dataframes from medallion-data-objects
+        bronzeDf = bronze.get_dataframe().copy()
+        silverDf = silver.get_dataframe().copy()
+        goldDf = gold.get_dataframe().copy()
+        
+        # append measurement_id to each dataframe
+        bronzeDf['measurement_id'] = measurement_id
+        silverDf['measurement_id'] = measurement_id
+        goldDf['measurement_id'] = measurement_id
+        
+        # convert dataframes to long format
+        longBronzeDf = bronzeDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
+        longSilverDf = silverDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
+        longGoldDf = goldDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
+        
+        # write data to databricks tables
+        self._upload_dataframe(self._bronzeTable, longBronzeDf)
+        self._upload_dataframe(self._silverTable, longSilverDf)
+        self._upload_dataframe(self._goldTable, longGoldDf)
+        
+        
+        
+        
+    def _upload_dataframe(self, table_name: str, df: DataFrame):
+        
+        # if no data to upload, return
+        if df.empty:
+            ui.notify(f"No data to upload to {table_name}.", color="orange")
+            return
+        
+        # make list of tuples out of the Dataframes
+        records = list(df.itertuples(index=False, name=None))
+        
+        # use client to upload data to databricks
+        try:
+            self.client.execute_batch_insert(table_name, records)
+            
+        except Exception as e:
+            ui.notify(f"Failed to upload data to {table_name}. Error: {e}", color="red")
+            print(f"Failed to upload data to {table_name}. Error: {e}")
+            raise e
+    
+    
     
     def get_gold_data_by_id(self, measurement_ids: set)-> DataFrame:
         
@@ -114,10 +188,36 @@ class MeasurementRepoDatabricks(MeasurementRepository):
             return DataFrame() 
         
         # create a string of measurement_ids for the SQL query
-        ids_str = ', '.join(measurement_ids)
+        ids_str = "', '".join(measurement_ids)
         
         # create a query to fetch gold data for the given measurement_ids
         query = f"SELECT * FROM {self._goldTable} WHERE measurement_id IN ({ids_str})"
         
         # use client to get data from Databricks
         return self.client.get_data(query)
+    
+    
+    
+    
+    def create_tables_if_not_exists(self):
+        
+        for table in [self._bronzeTable, self._silverTable, self._goldTable]:
+            query = f"""
+            CREATE TABLE IF NOT EXISTS {table} (
+                measurement_id STRING,
+                ReadTime TIMESTAMP,
+                channel STRING,
+                value DOUBLE
+            )
+            """
+            self.client.execute_query(query)
+            
+            
+            
+            
+    def delete_measurement(self, measurement_id):
+        
+        # create query to delete measurement from all tables
+        for table in [self._bronzeTable, self._silverTable, self._goldTable]:
+            query = f"DELETE FROM {table} WHERE measurement_id = '{measurement_id}'"
+            self.client.execute_query(query)

@@ -34,14 +34,8 @@ class DatabaseManager:
             self._metadataRepository = MetadataRepoDatabricks(self.databricksClient)
         else:
             raise ValueError(f"Invalid source '{source}' for VVT repository.")
-    
-    def connect_to_database(self):
-        """connects to the database"""
-        ui.notify("function to connect to database was called... wait to be implemented", color="orange")
         
-    def disconnect_from_database(self):
-        """disconnects from the database"""
-        ui.notify("function to disconnect from database was called... wait to be implemented", color="orange")
+        
 
     def save_measurement(self, measurement: DataComposition):
         """saves the measurement to the database"""
@@ -67,8 +61,14 @@ class DatabaseManager:
             raise WrongInputError(f"Metadata should be a dictionary, got {type(metadata)} instead.")
         
         # save data to the database
-        self._measurementRepository.add_measurement(measurement_id,medallionData)
-        self._metadataRepository.save_measurement_metadata(metadata, measurement_id)
+        try:
+            self._measurementRepository.add_measurement(measurement_id,medallionData)
+            self._metadataRepository.save_measurement_metadata(metadata, measurement_id)
+            
+        except Exception as e:
+            self._measurementRepository.delete_measurement(measurement_id)
+            self._metadataRepository.delete_measurement_metadata(measurement_id)
+            ui.notify(f"Error while saving measurement to database: {e}", color="red")
         
     
     

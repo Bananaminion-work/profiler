@@ -3,6 +3,8 @@ from pathlib import Path
 import pandas as pd
 from pandas import DataFrame
 
+from src.shared.table_names import TableNames
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 class VvtRepository(ABC):
@@ -40,9 +42,12 @@ class VvtRepoDatabricks(VvtRepository):
     
     def __init__(self,databaseClient):
         self.client = databaseClient
+        self._vvtTable = TableNames.VVT
     
     def load_vvt(self) -> DataFrame:
-        return pd.DataFrame()
+        query = f"SELECT * FROM {self._vvtTable}"
+        return self.client.get_data(query)
+        
     
     def add_vvt(self,df: DataFrame) -> None:
         pass
