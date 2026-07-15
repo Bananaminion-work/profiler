@@ -1,6 +1,4 @@
 import os
-
-from nicegui import ui
 import pandas as pd
 from pandas import DataFrame
 from src.shared.data_models import Data
@@ -133,7 +131,7 @@ class MeasurementRepoDatabricks(MeasurementRepository):
         
         # failiurehandling
         if not (isinstance(bronze, Data) and isinstance(silver, Data) and isinstance(gold, Data)):
-            ui.notify("Failed to add measurement to database. Medallion data should be of type Data.", color="red")
+            print(f"Failed to add measurement to database. Medallion data should be of type Data.")
             print (f"Medallion data should be of type Data, got Bronze: {type(bronze)}, Silver: {type(silver)}, Gold: {type(gold)} instead.")
             return
         
@@ -164,7 +162,7 @@ class MeasurementRepoDatabricks(MeasurementRepository):
         
         # if no data to upload, return
         if df.empty:
-            ui.notify(f"No data to upload to {table_name}.", color="orange")
+            print(f"No data to upload to {table_name}.")
             return
         
         # make list of tuples out of the Dataframes
@@ -175,7 +173,6 @@ class MeasurementRepoDatabricks(MeasurementRepository):
             self.client.execute_batch_insert(table_name, records)
             
         except Exception as e:
-            ui.notify(f"Failed to upload data to {table_name}. Error: {e}", color="red")
             print(f"Failed to upload data to {table_name}. Error: {e}")
             raise e
     

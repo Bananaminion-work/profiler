@@ -188,6 +188,11 @@ class ViolationDetector:
         
     def crop_dataframe_while_process(self,df: DataFrame):
         
+        #check if the channels are present in the dataframe
+        if ChannelNames.INLET_BULKHEAD_OPEN not in df.columns or ChannelNames.OUTLET_BULKHEAD_OPEN not in df.columns:
+            ui.notify(f"Columns of Bulheads not found in measurement data, cannot apply rules with process scope.")
+            return DataFrame()
+        
         # get index where PrcChbInletBulkheadOpen changes from 1 to zero
         chamberCloseIdx = df.index[df[ChannelNames.INLET_BULKHEAD_OPEN].diff() == -1]
         # get index where PrcChbOutletBulkheadOpen changes from 0 to 1

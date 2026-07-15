@@ -36,7 +36,8 @@ class ZeropointCalculator:
         
         """calculates the offset to ReadTime of the last found row where inlet bulkhead is 1, searching only in the first 300 rows"""
         
-        if not self.df[ChannelNames.INLET_BULKHEAD_OPEN].any():
+        # check if column is present in the dataframe and has values, else return 0
+        if ChannelNames.INLET_BULKHEAD_OPEN not in self.df.columns or not self.df[ChannelNames.INLET_BULKHEAD_OPEN].any():
             ui.notify("No inlet-bulkhead-zeropoint was found")
             return 0
         
@@ -59,8 +60,8 @@ class ZeropointCalculator:
     def caclulate_outlet_bulkhead_zeropoint(self)->int:
         
         """calculates the offset to ReadTime of the last found row where outlet bulkhead is 1, searching only in the first 300 rows"""
-        
-        if not self.df[ChannelNames.OUTLET_BULKHEAD_OPEN].any():
+        # check if column is present in the dataframe
+        if ChannelNames.OUTLET_BULKHEAD_OPEN not in self.df.columns or not self.df[ChannelNames.OUTLET_BULKHEAD_OPEN].any():
             ui.notify("No outlet-bulkhead-zeropoint was found")
             return 0
         
@@ -85,7 +86,7 @@ class ZeropointCalculator:
         
         """calculates the offset to ReadTime of the first injection from the 10. row onwards, where St_MediumPump is 1"""
         
-        if not self.df[ChannelNames.MEDIUM_PUMP].any():
+        if ChannelNames.MEDIUM_PUMP not in self.df.columns or not self.df[ChannelNames.MEDIUM_PUMP].any():
             ui.notify("No first injection zeropoint was found")
             return 0
         
@@ -108,7 +109,7 @@ class ZeropointCalculator:
     def calculate_above235_zeropoint(self):
         """calculates tho offset to ReadTime of the first row where temperature (CH1) is above 235°C"""
         
-        if not self.df[ChannelNames.CH1].any():
+        if ChannelNames.CH1 not in self.df.columns or not self.df[ChannelNames.CH1].any():
             ui.notify("No zeropoint above 235°C was found")
             return 0
         
@@ -126,7 +127,7 @@ class ZeropointCalculator:
     
     
     def calculate_ventilate2_zeropoint(self):
-        """calculkates the offset to ReadTime of the defined ventilation done - zeropoint"""
+        """calculates the offset to ReadTime of the defined ventilation done - zeropoint"""
         
         
         minVacuum = 100

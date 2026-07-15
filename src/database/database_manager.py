@@ -68,7 +68,7 @@ class DatabaseManager:
         except Exception as e:
             self._measurementRepository.delete_measurement(measurement_id)
             self._metadataRepository.delete_measurement_metadata(measurement_id)
-            ui.notify(f"Error while saving measurement to database: {e}", color="red")
+            print(f"Error while saving measurement to database: {e}")
         
     
     

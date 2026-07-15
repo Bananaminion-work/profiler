@@ -3,6 +3,7 @@ from nicegui import ui
 import importlib
 from pathlib import Path
 import inspect
+from nicegui import run
 
 from pandas import DataFrame
 
@@ -245,9 +246,11 @@ class AppController:
         #goldData = self.goldDataframe.copy()
         return self.plot.create_plot_single(df_for_plot, config, offset)
         
-        
-        
-    def handle_save_request(self, metadata: dict[str,str]):
+       
+       
+    
+    # asynchronous method to save in separate thread, so that the ui does not freeze while saving
+    async def handle_save_request(self, metadata: dict[str,str]):
         
         # set metadata for current session measurement
         self.data.current_import_measurement.get_metadata().set_user_input(metadata)
@@ -255,11 +258,27 @@ class AppController:
         # get meta-object from current session measurement for easier handling
         metaObject = self.data.current_import_measurement.get_metadata()
         
+        # triggers popup in the page if duplicate
         if self.database.is_duplicate(metaObject.get_metadata_dict()):
             return False
         
-        self._save_measurement_to_database()
-        return True
+        # show notification that saving is in progress
+        ui.notify("Saving measurement to database...", color="info")
+        
+        try:
+            # run the saving in a separate thread
+            await run.io_bound(self._save_measurement_to_database)
+        
+            # if saving is successful, show notification
+            ui.notify("Measurement saved successfully!", color="positive")
+            self.handle_navigation_request('landing')
+            return True
+        
+        except Exception as e:
+            # if failiure in db happens
+            ui.notify(f"Error while saving measurement to database: {e}", color="negative")
+            return False
+
         
         
         
@@ -275,12 +294,24 @@ class AppController:
         
         # save measurement to database
         self.database.save_measurement(self.data.current_import_measurement)
-        ui.notify("Measurement saved successfully!", color="green")
         
         # reset current session after saving
         self.data.current_import_measurement = DataComposition()
-        self.handle_navigation_request('landing')
     
+    
+    
+    async def handle_force_save_request(self):
+        """saves the measurement to the database, even if it is a duplicate"""
+        
+        ui.notify("Force-saving measurement to database...", color="info")
+        
+        try:
+            await run.io_bound(self._save_measurement_to_database)
+            ui.notify("Measurement force-saved successfully!", color="positive")
+            self.handle_navigation_request('landing')
+        
+        except Exception as e:
+            ui.notify(f"Error while force-saving measurement to database: {e}", color="negative")
     
     
     def load_vvt_options(self)-> list[str]:

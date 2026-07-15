@@ -22,15 +22,23 @@ class GoldCreator():
             
             # distiguish between different sources of measurement
             if source == "Rehm-recorder":
-                               
                 
-                # create df for gradient values
-                channelDf = self.goldDf[['CH1', 'CH2', 'CH3', 'CH4', 'CH5', 'CH6']].copy()
+                # define channels needed for gold creation
+                channelsForGold = ['CH1', 'CH2', 'CH3', 'CH4', 'CH5', 'CH6']
                 
-                # create df for gradient
+                # read existing channels from silver data
+                existingChannels = [col for col in channelsForGold if col in self.goldDf.columns]
+                
+                # create df for gradient values if available
+                if existingChannels:
+                    channelDf = self.goldDf[existingChannels].copy()
+                
+                # create empty df if no channels are available    
+                else:
+                    channelDf = DataFrame()
+                
+                # create df for calculation
                 gradientDf = DataFrame()
-                
-                #create df for rolling average
                 rollingDf = DataFrame()
                 
                 # call function to calc gradient if df is instanciated

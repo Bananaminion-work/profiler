@@ -246,7 +246,7 @@ class ImportPage_showData(SubPage):
         self.update_vvt_table()
     
 
-    def on_save_click(self) -> None:
+    async def on_save_click(self) -> None:
         # fields that must have a value
         requiredFields = [
             "oven_Recipe",
@@ -303,8 +303,8 @@ class ImportPage_showData(SubPage):
             MetaNames.COOLING_TIME_4                : self.cooling_time_4
         }
         
-        saved_directly = self.controller.handle_save_request(metadata)
-        
+        saved_directly = await self.controller.handle_save_request(metadata)
+
         if not saved_directly:
             self._show_duplicate_dialog()
       
@@ -317,9 +317,13 @@ class ImportPage_showData(SubPage):
             ui.label("A measurement with similar metadata (±1 hour) already exists.")
             ui.label("Do you really want to save it anyway?")
             
+            async def on_confirm():
+                dialog.close()
+                await self.controller.handle_force_save_request()
+            
             with ui.row().classes('w-full justify-end mt-4'):
                 ui.button("Cancel", on_click=dialog.close).props('flat')
-                ui.button("Yes, save it", on_click=lambda: [self.controller._save_measurement_to_database(), dialog.close()]).props('color=negative')
+                ui.button("Yes, save it", on_click=on_confirm).props('color=negative')
                 
         dialog.open()
     
