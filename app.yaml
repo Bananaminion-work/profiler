@@ -1,3 +1,10 @@
 command:
   - python
   - main.py
+env:
+  - name: "HTTP_PATH"
+    value: "/sql/1.0/warehouses/967f2c7a0c73c6a9"
+  - name: "DATABRICKS_HOST"
+    value: "adb-4236431387455605.5.azuredatabricks.net"
+  - name: "DATABRICKS_TOKEN"
+    valueFrom: "secret:secret_scope_VPS/DB-token"

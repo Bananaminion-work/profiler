@@ -93,10 +93,10 @@ class AppController:
         self.plot = PlotFactory()
         
         #create DatabaseManager
-        self.database = DatabaseManager("databricks")
+        #self.database = DatabaseManager("csv")
         
         # create Analyzer
-        self.analyzer = Analyzer(DataFrame())
+        self.analyzer = Analyzer()
         
         # create TableFactory
         self.table = TableFactory()
@@ -137,6 +137,11 @@ class AppController:
         else:
             raise WrongInputError(f"(@property: goldDataframe): Expected a Data object for gold data, got {type(goldData)} instead.")
 
+    
+    
+    def init_database(self, db_type:str):
+        """initializes the database with the given type"""
+        self.database = DatabaseManager(db_type.lower())
 
 
 
@@ -326,6 +331,11 @@ class AppController:
     
     
     def handle_violation_table_update_request(self, vvtName:str, zeropoint:str):
+        """calls the analyzer and tablefactory to create a tale for the found violations"""
+        
+        #load vvts for Analyzer once
+        if not self.analyzer.vvt_set:
+            self.analyzer.set_vvt(self.database.load_vvt())
     
         # get gold dataframe and violations from analyzer
         gold = self.goldDataframe
@@ -344,6 +354,11 @@ class AppController:
         
     
     def handle_violation_table_update_request_by_id(self, vvtName:str, zeropoint:str, selectedMeasurement:str):
+        """calls analyzer and table factory to create table of violations by selected id"""
+        
+        #load vvts for Analyzer once
+        if not self.analyzer.vvt_set:
+            self.analyzer.set_vvt(self.database.load_vvt())
         
         # check if selected id is in current gold data
         if not self.data.current_gold_data_for_plot or not selectedMeasurement:

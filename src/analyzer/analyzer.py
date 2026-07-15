@@ -8,9 +8,16 @@ class Analyzer:
     _zero : ZeropointCalculator
     _violation : ViolationDetector
     
-    def __init__(self, vvt: DataFrame):
+    def __init__(self):
         self._zero = ZeropointCalculator()
-        self._violation = ViolationDetector(vvt)
+        self._violation = ViolationDetector()
+    
+    @property
+    def vvt_set(self)->bool:
+        return self._violation._vvt is not None and not self._violation._vvt.empty
+    
+    def set_vvt(self, vvt: DataFrame):
+        self._violation.set_vvt(vvt)
     
     def analyze_zeropoints(self, gold: DataFrame):
         zeropoints = self._zero.calculate_zeropoints(gold)

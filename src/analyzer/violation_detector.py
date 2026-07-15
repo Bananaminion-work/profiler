@@ -11,15 +11,8 @@ class ViolationDetector:
     _vvt : DataFrame
     conditionHandlers: dict[str, Callable]
     
-    def __init__(self, vvt: DataFrame):
-        self._vvt = vvt
-        
-        #convert to floats in case it is a string
-        columnsToConvert = ['threshold', 'param1', 'param2']
-        for column in columnsToConvert:
-            if column in self._vvt.columns:
-                self._vvt[column] = pd.to_numeric(self._vvt[column], errors='coerce')
-        
+    def __init__(self):
+        self._vvt = pd.DataFrame()
         self.conditionHandlers = {
             "max": self.handle_max,
             "min": self.handle_min,
@@ -30,6 +23,17 @@ class ViolationDetector:
             "rate_in_range": self.rate_in_range,
             "main_vacuum_minimum": self.handle_main_vacuum_minimum
         }
+
+    def set_vvt(self, vvt: DataFrame):
+        
+        #set vvts in attribute
+        self._vvt = vvt
+        
+        #convert to floats in case it is a string
+        columnsToConvert = ['threshold', 'param1', 'param2']
+        for column in columnsToConvert:
+            if column in self._vvt.columns:
+                self._vvt[column] = pd.to_numeric(self._vvt[column], errors='coerce')
     
     def detect_violations(self, df: DataFrame, vvt:str):
         
