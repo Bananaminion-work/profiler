@@ -26,6 +26,12 @@ class SilverCreator():
             if source == "Rehm-recorder":
                 # resample and save first entry for datetime
                 dateTime = self.resample_dataframe()
+                
+                #make sure to only have numbers
+                for col in self.silverDataFrame.columns:
+                    if col != 'ReadTime':
+                        self.silverDataFrame[col] = pd.to_numeric(self.silverDataFrame[col], errors='coerce')
+                
                 # rename attributes for better legend display
                 self.rename_attributes_for_legend()
             

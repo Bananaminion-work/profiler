@@ -37,6 +37,7 @@ class DataStore:
         
         # return only the columns in the preset
         validChannels = [col for col in channels if col in df.columns]
+        
         return cast(DataFrame, df[validChannels])
     
     def get_scoped_data_multiple(self, preset:str)->dict[str, DataFrame]:

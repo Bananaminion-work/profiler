@@ -216,19 +216,19 @@ class AppController:
         """
         
         if type == 'confirm':
-            pageObject=self.ui.get_page('popup-confirm')
+            pageObject=self.ui.get_page('Popup_confirm')
             popupObject=cast(Popup_confirm,pageObject)
             popupObject.set_message(message)
             popupObject.set_returnPage(returnPage)
-            self.handle_navigation_request('popup-confirm')
+            self.handle_navigation_request('Popup_confirm')
             
             
         elif type == 'warning':
-            pageObject=self.ui.get_page('popup-warning')
+            pageObject=self.ui.get_page('Popup_warning')
             popupObject=cast(Popup_warning,pageObject)
             popupObject.set_message(message)
             popupObject.set_returnPage(returnPage)
-            self.handle_navigation_request('popup-warning')
+            self.handle_navigation_request('Popup_warning')
         
         
         

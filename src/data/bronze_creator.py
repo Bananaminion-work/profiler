@@ -29,11 +29,19 @@ class BronzeCreator():
             self.change_id_to_names() # create final dataframe
             self.csvData.set_index('ReadTime', inplace=True)
             
-            #build Object
-            self.bronzeObject = BronzeData(self.csvData)
-            
         else:
             raise SourceNotProvidedError(f"The provided source '{source}' is not supported yet!")
+
+
+        # change to global thousand divider
+        for col in self.csvData.columns:
+                    if col != 'ReadTime':
+                        # Wenn die Spalte Text (object) ist, ersetze Komma durch Punkt
+                        if self.csvData[col].dtype == object:
+                            self.csvData[col] = self.csvData[col].str.replace(',', '.', regex=False)
+                            
+        #build Object
+        self.bronzeObject = BronzeData(self.csvData)
 
         return self.bronzeObject
     

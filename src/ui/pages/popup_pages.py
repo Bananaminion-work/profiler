@@ -3,6 +3,8 @@ from nicegui import ui
 
 
 class Popup_confirm(BasePage):
+    
+    pageName = "Popup_confirm"
 
     def render(self, parent: ui.column) -> None:
         with parent:
@@ -24,6 +26,8 @@ class Popup_confirm(BasePage):
 
 
 class Popup_warning(BasePage):
+    
+    pageName = "Popup_warning"
 
     def render(self, parent: ui.column) -> None:
         with parent:

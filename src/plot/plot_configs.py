@@ -6,152 +6,108 @@ import pandas as pd
 
 class BasePlotConfig(ABC):
     
-    #@abstractmethod
-    #def build_figure(self, df: pd.DataFrame)-> go.Figure:
-    #    pass
-    
     @abstractmethod
     def build_figure(self, dataDict: dict[str, pd.DataFrame])-> go.Figure:
         pass
     
+    def get_axis_for_column(self, col_name: str) -> str:
+        """returns the appropriate y-axis for a given column name based on predefined rules
+        
+        used for dynamic axes application"""
+        
+        # convert column name to lowercase for easier matching
+        col_lower = col_name.lower()
+        
+        if 'gradient' in col_lower or "average" in col_lower:
+            return 'y3'  # Axis 3: Gradients
+        elif 'vacuum' in col_lower:
+            return 'y2'  # Axis 2: Vacuum
+        elif 'ch1' in col_lower or 'ch2' in col_lower or 'ch3' in col_lower or 'ch4' in col_lower or 'ch5' in col_lower or 'ch6' in col_lower:
+            return 'y1'   # Axis 1: Temperature
+        else:
+            return 'y4'  # Axis 4: Unknown Channels (Fallback)
+        
+    
+    def apply_dynamic_axes(self, fig: go.Figure, usedAxes: list[str]) -> go.Figure:
+        """solves scaling-problem for plot
+        
+        uses the first axis as reference and scales all others accordingly and as overlays."""
+        
+        # set the first axis as reference
+        refAxis = usedAxes[0] if usedAxes else 'y1'
+        # create a layout update dictionary to hold the axis configurations
+        layoutUpdate = {}
+        
+        # loop through all axes and set them to overlay the reference axis
+        for id in ['y1', 'y2', 'y3', 'y4']:
+            # determine the layout key based on the axis id
+            layoutKey = 'yaxis' if id == 'y1' else f'yaxis{id[1]}'
+            
+            # if the current axis is not the reference axis, set it to overlay the reference axis
+            if id != refAxis:
+                layoutUpdate[layoutKey] = dict(
+                    overlaying=refAxis
+                )
+            else:
+                layoutUpdate[layoutKey] = dict(
+                    overlaying=None
+                )
+                
+        # update the figure layout with the new axis configurations
+        fig.update_layout(**layoutUpdate)
+        return fig
+    
+    def apply_std_layout(self, dataDict: dict[str, pd.DataFrame]) -> go.Figure:
+        
+        fig = go.Figure()
+        dashStyles = ['solid', 'dash', 'dot', 'dashdot', 'longdash', 'longdashdot']
+        usedAxes = []
+        
+        # 
+        for index, (m_id, df) in enumerate(dataDict.items()):
+            currentDash = dashStyles[index % len(dashStyles)]
+            for column in df.columns:
+                targetAxis = self.get_axis_for_column(column)
+                if targetAxis not in usedAxes:
+                    usedAxes.append(targetAxis)
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=df.index,                 y=df[column],
+                        mode='lines',               line=dict(dash=currentDash),
+                        name=f"{m_id} | {column}",  connectgaps=True,
+                        yaxis=targetAxis
+                    )
+                )
+        #
+        fig.update_layout(
+            title_text='Standard-Plot',
+            showlegend=True,
+            xaxis=dict(title='Time', domain=[0.1, 0.9]),
+            yaxis=dict(title='Temperature in °C', side='left'),
+            yaxis2=dict(title='Vacuum in mBar', side='right', anchor='x'),
+            yaxis3=dict(title='Gradients in K/s', side='right', anchor='free', position=1.0),
+            yaxis4=dict(title='Other Channels', side='left', anchor='free', position=0.0),
+            legend=dict(orientation="h",yanchor="top",y=-0.2,xanchor="center",x=0.5),
+            autosize=True,
+            # Extra margin at the bottom to make room for the legend
+            margin=dict(l=20, r=20, t=50, b=100)
+        )
+        
+        return self.apply_dynamic_axes(fig, usedAxes)
+
+
+        
 class StandardConfig(BasePlotConfig):
     
     configName = "standard"
     
-
     def build_figure(self, dataDict: dict[str, pd.DataFrame])-> go.Figure:
         
-        fig = go.Figure()
-        
-        # walk through every measurement in the dict
-        for m_id, df in dataDict.items():
-            
-            # walk through every channel for this measurement
-            for column in df.columns:
-                
-                # add traces for every channel of every measurement
-                fig.add_trace(
-                    go.Scatter(
-                        x=df.index,
-                        y=df[column],
-                        mode='lines',
-                        # name of the legend
-                        name=f"{m_id} | {column}"
-                    )
-                )
+        fig = self.apply_std_layout(dataDict)
         
         fig.update_layout(
-            title_text='TESTPLOT',
-            xaxis_title='Time',
-            yaxis_title='Measurement-values',
-            autosize=True
-        )
-        
-        return fig
-        
-class StandardConfig2(BasePlotConfig):
-    
-    configName = "standard2"
-    
-    def build_figure(self, dataDict: dict[str, pd.DataFrame])-> go.Figure:
-        
-        fig = go.Figure()
-        
-        # define line styles
-        dash_styles = ['solid', 'dash', 'dot', 'dashdot', 'longdash', 'longdashdot']
-        
-        # 2. helpingfunction to find out which y-axis is the right one for a channel
-        def get_yaxis_for_column(col_name: str) -> str:
-            
-            # convert column name to lowercase for easier matching
-            col_lower = col_name.lower()
-            
-            if 'gradient' in col_lower or "average" in col_lower:
-                return 'y3'  # Axis 3: Gradients
-            elif 'vacuum' in col_lower:
-                return 'y2'  # Axis 2: Vacuum
-            elif 'ch1' in col_lower or 'ch2' in col_lower or 'ch3' in col_lower or 'ch4' in col_lower or 'ch5' in col_lower or 'ch6' in col_lower:
-                return 'y1'  # Axis 1: Temperature
-            else:
-                return 'y4'  # Axis 4: Unknown Channels (Fallback)
-
-        # walk through every measurement in the dict
-        for index, (m_id, df) in enumerate(dataDict.items()):
-            
-            # Choose the line style for this measurement (repeats if more than 6 measurements)
-            current_dash = dash_styles[index % len(dash_styles)]
-            
-            # walk through every channel for this measurement
-            for column in df.columns:
-                
-                # Find out which Y-axis this channel belongs to
-                target_yaxis = get_yaxis_for_column(column)
-                
-                # add traces for every channel of every measurement
-                fig.add_trace(
-                    go.Scatter(
-                        x=df.index,
-                        y=df[column],
-                        mode='lines',
-                        line=dict(dash=current_dash), # different line styles for each measurement!
-                        name=f"{m_id} | {column}",
-                        yaxis=target_yaxis            # assignment to the correct Y-axis!
-                    )
-                )
-        
-        # 3. Configure the layout with the 4 axes and the legend at the bottom
-        fig.update_layout(
-            title_text='Standard-Plot',
-            
-            # Compress the X-axis 
-            xaxis=dict(
-                title='Time',
-                domain=[0.1, 0.9] 
-            ),
-            
-            # Y-Axis 1: Temperature (Left, directly on the graph)
-            yaxis=dict(
-                title='Temperature [°C]',
-                side='left'
-            ),
-            
-            # Y-Axis 2: Vacuum (Right, directly on the graph)
-            yaxis2=dict(
-                title='Vacuum [mBar]',
-                side='right',
-                overlaying='y' # overlaying='y' forces it into the same plot
-            ),
-            
-            # Y-Axis 3: Gradient (Right, outermost)
-            yaxis3=dict(
-                title='Gradient [K/s]',
-                side='right',
-                overlaying='y',
-                anchor='free',
-                position=1.0 # Moves the axis to the far right (100%)
-            ),
-            
-            # Y-Axis 4: Unknown Channels (Left, outermost)
-            yaxis4=dict(
-                title='Other Channels',
-                side='left',
-                overlaying='y',
-                anchor='free',
-                position=0.0 # Moves the axis to the far left (0%)
-            ),
-            
-            # Move the legend below the plot
-            legend=dict(
-                orientation="h",      # Arrange horizontally
-                yanchor="top",
-                y=-0.2,               # Negative value moves it down
-                xanchor="center",
-                x=0.5
-            ),
-            
-            autosize=True,
-            # Extra margin at the bottom to make room for the legend
-            margin=dict(l=20, r=20, t=50, b=100) 
+            title_text = "Standard Plot for VPS"
         )
         
         return fig
@@ -177,7 +133,7 @@ class SampleConfig(BasePlotConfig):
             elif 'vacuum' in col_lower:
                 return 'y2'
             elif 'ch' in col_lower:
-                return 'y1'
+                return 'y'
             else:
                 return 'y4'
 
@@ -205,6 +161,7 @@ class SampleConfig(BasePlotConfig):
                         y=normalized_y,               # <--- HIER die normierten Daten plotten!
                         mode='lines',
                         line=dict(dash=current_dash),
+                        connectgaps=True,
                         name=f"{m_id[:4]} | {column}",
                         yaxis=target_yaxis
                     )
@@ -213,6 +170,7 @@ class SampleConfig(BasePlotConfig):
         # Configure the layout
         fig.update_layout(
             title_text='Normierter Prozess-Plot (Geheimhaltung)',
+            showlegend=True,
             
             xaxis=dict(
                 title='Time',
@@ -223,20 +181,20 @@ class SampleConfig(BasePlotConfig):
             
             # Alle Achsen zeigen jetzt 0-100% an, anstatt der echten Einheiten!
             yaxis=dict(
-                title='Temperature [%]',
+                title='Temperature in %',
                 side='left',
                 range=[-5, 105] # Ein kleiner Puffer oben und unten sieht besser aus
             ),
             
             yaxis2=dict(
-                title='Vacuum [%]',
+                title='Vacuum in %',
                 side='right',
                 overlaying='y',
-                range=[-5, 105]
+                range=[0, 1100] 
             ),
             
             yaxis3=dict(
-                title='Gradient [%]',
+                title='Gradient in %',
                 side='right',
                 overlaying='y',
                 anchor='free',
@@ -245,7 +203,7 @@ class SampleConfig(BasePlotConfig):
             ),
             
             yaxis4=dict(
-                title='Other Channels [%]',
+                title='Other Channels in %',
                 side='left',
                 overlaying='y',
                 anchor='free',
@@ -286,7 +244,7 @@ class SampleConfig2(BasePlotConfig):
             elif 'vacuum' in col_lower:
                 return 'y2'
             elif 'ch' in col_lower:
-                return 'y1'
+                return 'y'
             else:
                 return 'y4'
 
@@ -328,6 +286,7 @@ class SampleConfig2(BasePlotConfig):
                         y=normalized_y,               # <--- HIER das normierte Y nutzen!
                         mode='lines',
                         line=dict(dash=current_dash),
+                        connectgaps=True,
                         name=f"{m_id[:4]} | {column}",
                         yaxis=target_yaxis
                     )
@@ -336,29 +295,30 @@ class SampleConfig2(BasePlotConfig):
         # Configure the layout
         fig.update_layout(
             title_text='Normierter Prozess-Plot (Geheimhaltung)',
+            showlegend=True,
             
             xaxis=dict(
-                title='Time [%]',            # <--- Achsentitel auf % geändert
+                title='Time in %',            # <--- Achsentitel auf % geändert
                 domain=[0.05, 0.95],         # <--- X-Achse etwas komprimiert, damit die Y-Achsen nicht abgeschnitten werden
                 range=[-5, 105]              # <--- X-Achse zwingend auf 0 bis 100% (+ 5% Puffer)
             ),
             
             # Alle Y-Achsen zeigen jetzt 0-100% an
             yaxis=dict(
-                title='Temperature [%]',
+                title='Temperature in %',
                 side='left',
                 range=[-5, 105] 
             ),
             
             yaxis2=dict(
-                title='Vacuum [%]',
+                title='Vacuum in %',
                 side='right',
                 overlaying='y',
                 range=[-5, 105]
             ),
             
             yaxis3=dict(
-                title='Gradient [%]',
+                title='Gradient in %',
                 side='right',
                 overlaying='y',
                 anchor='free',
@@ -367,7 +327,7 @@ class SampleConfig2(BasePlotConfig):
             ),
             
             yaxis4=dict(
-                title='Other Channels [%]',
+                title='Other Channels in %',
                 side='left',
                 overlaying='y',
                 anchor='free',
