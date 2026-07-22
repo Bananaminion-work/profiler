@@ -23,7 +23,7 @@ class DatabricksClient:
             print(f"versucht zu verbinden zu: host={self.host}, http_path={self.http_path}")
             return
         
-    def get_data(self, query:str)-> DataFrame:
+    def get_data(self, query:str) -> DataFrame:
         
         try:
             # use contents of .env
@@ -47,9 +47,8 @@ class DatabricksClient:
             
             
         except Exception as e:
-            ui.notify(f"Error while fetching data from Databricks: {e}", color="red")
             print(f"Error while fetching data from Databricks: {e}")
-            return DataFrame()
+            raise
         
         
         
@@ -67,8 +66,8 @@ class DatabricksClient:
                 cursor.execute(query)
                 
         except Exception as e:
-            ui.notify(f"Error while executing query on Databricks: {e}", color="red")
             print(f"Error while executing query on Databricks: {e}")
+            raise
             
             
             
@@ -104,4 +103,5 @@ class DatabricksClient:
                 ui.notify(f"Successfully uploaded {totalRecords} records to {table_name}.", color="green")
                 
         except Exception as e:
-            ui.notify(f"Error while executing batch insert on Databricks: {e}", color="red")
+            print(f"Error while executing batch insert on Databricks: {e}")
+            raise

@@ -259,7 +259,12 @@ class AppController:
         metaObject = self.data.current_import_measurement.get_metadata()
         
         # triggers popup in the page if duplicate
-        if self.database.is_duplicate(metaObject.get_metadata_dict()):
+        try:
+            if self.database.is_duplicate(metaObject.get_metadata_dict()):
+                return False
+            
+        except Exception as e:
+            print(f"APPCONTROLLER: Error while checking for duplicate: {e}")
             return False
         
         # show notification that saving is in progress
@@ -276,6 +281,7 @@ class AppController:
         
         except Exception as e:
             # if failiure in db happens
+            print(f"APPCONTROLLER: Error while saving measurement to database: {e}")
             ui.notify(f"Error while saving measurement to database: {e}", color="negative")
             return False
 
