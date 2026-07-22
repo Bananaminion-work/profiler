@@ -81,7 +81,7 @@ class DatabricksClient:
         volumePath = TableNames.EXCHANGE
         measurement_id = records[0][0]
         shortName = table_name.split(".")[-1]
-        temporaryFile = f"{volumePath}/temp{shortName}{measurement_id}.csv"
+        temporaryFile = f"{volumePath}/temp{shortName}-{measurement_id}.csv"
         
         try:
             #create csv
@@ -101,6 +101,11 @@ class DatabricksClient:
                 """
             )
         
+        except Exception as e:
+            print(f"Error while executing batch insert on Databricks: {e}")
+            raise
+        
+        
         finally:
             #delete temporary file
             if os.path.exists(temporaryFile):
@@ -113,7 +118,7 @@ class DatabricksClient:
         
     def create_volume_if_not_exists(self):
         self.execute_query(f"""
-        CREATE VOLUME IF NOT EXISTS {TableNames.EXCHANGE}
+        CREATE VOLUME IF NOT EXISTS {TableNames.EXCHANGE_SQL}
         """)
         
         #try:

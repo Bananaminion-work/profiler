@@ -10,4 +10,6 @@ class TableNames():
     
     VVT             = f"bmlpdp_x_me_emea_d.{_user}.vps_vvt_limits"
     
-    EXCHANGE        = f"bmlpdp_x_me_emea_d.{_user}.vps_exchange_volume"
+    EXCHANGE_SQL    = f"bmlpdp_x_me_emea_d.{_user}.vps_exchange_volume"
+    
+    EXCHANGE        = f"/Volumes/bmlpdp_x_me_emea_d/{_user}/vps_exchange_volume"
