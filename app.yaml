@@ -7,4 +7,4 @@ env:
   - name: "DATABRICKS_HOST"
     value: "adb-4236431387455605.5.azuredatabricks.net"
   - name: "DATABRICKS_TOKEN"
-    valueFrom: "secret:secret_scope_VPS/DB-token"
+    valueFrom: "db_token_vps"
