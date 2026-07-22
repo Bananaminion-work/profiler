@@ -119,7 +119,7 @@ class MeasurementRepoDatabricks(MeasurementRepository):
         self._goldTable = TableNames.GOLD
         
         # create table if not exists
-        #self.create_tables_if_not_exists()
+        self.create_tables_if_not_exists()
     
     def add_measurement(self, measurement_id: str, measurement: dict[str,Data]):
         
@@ -202,7 +202,7 @@ class MeasurementRepoDatabricks(MeasurementRepository):
             query = f"""
             CREATE TABLE IF NOT EXISTS {table} (
                 measurement_id STRING,
-                ReadTime TIMESTAMP,
+                ReadTime STRING,
                 channel STRING,
                 value DOUBLE
             )

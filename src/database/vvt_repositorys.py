@@ -43,6 +43,8 @@ class VvtRepoDatabricks(VvtRepository):
     def __init__(self,databaseClient):
         self.client = databaseClient
         self._vvtTable = TableNames.VVT
+        # create table if not exists
+        self._initialize_vvt_table()
     
     def load_vvt(self) -> DataFrame:
         query = f"SELECT * FROM {self._vvtTable}"
@@ -89,7 +91,7 @@ class VvtRepoDatabricks(VvtRepository):
             # fill sql table with default vvt from csv file
             self.client.execute_batch_insert(self._vvtTable, default_vvt_tuple)
             
-        else:
-            print(f"VVT table '{self._vvtTable}' already contains data. Skipping default VVT insertion.")
+        #else:
+        #    print(f"VVT table '{self._vvtTable}' already contains data. Skipping default VVT insertion.")
             
             
