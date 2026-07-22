@@ -9,15 +9,17 @@ from dotenv import load_dotenv
 class DatabricksClient:
     def __init__(self):
         
-        # get contents of .env file
-        load_dotenv(os.path.join(Path(__file__).parent.parent, '.env'))
+        # Load .env from project root (../.. from src/database/databricks_client.py)
+        dotenv_path = Path(__file__).resolve().parents[2] / '.env'
+        load_dotenv(dotenv_path=dotenv_path)
         
         self.token = os.environ.get('DATABRICKS_TOKEN')
         self.http_path = os.environ.get('HTTP_PATH')
         self.host = os.environ.get('DATABRICKS_HOST')
         
         if not self.token or not self.http_path or not self.host:
-            print("krtischer fehler, .env nicht richtig")
+            print("kritischer fehler: .env nicht richtig geladen oder variablen fehlen")
+            print(f"verwendete .env: {dotenv_path} (exists={dotenv_path.exists()})")
             print(f"versucht zu verbinden zu: host={self.host}, http_path={self.http_path}")
             return
         
