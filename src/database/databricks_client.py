@@ -1,9 +1,11 @@
 import os
 from nicegui import ui
 from pandas import DataFrame
+import csv
 from pathlib import Path
 from databricks import sql
 from dotenv import load_dotenv
+from src.shared.table_names import TableNames
 
 
 class DatabricksClient:
@@ -73,35 +75,76 @@ class DatabricksClient:
             
     def execute_batch_insert(self, table_name:str, records:list):
         
+        # ensure that exchange volume exists before inserting
+        self.create_volume_if_not_exists()
+        
+        volumePath = TableNames.EXCHANGE
+        measurement_id = records[0][0]
+        shortName = table_name.split(".")[-1]
+        temporaryFile = f"{volumePath}/temp{shortName}{measurement_id}.csv"
+        
         try:
-            # use contents of .env
-            with sql.connect(
-                server_hostname=self.host,
-                http_path=self.http_path,
-                access_token=self.token
-            ) as connection:
-                # execute the batch insert
-                cursor = connection.cursor()
+            #create csv
+            with open(temporaryFile, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(["measurement_id","ReadTime","channel","value"])
+                writer.writerows(records)
                 
-                # count the columns
-                num_columns = len(records[0])
-                placeholders = ', '.join(['?'] * num_columns)
-                
-                # create the insert query
-                query = f"INSERT INTO {table_name} VALUES ({placeholders})"
-                
-                # chunking 
-                chunkSize = 5000
-                totalRecords = len(records)
-                
-                # upload in chunks to avoid memory issues
-                for i in range(0, totalRecords, chunkSize):
-                    chunk = records[i:i + chunkSize]
-                    cursor.executemany(query, chunk)
-                    print(f"Uploaded {min(i + chunkSize, totalRecords)} of {totalRecords} records to {table_name}.")
-                
-                ui.notify(f"Successfully uploaded {totalRecords} records to {table_name}.", color="green")
-                
-        except Exception as e:
-            print(f"Error while executing batch insert on Databricks: {e}")
-            raise
+            #bulk load
+            self.execute_query(
+                f"""
+                COPY INTO {table_name}
+                FROM '{temporaryFile}'
+                FILEFORMAT = CSV
+                FORMAT_OPTIONS ('header' = 'true')
+                COPY_OPTIONS ('force' = 'true')
+                """
+            )
+        
+        finally:
+            #delete temporary file
+            if os.path.exists(temporaryFile):
+                os.remove(temporaryFile)
+
+        
+        
+        
+        
+        
+    def create_volume_if_not_exists(self):
+        self.execute_query(f"""
+        CREATE VOLUME IF NOT EXISTS {TableNames.EXCHANGE}
+        """)
+        
+        #try:
+        #    # use contents of .env
+        #    with sql.connect(
+        #        server_hostname=self.host,
+        #        http_path=self.http_path,
+        #        access_token=self.token
+        #    ) as connection:
+        #        # execute the batch insert
+        #        cursor = connection.cursor()
+        #        
+        #        # count the columns
+        #        num_columns = len(records[0])
+        #        placeholders = ', '.join(['?'] * num_columns)
+        #        
+        #        # create the insert query
+        #        query = f"INSERT INTO {table_name} VALUES ({placeholders})"
+        #        
+        #        # chunking 
+        #        chunkSize = 5000
+        #        totalRecords = len(records)
+        #        
+        #        # upload in chunks to avoid memory issues
+        #        for i in range(0, totalRecords, chunkSize):
+        #            chunk = records[i:i + chunkSize]
+        #            cursor.executemany(query, chunk)
+        #            print(f"Uploaded {min(i + chunkSize, totalRecords)} of {totalRecords} records to {table_name}.")
+        #        
+        #        ui.notify(f"Successfully uploaded {totalRecords} records to {table_name}.", color="green")
+        #        
+        #except Exception as e:
+        #    print(f"Error while executing batch insert on Databricks: {e}")
+        #    raise

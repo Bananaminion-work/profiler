@@ -209,12 +209,16 @@ class ImportPage_showData(SubPage):
     def update_plot_preview(self):
         """clears plot container and redraws with fresh plot"""
         
-        if not hasattr(self, 'plotContainer'):
+        if not hasattr(self, 'plotContainer') or self.plotContainer.is_deleted:
             return  # controller is not set yet, do nothing
         
         self.plotContainer.clear()
         
-        plotContent = self.controller.handle_plot_request_single(self.config,self.chosenZeropoint_show,self.chosenScope)
+        plotContent = self.controller.handle_plot_request_single(
+            self.config,
+            self.chosenZeropoint_show,
+            self.chosenScope
+            )
         
         if plotContent is not None:
             # with function enables the call of handle-method on the container object
@@ -226,7 +230,7 @@ class ImportPage_showData(SubPage):
     def update_vvt_table(self):
         """clears the vvt table container and redraws the table with the violations for the selected vvt"""
         
-        if not hasattr(self, "tableContainer"):
+        if not hasattr(self, "tableContainer") or self.tableContainer.is_deleted:
             return
         
         self.tableContainer.clear()
