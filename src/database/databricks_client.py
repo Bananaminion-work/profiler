@@ -26,6 +26,11 @@ class DatabricksClient:
             print(f"versucht zu verbinden zu: host={self.host}, http_path={self.http_path}")
             return
         
+        # delete the token from Databricks to use only the PAT
+        os.environ.pop('DATABRICKS_CLIENT_ID', None)
+        os.environ.pop('DATABRICKS_CLIENT_SECRET', None)
+        
+        
     def get_data(self, query:str) -> DataFrame:
         
         try:
