@@ -96,19 +96,35 @@ class DatabricksClient:
             ) as connection:
                 cursor = connection.cursor()
                 
-                # Zählt die Spalten automatisch anhand des ersten Eintrags
-                num_columns = len(records[0])
-                placeholders = ", ".join(["?"] * num_columns)
-                insert_query = f"INSERT INTO {table_name} VALUES ({placeholders})"
-                
                 chunkSize = 5000
                 totalRecords = len(records)
                 
                 for i in range(0, totalRecords, chunkSize):
                     chunk = records[i:i + chunkSize]
                     
-                    # executemany setzt die Platzhalter (%s) vollautomatisch ein!
-                    cursor.executemany(insert_query, chunk)
+                    # Riesen-String bauen (Die extrem schnelle Methode!)
+                    value_strings = []
+                    for r in chunk:
+                        formatted_vals = []
+                        for val in r:
+                            # Typen korrekt für SQL formatieren
+                            if val is None or str(val).lower() in ['nan', 'nat']:
+                                formatted_vals.append("NULL")
+                            elif isinstance(val, bool):
+                                formatted_vals.append("TRUE" if val else "FALSE")
+                            elif isinstance(val, (int, float)):
+                                formatted_vals.append(str(val))
+                            else:
+                                # Strings in ' setzen und einfache Anführungszeichen escapen
+                                safe_str = str(val).replace("'", "''")
+                                formatted_vals.append(f"'{safe_str}'")
+                                
+                        # Zeile als (val1, val2, ...) anhängen
+                        value_strings.append(f"({', '.join(formatted_vals)})")
+                        
+                    # Ein einziger Insert-Befehl für 5000 Zeilen
+                    insert_query = f"INSERT INTO {table_name} VALUES " + ", ".join(value_strings)
+                    cursor.execute(insert_query)
                     
                     print(f"Uploaded {min(i + chunkSize, totalRecords)} of {totalRecords} records to {table_name}.")
                     
