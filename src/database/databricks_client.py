@@ -21,11 +21,12 @@ class DatabricksClient:
         # delete the variables coming from Databricks to only use the PAT
         os.environ.pop('DATABRICKS_CLIENT_ID', None)
         os.environ.pop('DATABRICKS_CLIENT_SECRET', None)
+        os.environ.pop('DATABRICKS_TOKEN', None)
         # delete the two lines above (or comment them out) if you want to use the App with public tables
         
         
         
-        self.token = os.environ.get('DATABRICKS_TOKEN')
+        self.token = os.environ.get('DATABRICKS_PAT')
         self.http_path = os.environ.get('HTTP_PATH')
         self.host = os.environ.get('DATABRICKS_HOST')
         
