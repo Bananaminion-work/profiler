@@ -1,11 +1,12 @@
 import os
-from nicegui import ui
+import io
 from pandas import DataFrame
 import csv
 from pathlib import Path
 from databricks import sql
 from dotenv import load_dotenv
 from src.shared.table_names import TableNames
+from databricks.sdk import WorkspaceClient
 
 
 class DatabricksClient:
@@ -78,23 +79,36 @@ class DatabricksClient:
         # ensure that exchange volume exists before inserting
         self.create_volume_if_not_exists()
         
-        volumePath = TableNames.EXCHANGE
+        # set measurement_id as first entry
         measurement_id = records[0][0]
+        # create short name of the table for the temporary file name
         shortName = table_name.split(".")[-1]
-        temporaryFile = f"{volumePath}/temp{shortName}-{measurement_id}.csv"
+        # build file name and volume path for the temporary CSV file
+        fileName = f"temp{shortName}-{measurement_id}.csv"
+        volumePath = f"{TableNames.EXCHANGE}/{fileName}"
+        # instantiate the Databricks SDK WorkspaceClient
+        w = WorkspaceClient()
         
         try:
             #create csv
-            with open(temporaryFile, 'w', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(["measurement_id","ReadTime","channel","value"])
-                writer.writerows(records)
-                
-            #bulk load
+            buffer = io.StringIO()
+            writer = csv.writer(buffer)
+            writer.writerow(["measurement_id","ReadTime","channel","value"])
+            writer.writerows(records)
+
+
+            #use SDK to upload the CSV to Databricks volume
+            w.files.upload(
+                volumePath,
+                io.BytesIO(buffer.getvalue().encode('utf-8')),
+                overwrite=True
+            )
+                       
+            # execute bulk load
             self.execute_query(
                 f"""
                 COPY INTO {table_name}
-                FROM '{temporaryFile}'
+                FROM '{volumePath}'
                 FILEFORMAT = CSV
                 FORMAT_OPTIONS ('header' = 'true')
                 COPY_OPTIONS ('force' = 'true')
@@ -108,8 +122,10 @@ class DatabricksClient:
         
         finally:
             #delete temporary file
-            if os.path.exists(temporaryFile):
-                os.remove(temporaryFile)
+            try:
+                w.files.delete(volumePath)
+            except:
+                pass
 
         
         
