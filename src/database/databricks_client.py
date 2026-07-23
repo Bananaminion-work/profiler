@@ -98,7 +98,7 @@ class DatabricksClient:
                 
                 # Zählt die Spalten automatisch anhand des ersten Eintrags
                 num_columns = len(records[0])
-                placeholders = ", ".join(["%s"] * num_columns)
+                placeholders = ", ".join(["?"] * num_columns)
                 insert_query = f"INSERT INTO {table_name} VALUES ({placeholders})"
                 
                 chunkSize = 5000
