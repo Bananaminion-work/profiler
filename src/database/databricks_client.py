@@ -16,6 +16,15 @@ class DatabricksClient:
         dotenv_path = Path(__file__).resolve().parents[2] / '.env'
         load_dotenv(dotenv_path=dotenv_path)
         
+        
+        
+        # delete the variables coming from Databricks to only use the PAT
+        os.environ.pop('DATABRICKS_CLIENT_ID', None)
+        os.environ.pop('DATABRICKS_CLIENT_SECRET', None)
+        # delete the two lines above (or comment them out) if you want to use the App with public tables
+        
+        
+        
         self.token = os.environ.get('DATABRICKS_TOKEN')
         self.http_path = os.environ.get('HTTP_PATH')
         self.host = os.environ.get('DATABRICKS_HOST')
