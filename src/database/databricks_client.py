@@ -86,8 +86,8 @@ class DatabricksClient:
         # build file name and volume path for the temporary CSV file
         fileName = f"temp{shortName}-{measurement_id}.csv"
         volumePath = f"{TableNames.EXCHANGE}/{fileName}"
-        # instantiate the Databricks SDK WorkspaceClient
-        w = WorkspaceClient()
+        # instantiate the Databricks SDK WorkspaceClient with host and token from .env
+        w = WorkspaceClient(host=self.host, token=self.token)
         
         try:
             #create csv
