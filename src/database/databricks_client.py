@@ -89,56 +89,102 @@ class DatabricksClient:
             
     def execute_batch_insert(self, table_name:str, records:list):
         
-        # set measurement_id as first entry
-        measurement_id = records[0][0]
-        # create short name of the table for the temporary file name
-        shortName = table_name.split(".")[-1]
-        # build file name and volume path for the temporary CSV file
-        fileName = f"temp{shortName}-{measurement_id}.csv"
-        volumePath = f"{TableNames.EXCHANGE}/{fileName}"
-        # instantiate the Databricks SDK WorkspaceClient with host and token from .env
-        cfg = Config(host=f"https://{self.host}", token=self.token, auth_type="pat")
-        w = WorkspaceClient(config=cfg)
-        
         try:
-            #create csv
-            buffer = io.StringIO()
-            writer = csv.writer(buffer)
-            writer.writerow(["measurement_id","ReadTime","channel","value"])
-            writer.writerows(records)
-
-
-            #use SDK to upload the CSV to Databricks volume
-            w.files.upload(
-                volumePath,
-                io.BytesIO(buffer.getvalue().encode('utf-8')),
-                overwrite=True
-            )
-                       
-            # execute bulk load
-            self.execute_query(
-                f"""
-                COPY INTO {table_name}
-                FROM '{volumePath}'
-                FILEFORMAT = CSV
-                FORMAT_OPTIONS ('header' = 'true')
-                COPY_OPTIONS ('force' = 'true')
-                """
-            )
-        
+            with sql.connect(
+                server_hostname=self.host,
+                http_path=self.http_path,
+                access_token=self.token
+            ) as connection:
+                cursor = connection.cursor()
+                
+                chunkSize = 5000
+                totalRecords = len(records)
+                
+                for i in range(0, totalRecords, chunkSize):
+                    chunk = records[i:i + chunkSize]
+                    
+                    # Baue EINEN riesigen SQL-String für 5000 Zeilen
+                    value_strings = []
+                    for r in chunk:
+                        # r[0]=id(str), r[1]=time(str/float), r[2]=channel(str), r[3]=value(float/None)
+                        
+                        # None/NaN zu NULL konvertieren, sonst kracht SQL
+                        val = "NULL" if r[3] is None or str(r[3]) == 'nan' else r[3]
+                        
+                        # Strings in einfache Anführungszeichen packen!
+                        val_str = f"('{r[0]}', '{r[1]}', '{r[2]}', {val})"
+                        value_strings.append(val_str)
+                        
+                    # Verbinde alle 5000 Zeilen mit Komma
+                    insert_query = f"INSERT INTO {table_name} VALUES " + ", ".join(value_strings)
+                    
+                    # Schickt nur EINE einzige HTTP-Anfrage ab
+                    cursor.execute(insert_query)
+                    
+                    print(f"Uploaded {min(i + chunkSize, totalRecords)} of {totalRecords} records to {table_name}.")
+                    
         except Exception as e:
             print(f"Error while executing batch insert on Databricks: {e}")
             raise
-        
-        
-        finally:
-            #delete temporary file
-            try:
-                w.files.delete(volumePath)
-            except:
-                pass
 
         
+        
+        # old version: Upload with temporary CSV file
+            # doesnt work bc Databricks wont let you create a file even if its in your own workspace
+        
+        ## set measurement_id as first entry
+        #measurement_id = records[0][0]
+        ## create short name of the table for the temporary file name
+        #shortName = table_name.split(".")[-1]
+        ## build file name and volume path for the temporary CSV file
+        #fileName = f"temp{shortName}-{measurement_id}.csv"
+        #volumePath = f"{TableNames.EXCHANGE}/{fileName}"
+        ## instantiate the Databricks SDK WorkspaceClient with host and token from .env
+        #cfg = Config(host=f"https://{self.host}", token=self.token, auth_type="pat")
+        #w = WorkspaceClient(config=cfg)
+        #
+        #try:
+        #    #create csv
+        #    buffer = io.StringIO()
+        #    writer = csv.writer(buffer)
+        #    writer.writerow(["measurement_id","ReadTime","channel","value"])
+        #    writer.writerows(records)
+#
+#
+        #    #use SDK to upload the CSV to Databricks volume
+        #    w.files.upload(
+        #        volumePath,
+        #        io.BytesIO(buffer.getvalue().encode('utf-8')),
+        #        overwrite=True
+        #    )
+        #               
+        #    # execute bulk load
+        #    self.execute_query(
+        #        f"""
+        #        COPY INTO {table_name}
+        #        FROM '{volumePath}'
+        #        FILEFORMAT = CSV
+        #        FORMAT_OPTIONS ('header' = 'true')
+        #        COPY_OPTIONS ('force' = 'true')
+        #        """
+        #    )
+        #
+        #except Exception as e:
+        #    print(f"Error while executing batch insert on Databricks: {e}")
+        #    raise
+        #
+        #
+        #finally:
+        #    #delete temporary file
+        #    try:
+        #        w.files.delete(volumePath)
+        #    except:
+        #        pass
+
+        
+        
+        
+        # old version: Upload with chunks (10 min for 1.2k lines....)
         
         #try:
         #    # use contents of .env
