@@ -17,6 +17,9 @@ class DatabricksClient:
         dotenv_path = Path(__file__).resolve().parents[2] / '.env'
         load_dotenv(dotenv_path=dotenv_path)
         
+        self.token = os.environ.get('DATABRICKS_PAT')
+        self.http_path = os.environ.get('HTTP_PATH')
+        self.host = os.environ.get('DATABRICKS_HOST')
         
         
         # delete the variables coming from Databricks to only use the PAT
@@ -27,14 +30,12 @@ class DatabricksClient:
         
         
         
-        self.token = os.environ.get('DATABRICKS_PAT')
-        self.http_path = os.environ.get('HTTP_PATH')
-        self.host = os.environ.get('DATABRICKS_HOST')
         
-        if not self.token or not self.http_path or not self.host:
+        if not self.token or not self.http_path or not self.host or self.token == "db_token_vps":
             print("kritischer fehler: .env nicht richtig geladen oder variablen fehlen")
             print(f"verwendete .env: {dotenv_path} (exists={dotenv_path.exists()})")
             print(f"versucht zu verbinden zu: host={self.host}, http_path={self.http_path}")
+            print(f"token={self.token}")
             return
         
         
