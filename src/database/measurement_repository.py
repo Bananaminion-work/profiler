@@ -28,6 +28,34 @@ class MeasurementRepository:
     def delete_measurement(self, measurement_id):
         pass
     
+    def _format_measurement(self,df:DataFrame)->DataFrame:
+        
+        if df.empty:
+            return df
+        
+        # define Datatypes
+        if 'ReadTime' in df.columns:
+            df['ReadTime'] = pd.to_numeric(df['ReadTime'], errors='coerce')
+        if 'value' in df.columns:
+            df['value'] = pd.to_numeric(df['value'], errors='coerce')
+        if 'measurement_id' in df.columns:
+            df['measurement_id'] = df['measurement_id'].astype(str)
+            
+        # change from long to wide
+        if all(col in df.columns for col in ['measurement_id','ReadTime','channel','value']):
+            df = df.pivot_table(
+                index=['measurement_id','ReadTime'],
+                columns='channel',
+                values='value'
+            ).reset_index()
+            
+        # ensure that the columns are in the correct order
+        if 'measurement_id' in df.columns and 'ReadTime' in df.columns:
+            df = df.sort_values(by=['measurement_id','ReadTime'])
+        
+        return df
+        
+    
     
     
 class MeasurementRepoCsv(MeasurementRepository):
@@ -93,7 +121,7 @@ class MeasurementRepoCsv(MeasurementRepository):
         filteredGoldDf = goldDf[goldDf['measurement_id'].isin(measurement_ids)]
         
         # always return since its always a DataFrame even if its empty
-        return filteredGoldDf #type:ignore
+        return self._format_measurement(filteredGoldDf) #type:ignore
     
     
     
@@ -190,7 +218,10 @@ class MeasurementRepoDatabricks(MeasurementRepository):
         query = f"SELECT * FROM {self._goldTable} WHERE measurement_id IN ({ids_str})"
         
         # use client to get data from Databricks
-        return self.client.get_data(query)
+        df = self.client.get_data(query)
+        
+        # apply formatting to the DataFrame
+        return self._format_measurement(df)
             
             
             
