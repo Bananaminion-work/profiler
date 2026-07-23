@@ -16,7 +16,7 @@ class DatabricksClient:
         dotenv_path = Path(__file__).resolve().parents[2] / '.env'
         load_dotenv(dotenv_path=dotenv_path)
         
-        self.token = os.environ.get('DATABRICKS_PAT')
+        self.token = os.environ.get('DATABRICKS_TOKEN')
         self.http_path = os.environ.get('HTTP_PATH')
         self.host = os.environ.get('DATABRICKS_HOST')
         
