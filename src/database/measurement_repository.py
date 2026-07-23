@@ -184,7 +184,7 @@ class MeasurementRepoDatabricks(MeasurementRepository):
             return DataFrame() 
         
         # create a string of measurement_ids for the SQL query
-        ids_str = "', '".join(measurement_ids)
+        ids_str = ", ".join([f"'{m}'" for m in measurement_ids])
         
         # create a query to fetch gold data for the given measurement_ids
         query = f"SELECT * FROM {self._goldTable} WHERE measurement_id IN ({ids_str})"
