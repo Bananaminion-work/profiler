@@ -26,11 +26,6 @@ class DatabricksClient:
             print(f"versucht zu verbinden zu: host={self.host}, http_path={self.http_path}")
             return
         
-        # delete the token from Databricks to use only the PAT
-        os.environ.pop('DATABRICKS_CLIENT_ID', None)
-        os.environ.pop('DATABRICKS_CLIENT_SECRET', None)
-        os.environ.pop('DATABRICKS_TOKEN', None)
-        
         
     def get_data(self, query:str) -> DataFrame:
         
@@ -82,9 +77,6 @@ class DatabricksClient:
             
     def execute_batch_insert(self, table_name:str, records:list):
         
-        # ensure that exchange volume exists before inserting
-        self.create_volume_if_not_exists()
-        
         # set measurement_id as first entry
         measurement_id = records[0][0]
         # create short name of the table for the temporary file name
@@ -134,14 +126,6 @@ class DatabricksClient:
                 pass
 
         
-        
-        
-        
-        
-    def create_volume_if_not_exists(self):
-        self.execute_query(f"""
-        CREATE VOLUME IF NOT EXISTS {TableNames.EXCHANGE_SQL}
-        """)
         
         #try:
         #    # use contents of .env
