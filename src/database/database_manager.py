@@ -86,20 +86,20 @@ class DatabaseManager:
         """retrieves gold data for a given measurement id"""
         
         #load all gold data for given ids
-        goldDfLong = self._measurementRepository.get_gold_data_by_id(measurement_ids)
+        goldDf = self._measurementRepository.get_gold_data_by_id(measurement_ids)
         
-        # change format to wide for easier use in the plots
-        goldDfWide = goldDfLong.pivot_table(
-            index=['measurement_id','ReadTime'],
-            columns='channel',
-            values='value'
-            ).reset_index()
+        ## change format to wide for easier use in the plots
+        #goldDf = goldDf.pivot_table(
+        #    index=['measurement_id','ReadTime'],
+        #    columns='channel',
+        #    values='value'
+        #    ).reset_index()
         
         # split the df according to the measurement_id
         measurementsDict = {}
         
         # create dict with measurement_id as key and corresponding gold data as value
-        for id, groupDf in goldDfWide.groupby('measurement_id'):
+        for id, groupDf in goldDf.groupby('measurement_id'):
             
             # remove m_id as column and set ReadTime as index for easier use in plots
             cleanDf = groupDf.drop(columns=['measurement_id']).set_index('ReadTime')
