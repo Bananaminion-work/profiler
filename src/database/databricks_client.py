@@ -16,7 +16,7 @@ class DatabricksClient:
         dotenv_path = Path(__file__).resolve().parents[2] / '.env'
         load_dotenv(dotenv_path=dotenv_path)
         
-        self.token = os.environ.get('DATABRICKS_TOKEN')
+        self.token = os.environ.get('DATABRICKS_PAT')
         self.http_path = os.environ.get('HTTP_PATH')
         self.host = os.environ.get('DATABRICKS_HOST')
         
@@ -29,6 +29,7 @@ class DatabricksClient:
         # delete the token from Databricks to use only the PAT
         os.environ.pop('DATABRICKS_CLIENT_ID', None)
         os.environ.pop('DATABRICKS_CLIENT_SECRET', None)
+        os.environ.pop('DATABRICKS_TOKEN', None)
         
         
     def get_data(self, query:str) -> DataFrame:
