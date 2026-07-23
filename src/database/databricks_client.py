@@ -1,13 +1,9 @@
 import os
-import io
 from pandas import DataFrame
-import csv
 from pathlib import Path
 from databricks import sql
 from dotenv import load_dotenv
-from src.shared.table_names import TableNames
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.core import Config
+from typing import Optional
 
 
 class DatabricksClient:
@@ -87,7 +83,7 @@ class DatabricksClient:
             
             
             
-    def execute_batch_insert(self, table_name: str, records: list):
+    def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
         try:
             with sql.connect(
                 server_hostname=self.host,
@@ -98,6 +94,9 @@ class DatabricksClient:
                 
                 chunkSize = 5000
                 totalRecords = len(records)
+                
+                # create the string for the columns
+                colString = f" ({', '.join(columns)})" if columns else ""
                 
                 for i in range(0, totalRecords, chunkSize):
                     chunk = records[i:i + chunkSize]
@@ -123,7 +122,7 @@ class DatabricksClient:
                         value_strings.append(f"({', '.join(formatted_vals)})")
                         
                     # Ein einziger Insert-Befehl für 5000 Zeilen
-                    insert_query = f"INSERT INTO {table_name} VALUES " + ", ".join(value_strings)
+                    insert_query = f"INSERT INTO {table_name}{colString} VALUES " + ", ".join(value_strings)
                     cursor.execute(insert_query)
                     
                     print(f"Uploaded {min(i + chunkSize, totalRecords)} of {totalRecords} records to {table_name}.")

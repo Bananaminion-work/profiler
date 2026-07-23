@@ -185,7 +185,7 @@ class MetadataRepoDatabricks(MetadataRepository):
         
         # save to databricks table
         records = list(metaDf.itertuples(index=False, name=None))
-        self.client.execute_batch_insert(self._metadataTable, records)
+        self.client.execute_batch_insert(self._metadataTable, records, columns=columnOrder)
         
         # return measurement_id if successful so other data is correct
         #return measurement_id
