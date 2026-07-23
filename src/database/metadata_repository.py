@@ -17,9 +17,9 @@ class MetadataRepository:
     def __init__(self) -> None:
         pass
         
-    def save_measurement_metadata(self, metadata, measurement_id: str) -> str:
+    def save_measurement_metadata(self, metadata, measurement_id: str):
         # Code to save measurement metadata to the database
-        return""
+        pass
 
     def get_measurement_metadata(self, measurement_id) -> DataFrame:
         # Code to retrieve measurement metadata from the database
@@ -40,7 +40,7 @@ class MetadataRepoCsv(MetadataRepository):
         super().__init__()
         self._pathToCsv = PROJECT_ROOT / "tests" / "fixtures" / "vps_metadata.csv"
     
-    def save_measurement_metadata(self, metadata:Metadata, measurement_id: str) -> str:
+    def save_measurement_metadata(self, metadata:Metadata, measurement_id: str):
         
         # get metadata as dict
         metaDict = metadata.get_metadata_dict()
@@ -83,7 +83,7 @@ class MetadataRepoCsv(MetadataRepository):
         
         # save df to csv
         metaDf.to_csv(self._pathToCsv, mode='a', header=needsHeader, index=False)
-        return measurement_id
+        #return measurement_id
     
     
     
@@ -147,7 +147,7 @@ class MetadataRepoDatabricks(MetadataRepository):
         self.client = databricksClient
         self._metadataTable = TableNames.METADATA
     
-    def save_measurement_metadata(self, metadata, measurement_id: str) -> str:
+    def save_measurement_metadata(self, metadata, measurement_id: str):
         
         # get metadata as dict
         metaDict = metadata.get_metadata_dict()
@@ -185,10 +185,10 @@ class MetadataRepoDatabricks(MetadataRepository):
         
         # save to databricks table
         records = list(metaDf.itertuples(index=False, name=None))
-        self.client.upload_dataframe(self._metadataTable, records)
+        self.client.execute_batch_insert(self._metadataTable, records)
         
         # return measurement_id if successful so other data is correct
-        return measurement_id
+        #return measurement_id
 
     
     def get_measurement_metadata(self, measurement_id):

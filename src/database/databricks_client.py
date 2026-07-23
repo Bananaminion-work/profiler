@@ -87,8 +87,7 @@ class DatabricksClient:
             
             
             
-    def execute_batch_insert(self, table_name:str, records:list):
-        
+    def execute_batch_insert(self, table_name: str, records: list):
         try:
             with sql.connect(
                 server_hostname=self.host,
@@ -97,35 +96,26 @@ class DatabricksClient:
             ) as connection:
                 cursor = connection.cursor()
                 
+                # Zählt die Spalten automatisch anhand des ersten Eintrags
+                num_columns = len(records[0])
+                placeholders = ", ".join(["%s"] * num_columns)
+                insert_query = f"INSERT INTO {table_name} VALUES ({placeholders})"
+                
                 chunkSize = 5000
                 totalRecords = len(records)
                 
                 for i in range(0, totalRecords, chunkSize):
                     chunk = records[i:i + chunkSize]
                     
-                    # Baue EINEN riesigen SQL-String für 5000 Zeilen
-                    value_strings = []
-                    for r in chunk:
-                        # r[0]=id(str), r[1]=time(str/float), r[2]=channel(str), r[3]=value(float/None)
-                        
-                        # None/NaN zu NULL konvertieren, sonst kracht SQL
-                        val = "NULL" if r[3] is None or str(r[3]) == 'nan' else r[3]
-                        
-                        # Strings in einfache Anführungszeichen packen!
-                        val_str = f"('{r[0]}', '{r[1]}', '{r[2]}', {val})"
-                        value_strings.append(val_str)
-                        
-                    # Verbinde alle 5000 Zeilen mit Komma
-                    insert_query = f"INSERT INTO {table_name} VALUES " + ", ".join(value_strings)
-                    
-                    # Schickt nur EINE einzige HTTP-Anfrage ab
-                    cursor.execute(insert_query)
+                    # executemany setzt die Platzhalter (%s) vollautomatisch ein!
+                    cursor.executemany(insert_query, chunk)
                     
                     print(f"Uploaded {min(i + chunkSize, totalRecords)} of {totalRecords} records to {table_name}.")
                     
         except Exception as e:
             print(f"Error while executing batch insert on Databricks: {e}")
             raise
+
 
         
         
