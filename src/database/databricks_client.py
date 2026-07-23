@@ -7,6 +7,7 @@ from databricks import sql
 from dotenv import load_dotenv
 from src.shared.table_names import TableNames
 from databricks.sdk import WorkspaceClient
+from databricks.sdk.core import Config
 
 
 class DatabricksClient:
@@ -95,7 +96,8 @@ class DatabricksClient:
         fileName = f"temp{shortName}-{measurement_id}.csv"
         volumePath = f"{TableNames.EXCHANGE}/{fileName}"
         # instantiate the Databricks SDK WorkspaceClient with host and token from .env
-        w = WorkspaceClient(host=f"https://{self.host}", token=self.token)
+        cfg = Config(host=f"https://{self.host}", token=self.token, auth_type="pat")
+        w = WorkspaceClient(config=cfg)
         
         try:
             #create csv
