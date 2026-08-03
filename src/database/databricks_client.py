@@ -81,7 +81,50 @@ class DatabricksClient:
             print(f"Error while executing query on Databricks: {e}")
             raise
             
+    
+    
+    def upload_dataframe_via_volume(self, table_name: str, df: DataFrame, measurement_id: str, volume_path: str):
+        #import os
+        
+        # 1. Dateinamen und Pfad generieren
+        shortName = table_name.split(".")[-1]
+        fileName = f"temp_{shortName}_{measurement_id}.csv"
+        full_volume_path = f"{volume_path}/{fileName}"
+        
+        print(f"Schreibe CSV direkt auf das Volume-Laufwerk: {full_volume_path}...")
+        
+        try:
+            # 2. DIE MAGIE: Wir speichern die CSV einfach ganz normal! 
+            # Databricks fängt das ab und legt es automatisch sicher ins Volume.
+            df.to_csv(full_volume_path, index=False, header=True)
             
+            # 3. COPY INTO ausführen
+            print(f"Führe COPY INTO auf Tabelle {table_name} aus...")
+            query = f"""
+            COPY INTO {table_name}
+            FROM '{full_volume_path}'
+            FILEFORMAT = CSV
+            FORMAT_OPTIONS ('header' = 'true', 'mergeSchema' = 'true')
+            COPY_OPTIONS ('force' = 'true')
+            """
+            self.execute_query(query)
+            print(f"Upload für {table_name} erfolgreich beendet!")
+            
+        except Exception as e:
+            print(f"Fehler beim Upload für {table_name}: {e}")
+            raise
+            
+        finally:
+            # 4. Aufräumen: Temp-Datei wieder löschen
+            try:
+                if os.path.exists(full_volume_path):
+                    os.remove(full_volume_path)
+                    print(f"Temporäre Datei {fileName} gelöscht.")
+            except Exception as e:
+                print(f"Konnte Temp-Datei nicht löschen (kann ignoriert werden): {e}")
+
+    
+        
             
     #def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
     #    try:
