@@ -8,6 +8,9 @@ class LandingPage(BasePage):
 
     def render(self, parent: ui.column) -> None:
         with parent:
+            
+            ui.label("Welcome to the Temp-Profiler!").classes("w-full text-center text-2xl font-bold")
+            
             with ui.column().classes("items-center gap-4 mx-auto my-8"):
                 ui.label("Choose your action:").classes("text-lg")
                 
@@ -25,10 +28,10 @@ class LandingPage(BasePage):
                     ).classes("w-72")
                     
                     ui.label("choose the database type").classes("text-sm text-gray-500")
-                    
+                
                     ui.radio(
                         ["CSV", "Databricks"]
-                        ).props("inline").bind_value(self, "dbType")
+                    ).props("inline").bind_value(self, "dbType")
                     
                     
         def start_analyzing(pageName: str):

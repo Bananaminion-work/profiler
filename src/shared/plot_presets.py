@@ -9,6 +9,15 @@ class PlotPresets:
         
         "All" : None,
         
+        "for thesis" : [
+            ChannelNames.CH1,
+            ChannelNames.CH1_GRADIENT_ROLLING_AVG,
+            ChannelNames.VACUUM,
+            ChannelNames.INLET_BULKHEAD_OPEN,
+            ChannelNames.OUTLET_BULKHEAD_OPEN,
+            ],
+            
+        
         
         "Default" : [
             ChannelNames.CH1,

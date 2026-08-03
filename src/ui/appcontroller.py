@@ -249,7 +249,7 @@ class AppController:
        
        
     
-    # asynchronous method to save in separate thread, so that the ui does not freeze while saving
+    # asynchronous method to save in separate thread, so the ui does not freeze while saving
     async def handle_save_request(self, metadata: dict[str,str]):
         
         # set metadata for current session measurement

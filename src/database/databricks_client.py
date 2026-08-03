@@ -92,11 +92,11 @@ class DatabricksClient:
             ) as connection:
                 cursor = connection.cursor()
                 
-                chunkSize = 5000
+                chunkSize = 100
                 totalRecords = len(records)
                 
                 # create the string for the columns
-                colString = f" ({', '.join(columns)})" if columns else ""
+                colString = f" (`{'`, `'.join(columns)}`)" if columns else ""
                 
                 for i in range(0, totalRecords, chunkSize):
                     chunk = records[i:i + chunkSize]

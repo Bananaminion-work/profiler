@@ -33,6 +33,9 @@ class MeasurementRepository:
         if df.empty:
             return df
         
+        # create copy for safety
+        df = df.copy()
+        
         # define Datatypes
         if 'ReadTime' in df.columns:
             df['ReadTime'] = pd.to_numeric(df['ReadTime'], errors='coerce')
@@ -147,61 +150,124 @@ class MeasurementRepoDatabricks(MeasurementRepository):
         self._goldTable = TableNames.GOLD
         
         
-    
+        
     def add_measurement(self, measurement_id: str, measurement: dict[str,Data]):
-        
-        
         # get medallion-data-objects
         bronze = measurement.get("bronze")
         silver = measurement.get("silver")
         gold = measurement.get("gold")
-        
+
         # failiurehandling
         if not (isinstance(bronze, Data) and isinstance(silver, Data) and isinstance(gold, Data)):
             print(f"Failed to add measurement to database. Medallion data should be of type Data.")
             print (f"Medallion data should be of type Data, got Bronze: {type(bronze)}, Silver: {type(silver)}, Gold: {type(gold)} instead.")
             return
         
-        #  copy dataframes from medallion-data-objects
+        # 1. Wir holen die DataFrames (im flachen Original-Format)
         bronzeDf = bronze.get_dataframe().copy()
         silverDf = silver.get_dataframe().copy()
         goldDf = gold.get_dataframe().copy()
         
-        # append measurement_id to each dataframe
+        # 2. ReadTime aus dem Index holen, BEVOR wir die ID anhängen
+        bronzeDf = bronzeDf.reset_index()
+        silverDf = silverDf.reset_index()
+        goldDf = goldDf.reset_index()
+        
+        # 3. ID anhängen
         bronzeDf['measurement_id'] = measurement_id
         silverDf['measurement_id'] = measurement_id
         goldDf['measurement_id'] = measurement_id
         
-        # convert dataframes to long format
-        longBronzeDf = bronzeDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
-        longSilverDf = silverDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
-        longGoldDf = goldDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
+        # 4. DIREKT HOCHLADEN (ohne .melt()!)
+        # ACHTUNG: Nur für diesen Cloud-Test nehmen wir dreimal dieselbe Test-Tabelle!
+        import time
+        start_time = time.time()
         
-        # write data to databricks tables
-        self._upload_dataframe(self._bronzeTable, longBronzeDf)
-        self._upload_dataframe(self._silverTable, longSilverDf)
-        self._upload_dataframe(self._goldTable, longGoldDf)
+        test_table = "bmlpdp_x_me_emea_d.x_usr_dea6rt.vps_test_flat_table"
         
+        # Wir laden nur Gold hoch, um den Speed zu messen
+        self._upload_dataframe(test_table, goldDf)
         
-        
-        
+        end_time = time.time()
+        print(f"CLOUD SPEED-TEST BEENDET! Dauer: {end_time - start_time:.2f} Sekunden.")
+
+
     def _upload_dataframe(self, table_name: str, df: DataFrame):
-        
-        # if no data to upload, return
         if df.empty:
             print(f"No data to upload to {table_name}.")
             return
+            
+        # 1. Wir müssen die Spaltennamen extrahieren
+        columns = list(df.columns)
         
-        # make list of tuples out of the Dataframes
+        # 2. Tupel erstellen
         records = list(df.itertuples(index=False, name=None))
         
-        # use client to upload data to databricks
+        # 3. Dem Client die Spaltennamen mitgeben!
         try:
-            self.client.execute_batch_insert(table_name, records)
+            self.client.execute_batch_insert(table_name, records, columns=columns)
             
         except Exception as e:
             print(f"Failed to upload data to {table_name}. Error: {e}")
             raise e
+
+    
+        
+    
+    #def add_measurement(self, measurement_id: str, measurement: dict[str,Data]):
+    #    
+    #    
+    #    # get medallion-data-objects
+    #    bronze = measurement.get("bronze")
+    #    silver = measurement.get("silver")
+    #    gold = measurement.get("gold")
+    #    
+    #    # failiurehandling
+    #    if not (isinstance(bronze, Data) and isinstance(silver, Data) and isinstance(gold, Data)):
+    #        print(f"Failed to add measurement to database. Medallion data should be of type Data.")
+    #        print (f"Medallion data should be of type Data, got Bronze: {type(bronze)}, Silver: {type(silver)}, Gold: {type(gold)} instead.")
+    #        return
+    #    
+    #    #  copy dataframes from medallion-data-objects
+    #    bronzeDf = bronze.get_dataframe().copy()
+    #    silverDf = silver.get_dataframe().copy()
+    #    goldDf = gold.get_dataframe().copy()
+    #    
+    #    # append measurement_id to each dataframe
+    #    bronzeDf['measurement_id'] = measurement_id
+    #    silverDf['measurement_id'] = measurement_id
+    #    goldDf['measurement_id'] = measurement_id
+    #    
+    #    # convert dataframes to long format
+    #    longBronzeDf = bronzeDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
+    #    longSilverDf = silverDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
+    #    longGoldDf = goldDf.reset_index().melt(id_vars=['measurement_id','ReadTime'], var_name="channel", value_name="value")
+    #    
+    #    # write data to databricks tables
+    #    self._upload_dataframe(self._bronzeTable, longBronzeDf)
+    #    self._upload_dataframe(self._silverTable, longSilverDf)
+    #    self._upload_dataframe(self._goldTable, longGoldDf)
+    #    
+    #    
+    #    
+    #    
+    #def _upload_dataframe(self, table_name: str, df: DataFrame):
+    #    
+    #    # if no data to upload, return
+    #    if df.empty:
+    #        print(f"No data to upload to {table_name}.")
+    #        return
+    #    
+    #    # make list of tuples out of the Dataframes
+    #    records = list(df.itertuples(index=False, name=None))
+    #    
+    #    # use client to upload data to databricks
+    #    try:
+    #        self.client.execute_batch_insert(table_name, records)
+    #        
+    #    except Exception as e:
+    #        print(f"Failed to upload data to {table_name}. Error: {e}")
+    #        raise e
     
     
     

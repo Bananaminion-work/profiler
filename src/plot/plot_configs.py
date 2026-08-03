@@ -85,7 +85,7 @@ class BasePlotConfig(ABC):
             showlegend=True,
             xaxis=dict(title='Time', domain=[0.1, 0.9]),
             yaxis=dict(title='Temperature in °C', side='left'),
-            yaxis2=dict(title='Vacuum in mBar', side='right', anchor='x'),
+            yaxis2=dict(title='Pressure in mBar', side='right', anchor='x'),
             yaxis3=dict(title='Gradients in K/s', side='right', anchor='free', position=1.0),
             yaxis4=dict(title='Other Channels', side='left', anchor='free', position=0.0),
             legend=dict(orientation="h",yanchor="top",y=-0.2,xanchor="center",x=0.5),
@@ -187,7 +187,7 @@ class SampleConfig(BasePlotConfig):
             ),
             
             yaxis2=dict(
-                title='Vacuum in %',
+                title='Pressure in %',
                 side='right',
                 overlaying='y',
                 range=[0, 1100] 
@@ -311,7 +311,7 @@ class SampleConfig2(BasePlotConfig):
             ),
             
             yaxis2=dict(
-                title='Vacuum in %',
+                title='Pressure in %',
                 side='right',
                 overlaying='y',
                 range=[-5, 105]
