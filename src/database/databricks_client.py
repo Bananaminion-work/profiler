@@ -83,108 +83,113 @@ class DatabricksClient:
             
             
             
+    #def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
+    #    try:
+    #        with sql.connect(
+    #            server_hostname=self.host,
+    #            http_path=self.http_path,
+    #            access_token=self.token
+    #        ) as connection:
+    #            cursor = connection.cursor()
+    #            
+    #            chunkSize = 100
+    #            totalRecords = len(records)
+    #            
+    #            # create the string for the columns
+    #            colString = f" (`{'`, `'.join(columns)}`)" if columns else ""
+    #            
+    #            for i in range(0, totalRecords, chunkSize):
+    #                chunk = records[i:i + chunkSize]
+    #                
+    #                # Riesen-String bauen (Die extrem schnelle Methode!)
+    #                value_strings = []
+    #                for r in chunk:
+    #                    formatted_vals = []
+    #                    for val in r:
+    #                        # Typen korrekt für SQL formatieren
+    #                        if val is None or str(val).lower() in ['nan', 'nat']:
+    #                            formatted_vals.append("NULL")
+    #                        elif isinstance(val, bool):
+    #                            formatted_vals.append("TRUE" if val else "FALSE")
+    #                        elif isinstance(val, (int, float)):
+    #                            formatted_vals.append(str(val))
+    #                        else:
+    #                            # Strings in ' setzen und einfache Anführungszeichen escapen
+    #                            safe_str = str(val).replace("'", "''")
+    #                            formatted_vals.append(f"'{safe_str}'")
+    #                            
+    #                    # Zeile als (val1, val2, ...) anhängen
+    #                    value_strings.append(f"({', '.join(formatted_vals)})")
+    #                    
+    #                # Ein einziger Insert-Befehl für 5000 Zeilen
+    #                insert_query = f"INSERT INTO {table_name}{colString} VALUES " + ", ".join(value_strings)
+    #                cursor.execute(insert_query)
+    #                
+    #                print(f"Uploaded {min(i + chunkSize, totalRecords)} of {totalRecords} records to {table_name}.")
+    #                
+    #    except Exception as e:
+    #        print(f"Error while executing batch insert on Databricks: {e}")
+    #        raise
+
+
     def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
+        
+        from databricks.sdk import WorkspaceClient
+        from databricks.sdk.core import Config
+        import io
+        from src.shared.table_names import TableNames
+        import csv
+    
+        # set measurement_id as first entry
+        measurement_id = records[0][0]
+        # create short name of the table for the temporary file name
+        shortName = table_name.split(".")[-1]
+        # build file name and volume path for the temporary CSV file
+        fileName = f"temp{shortName}-{measurement_id}.csv"
+        volumePath = f"{TableNames.EXCHANGE}/{fileName}"
+        # instantiate the Databricks SDK WorkspaceClient with host and token from .env
+        cfg = Config(host=f"https://{self.host}", token=self.token, auth_type="pat")
+        w = WorkspaceClient(config=cfg)
+        
         try:
-            with sql.connect(
-                server_hostname=self.host,
-                http_path=self.http_path,
-                access_token=self.token
-            ) as connection:
-                cursor = connection.cursor()
-                
-                chunkSize = 100
-                totalRecords = len(records)
-                
-                # create the string for the columns
-                colString = f" (`{'`, `'.join(columns)}`)" if columns else ""
-                
-                for i in range(0, totalRecords, chunkSize):
-                    chunk = records[i:i + chunkSize]
-                    
-                    # Riesen-String bauen (Die extrem schnelle Methode!)
-                    value_strings = []
-                    for r in chunk:
-                        formatted_vals = []
-                        for val in r:
-                            # Typen korrekt für SQL formatieren
-                            if val is None or str(val).lower() in ['nan', 'nat']:
-                                formatted_vals.append("NULL")
-                            elif isinstance(val, bool):
-                                formatted_vals.append("TRUE" if val else "FALSE")
-                            elif isinstance(val, (int, float)):
-                                formatted_vals.append(str(val))
-                            else:
-                                # Strings in ' setzen und einfache Anführungszeichen escapen
-                                safe_str = str(val).replace("'", "''")
-                                formatted_vals.append(f"'{safe_str}'")
-                                
-                        # Zeile als (val1, val2, ...) anhängen
-                        value_strings.append(f"({', '.join(formatted_vals)})")
-                        
-                    # Ein einziger Insert-Befehl für 5000 Zeilen
-                    insert_query = f"INSERT INTO {table_name}{colString} VALUES " + ", ".join(value_strings)
-                    cursor.execute(insert_query)
-                    
-                    print(f"Uploaded {min(i + chunkSize, totalRecords)} of {totalRecords} records to {table_name}.")
-                    
+            #create csv
+            buffer = io.StringIO()
+            writer = csv.writer(buffer)
+            writer.writerow(["measurement_id","ReadTime","channel","value"])
+            writer.writerows(records)
+#
+#
+            #use SDK to upload the CSV to Databricks volume
+            w.files.upload(
+                volumePath,
+                io.BytesIO(buffer.getvalue().encode('utf-8')),
+                overwrite=True
+            )
+            print("Upload successfull")
+                       
+            # execute bulk load
+            self.execute_query(
+                f"""
+                COPY INTO {table_name}
+                FROM '{volumePath}'
+                FILEFORMAT = CSV
+                FORMAT_OPTIONS ('header' = 'true')
+                COPY_OPTIONS ('force' = 'true')
+                """
+            )
+            print("COPY INTO successfull")
+        
         except Exception as e:
             print(f"Error while executing batch insert on Databricks: {e}")
             raise
-
-
         
         
-        # old version: Upload with temporary CSV file
-            # doesnt work bc Databricks wont let you create a file even if its in your own workspace
-        
-        ## set measurement_id as first entry
-        #measurement_id = records[0][0]
-        ## create short name of the table for the temporary file name
-        #shortName = table_name.split(".")[-1]
-        ## build file name and volume path for the temporary CSV file
-        #fileName = f"temp{shortName}-{measurement_id}.csv"
-        #volumePath = f"{TableNames.EXCHANGE}/{fileName}"
-        ## instantiate the Databricks SDK WorkspaceClient with host and token from .env
-        #cfg = Config(host=f"https://{self.host}", token=self.token, auth_type="pat")
-        #w = WorkspaceClient(config=cfg)
-        #
-        #try:
-        #    #create csv
-        #    buffer = io.StringIO()
-        #    writer = csv.writer(buffer)
-        #    writer.writerow(["measurement_id","ReadTime","channel","value"])
-        #    writer.writerows(records)
-#
-#
-        #    #use SDK to upload the CSV to Databricks volume
-        #    w.files.upload(
-        #        volumePath,
-        #        io.BytesIO(buffer.getvalue().encode('utf-8')),
-        #        overwrite=True
-        #    )
-        #               
-        #    # execute bulk load
-        #    self.execute_query(
-        #        f"""
-        #        COPY INTO {table_name}
-        #        FROM '{volumePath}'
-        #        FILEFORMAT = CSV
-        #        FORMAT_OPTIONS ('header' = 'true')
-        #        COPY_OPTIONS ('force' = 'true')
-        #        """
-        #    )
-        #
-        #except Exception as e:
-        #    print(f"Error while executing batch insert on Databricks: {e}")
-        #    raise
-        #
-        #
-        #finally:
-        #    #delete temporary file
-        #    try:
-        #        w.files.delete(volumePath)
-        #    except:
-        #        pass
+        finally:
+            #delete temporary file
+            try:
+                w.files.delete(volumePath)
+            except:
+                pass
 
         
         

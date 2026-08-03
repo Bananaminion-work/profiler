@@ -149,7 +149,7 @@ class MeasurementRepoDatabricks(MeasurementRepository):
         self._silverTable = TableNames.SILVER
         self._goldTable = TableNames.GOLD
         
-        
+    ##################---------------------------WIDE FORMAT OF THE TABLE---------------------------##################
         
     def add_measurement(self, measurement_id: str, measurement: dict[str,Data]):
         # get medallion-data-objects
@@ -212,7 +212,8 @@ class MeasurementRepoDatabricks(MeasurementRepository):
             raise e
 
     
-        
+    
+    ##################---------------------------LONG FORMAT OF THE TABLE---------------------------##################    
     
     #def add_measurement(self, measurement_id: str, measurement: dict[str,Data]):
     #    
