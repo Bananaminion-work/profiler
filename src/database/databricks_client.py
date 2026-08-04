@@ -1,4 +1,5 @@
 import os
+from time import time as _now
 from pandas import DataFrame
 from pathlib import Path
 from databricks import sql
@@ -80,51 +81,82 @@ class DatabricksClient:
         except Exception as e:
             print(f"Error while executing query on Databricks: {e}")
             raise
-            
-    
-    
-    def upload_dataframe_via_volume(self, table_name: str, df: DataFrame, measurement_id: str, volume_path: str):
-        #import os
-        
-        # 1. Dateinamen und Pfad generieren
-        shortName = table_name.split(".")[-1]
-        fileName = f"temp_{shortName}_{measurement_id}.csv"
-        full_volume_path = f"{volume_path}/{fileName}"
-        
-        print(f"Schreibe CSV direkt auf das Volume-Laufwerk: {full_volume_path}...")
-        
-        try:
-            # 2. DIE MAGIE: Wir speichern die CSV einfach ganz normal! 
-            # Databricks fängt das ab und legt es automatisch sicher ins Volume.
-            df.to_csv(full_volume_path, index=False, header=True)
-            
-            # 3. COPY INTO ausführen
-            print(f"Führe COPY INTO auf Tabelle {table_name} aus...")
-            query = f"""
-            COPY INTO {table_name}
-            FROM '{full_volume_path}'
-            FILEFORMAT = CSV
-            FORMAT_OPTIONS ('header' = 'true', 'mergeSchema' = 'true')
-            COPY_OPTIONS ('force' = 'true')
-            """
-            self.execute_query(query)
-            print(f"Upload für {table_name} erfolgreich beendet!")
-            
-        except Exception as e:
-            print(f"Fehler beim Upload für {table_name}: {e}")
-            raise
-            
-        finally:
-            # 4. Aufräumen: Temp-Datei wieder löschen
-            try:
-                if os.path.exists(full_volume_path):
-                    os.remove(full_volume_path)
-                    print(f"Temporäre Datei {fileName} gelöscht.")
-            except Exception as e:
-                print(f"Konnte Temp-Datei nicht löschen (kann ignoriert werden): {e}")
 
     
+    
+    def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
+        from concurrent.futures import ThreadPoolExecutor
+
+        # chunk size, lenth of records, and column string for SQL query
+        chunk_size = 5000
+        total_records = len(records)
+        col_string = f" (`{'`, `'.join(columns)}`)" if columns else ""
+
+        print(f"[DATABRICKS CLIENT] Starting batch insert of {total_records} records into {table_name} in chunks of {chunk_size}...")
+
+        # Helper function to format values for SQL insertion
+        def _format_value(val):
+            if val is None or str(val).lower() in ('nan', 'nat'):
+                return "NULL"
+            elif isinstance(val, bool):
+                return "TRUE" if val else "FALSE"
+            elif isinstance(val, (int, float)):
+                return str(val)
+            else:
+                return f"'{str(val).replace(chr(39), chr(39)+chr(39))}'"
+
         
+        # Function to insert a chunk of records
+        def _insert_chunk(chunk, chunk_idx,total_chunks):
+            
+            try:
+                
+                start_time = _now()
+                print(f"[DATABRICKS CLIENT] Inserting chunk {chunk_idx + 1}/{total_chunks} with {len(chunk)} records...")
+                
+                with sql.connect(
+                    server_hostname=self.host,
+                    http_path=self.http_path,
+                    access_token=self.token
+                ) as connection:
+                    cursor = connection.cursor()
+                    value_strings = [
+                        f"({', '.join(_format_value(val) for val in r)})"
+                        for r in chunk
+                    ]
+                    insert_query = f"INSERT INTO {table_name}{col_string} VALUES " + ", ".join(value_strings)
+                    cursor.execute(insert_query)
+                    cursor.close()
+                    
+                    duration = _now() - start_time
+                    print(f"[DATABRICKS CLIENT] Chunk {chunk_idx + 1}/{total_chunks} inserted. Duration: {duration:.1f}s")
+                    
+            except Exception as e:
+                print(f"[DATABRICKS CLIENT] Error while inserting chunk {chunk_idx + 1}/{total_chunks}: {e}")
+                raise
+            
+        try:
+            # split the records in chunks
+            chunks = [records[i:i + chunk_size] for i in range(0, total_records, chunk_size)]
+            
+            start_total = _now()
+
+            # use maximum of 4 threads to insert chunks in parallel
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                futures = [
+                    executor.submit(_insert_chunk, chunk, idx, len(chunks))
+                    for idx, chunk in enumerate(chunks)
+                ]
+                for f in futures:
+                    f.result()
+
+            total_duration = _now() - start_total
+            print(f"[DATABRICKS CLIENT] Batch insert completed. Total duration: {total_duration:.1f}s")
+
+        except Exception as e:
+            print(f"Error while executing batch insert: {e}")
+            raise
+            
             
     #def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
     #    try:
@@ -135,7 +167,7 @@ class DatabricksClient:
     #        ) as connection:
     #            cursor = connection.cursor()
     #            
-    #            chunkSize = 100
+    #            chunkSize = 5000
     #            totalRecords = len(records)
     #            
     #            # create the string for the columns
@@ -173,101 +205,3 @@ class DatabricksClient:
     #    except Exception as e:
     #        print(f"Error while executing batch insert on Databricks: {e}")
     #        raise
-
-
-    def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
-        
-        from databricks.sdk import WorkspaceClient
-        from databricks.sdk.core import Config
-        import io
-        from src.shared.table_names import TableNames
-        import csv
-    
-        # set measurement_id as first entry
-        measurement_id = records[0][0]
-        # create short name of the table for the temporary file name
-        shortName = table_name.split(".")[-1]
-        # build file name and volume path for the temporary CSV file
-        fileName = f"temp{shortName}-{measurement_id}.csv"
-        volumePath = f"{TableNames.EXCHANGE}/{fileName}"
-        # instantiate the Databricks SDK WorkspaceClient with host and token from .env
-        cfg = Config(host=f"https://{self.host}", token=self.token, auth_type="pat")
-        w = WorkspaceClient(config=cfg)
-        
-        try:
-            #create csv
-            buffer = io.StringIO()
-            writer = csv.writer(buffer)
-            writer.writerow(["measurement_id","ReadTime","channel","value"])
-            writer.writerows(records)
-#
-#
-            #use SDK to upload the CSV to Databricks volume
-            w.files.upload(
-                volumePath,
-                io.BytesIO(buffer.getvalue().encode('utf-8')),
-                overwrite=True
-            )
-            print("Upload successfull")
-                       
-            # execute bulk load
-            self.execute_query(
-                f"""
-                COPY INTO {table_name}
-                FROM '{volumePath}'
-                FILEFORMAT = CSV
-                FORMAT_OPTIONS ('header' = 'true')
-                COPY_OPTIONS ('force' = 'true')
-                """
-            )
-            print("COPY INTO successfull")
-        
-        except Exception as e:
-            print(f"Error while executing batch insert on Databricks: {e}")
-            raise
-        
-        
-        finally:
-            #delete temporary file
-            try:
-                w.files.delete(volumePath)
-            except:
-                pass
-
-        
-        
-        
-        # old version: Upload with chunks (10 min for 1.2k lines....)
-        
-        #try:
-        #    # use contents of .env
-        #    with sql.connect(
-        #        server_hostname=self.host,
-        #        http_path=self.http_path,
-        #        access_token=self.token
-        #    ) as connection:
-        #        # execute the batch insert
-        #        cursor = connection.cursor()
-        #        
-        #        # count the columns
-        #        num_columns = len(records[0])
-        #        placeholders = ', '.join(['?'] * num_columns)
-        #        
-        #        # create the insert query
-        #        query = f"INSERT INTO {table_name} VALUES ({placeholders})"
-        #        
-        #        # chunking 
-        #        chunkSize = 5000
-        #        totalRecords = len(records)
-        #        
-        #        # upload in chunks to avoid memory issues
-        #        for i in range(0, totalRecords, chunkSize):
-        #            chunk = records[i:i + chunkSize]
-        #            cursor.executemany(query, chunk)
-        #            print(f"Uploaded {min(i + chunkSize, totalRecords)} of {totalRecords} records to {table_name}.")
-        #        
-        #        ui.notify(f"Successfully uploaded {totalRecords} records to {table_name}.", color="green")
-        #        
-        #except Exception as e:
-        #    print(f"Error while executing batch insert on Databricks: {e}")
-        #    raise
