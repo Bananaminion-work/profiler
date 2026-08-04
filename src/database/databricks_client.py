@@ -87,7 +87,7 @@ class DatabricksClient:
     def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
 
         # chunk size, lenth of records, and column string for SQL query
-        chunk_size = 30000
+        chunk_size = 40000
         total_records = len(records)
         col_string = f" (`{'`, `'.join(columns)}`)" if columns else ""
 
@@ -143,7 +143,7 @@ class DatabricksClient:
                             if val is None or val != val:  # Check for NaN
                                 vals.append("NULL")
                                 
-                            elif type(val) in (int, float):
+                            elif type(val) is int or type(val) is float:
                                 vals.append(str(val))
                                 
                             elif type(val) is bool:
