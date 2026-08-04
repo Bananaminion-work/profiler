@@ -88,12 +88,14 @@ class DatabricksClient:
         from concurrent.futures import ThreadPoolExecutor
 
         # chunk size, lenth of records, and column string for SQL query
-        chunk_size = 5000
+        chunk_size = 4000
         total_records = len(records)
         col_string = f" (`{'`, `'.join(columns)}`)" if columns else ""
 
         print(f"[DATABRICKS CLIENT] Starting batch insert of {total_records} records into {table_name} in chunks of {chunk_size}...")
 
+        
+        
         # Helper function to format values for SQL insertion
         def _format_value(val):
             if val is None or str(val).lower() in ('nan', 'nat'):
@@ -104,51 +106,48 @@ class DatabricksClient:
                 return str(val)
             else:
                 return f"'{str(val).replace(chr(39), chr(39)+chr(39))}'"
-
-        
-        # Function to insert a chunk of records
-        def _insert_chunk(chunk, chunk_idx,total_chunks):
             
-            try:
+        
+        # try to save, raise exception if failed
+        try:
+            # split the records in chunks
+            chunks = [records[i:i + chunk_size] for i in range(0, total_records, chunk_size)]
+            total_chunks = len(chunks)
+            
+            # save the time for evaluation
+            start_total = _now()
+            
+            # create connector and cursor
+            with sql.connect(
+                server_hostname=self.host,
+                http_path=self.http_path,
+                access_token=self.token
+            ) as connection:
+                cursor = connection.cursor()
                 
-                start_time = _now()
-                print(f"[DATABRICKS CLIENT] Inserting chunk {chunk_idx + 1}/{total_chunks} with {len(chunk)} records...")
-                
-                with sql.connect(
-                    server_hostname=self.host,
-                    http_path=self.http_path,
-                    access_token=self.token
-                ) as connection:
-                    cursor = connection.cursor()
+                # insert chunks one by one
+                for idx, chunk in enumerate(chunks):
+                    # starttime for evaluation
+                    start_chunk = _now()
+                    
+                    print(f"[DATABRICKS CLIENT] Inserting chunk {idx + 1}/{total_chunks} with {len(chunk)} records...")
+                    
+                    # create the value strings for the SQL insert
                     value_strings = [
                         f"({', '.join(_format_value(val) for val in r)})"
                         for r in chunk
                     ]
+                    
+                    # create the insert query
                     insert_query = f"INSERT INTO {table_name}{col_string} VALUES " + ", ".join(value_strings)
+                    
+                    # execute query
                     cursor.execute(insert_query)
-                    cursor.close()
                     
-                    duration = _now() - start_time
-                    print(f"[DATABRICKS CLIENT] Chunk {chunk_idx + 1}/{total_chunks} inserted. Duration: {duration:.1f}s")
+                    duration = _now() - start_chunk
+                    print(f"[DATABRICKS CLIENT] Chunk {idx + 1}/{total_chunks} inserted in {duration:.1f}s.")
                     
-            except Exception as e:
-                print(f"[DATABRICKS CLIENT] Error while inserting chunk {chunk_idx + 1}/{total_chunks}: {e}")
-                raise
-            
-        try:
-            # split the records in chunks
-            chunks = [records[i:i + chunk_size] for i in range(0, total_records, chunk_size)]
-            
-            start_total = _now()
-
-            # use maximum of 4 threads to insert chunks in parallel
-            with ThreadPoolExecutor(max_workers=4) as executor:
-                futures = [
-                    executor.submit(_insert_chunk, chunk, idx, len(chunks))
-                    for idx, chunk in enumerate(chunks)
-                ]
-                for f in futures:
-                    f.result()
+                cursor.close()
 
             total_duration = _now() - start_total
             print(f"[DATABRICKS CLIENT] Batch insert completed. Total duration: {total_duration:.1f}s")
