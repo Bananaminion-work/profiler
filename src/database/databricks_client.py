@@ -85,10 +85,9 @@ class DatabricksClient:
     
     
     def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
-        from concurrent.futures import ThreadPoolExecutor
 
         # chunk size, lenth of records, and column string for SQL query
-        chunk_size = 4000
+        chunk_size = 10000
         total_records = len(records)
         col_string = f" (`{'`, `'.join(columns)}`)" if columns else ""
 
