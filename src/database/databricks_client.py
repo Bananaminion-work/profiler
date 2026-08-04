@@ -114,7 +114,7 @@ class DatabricksClient:
             total_chunks = len(chunks)
             
             # save the time for evaluation
-            start_total = _now()
+            start = _now()
             
             # create connector and cursor
             with sql.connect(
@@ -124,32 +124,43 @@ class DatabricksClient:
             ) as connection:
                 cursor = connection.cursor()
                 
+                
                 # insert chunks one by one
-                for idx, chunk in enumerate(chunks):
-                    # starttime for evaluation
-                    start_chunk = _now()
+                for i in range (0, total_records, chunk_size):
                     
-                    print(f"[DATABRICKS CLIENT] Inserting chunk {idx + 1}/{total_chunks} with {len(chunk)} records...")
+                    # get the current chunk
+                    chunk = records[i:i + chunk_size]
                     
-                    # create the value strings for the SQL insert
-                    value_strings = [
-                        f"({', '.join(_format_value(val) for val in r)})"
-                        for r in chunk
-                    ]
+                    rows = []
                     
-                    # create the insert query
-                    insert_query = f"INSERT INTO {table_name}{col_string} VALUES " + ", ".join(value_strings)
+                    # iterate through the chunk and format the values for SQL insertion
+                    for r in chunk:
+                        
+                        vals = []
+                        
+                        for val in r:
+                            
+                            if val is None or val != val:  # Check for NaN
+                                vals.append("NULL")
+                                
+                            elif type(val) in (int, float):
+                                vals.append(str(val))
+                                
+                            elif type(val) is bool:
+                                vals.append("TRUE" if val else "FALSE")
+                            
+                            else:
+                                vals.append(f"'{str(val).replace(chr(39), chr(39)+chr(39))}'")
+                        
+                        rows.append(f"({', '.join(vals)})")
+                        
+                    cursor.execute(f"INSERT INTO {table_name}{col_string} VALUES " + ", ".join(rows))
                     
-                    # execute query
-                    cursor.execute(insert_query)
-                    
-                    duration = _now() - start_chunk
-                    print(f"[DATABRICKS CLIENT] Chunk {idx + 1}/{total_chunks} inserted in {duration:.1f}s.")
                     
                 cursor.close()
 
-            total_duration = _now() - start_total
-            print(f"[DATABRICKS CLIENT] Batch insert completed. Total duration: {total_duration:.1f}s")
+            duration = _now() - start
+            print(f"[DATABRICKS CLIENT] Batch insert completed. Total duration: {duration:.1f}s")
 
         except Exception as e:
             print(f"Error while executing batch insert: {e}")
