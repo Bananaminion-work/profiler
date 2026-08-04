@@ -247,8 +247,7 @@ class AppController:
         return self.plot.create_plot_single(df_for_plot, config, offset)
         
        
-       
-    
+        
     # asynchronous method to save in separate thread, so the ui does not freeze while saving
     async def handle_save_request(self, metadata: dict[str,str]):
         

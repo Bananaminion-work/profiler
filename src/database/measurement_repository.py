@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+from email import errors
 import os
 import pandas as pd
 from pandas import DataFrame
@@ -248,20 +250,30 @@ class MeasurementRepoDatabricks(MeasurementRepository):
             (self._goldTable, longGoldDf)
         ]
         
+        # create list for errors
         errors = []
         
-        for tableName, df in uploads:
-            try:
-                self._upload_dataframe(tableName, df)
-            except Exception as e:
-                errors.append((tableName, str(e)))
-                
-        if errors:
-            for tableName, e in errors:
-                print(f"[DATABASE] Upload failed for table {tableName}. Error: {e}")
-            raise RuntimeError("One or more uploads failed. See logs for details.")
         
-        print(f"[DATABASE] Successfully uploaded measurement {measurement_id} to all tables.")
+        # start upload in a thread for each table
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            
+            futures = {
+                executor.submit(self._upload_dataframe, table, df): table
+                for table, df in uploads
+            }
+            
+            for f in futures:
+                try:
+                    f.result()
+                except Exception as e:
+                    errors.append((futures[f], e))
+
+        if errors:
+            for t, e in errors:
+                print(f"[DATABASE] failed {t}: {e}")
+            raise RuntimeError(f"[DATABASE] {len(errors)}/3 Uploads fehlgeschlagen.")
+
+        print(f"[DATABASE]  Measurement '{measurement_id}' saved successfully to all tables.")
         
         
     def _upload_dataframe(self, table_name: str, df: DataFrame):
