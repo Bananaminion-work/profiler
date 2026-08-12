@@ -25,12 +25,19 @@ class PlotPage_selectData(SubPage):
             with ui.card().classes("w-full"):
                 with ui.grid(columns=3).classes("w-full gap-3"):
                     ui.label("Select the filters for the measurement table").classes("text-lg col-span-3")
+                    # date
                     ui.date("Pick the date", on_change=self.update_table).props("type=date").bind_value(self, "date")
+                    # time
                     ui.time("Enter the time", on_change=self.update_table).props("format24h").bind_value(self, "time")
+                    # ovennr
                     ui.input("Enter the oven number", placeholder="Oven number", on_change=self.update_table).props("debounce=300").bind_value(self, "oven_nr")
+                    # ovenRecipe
                     ui.input("Enter the oven recipe", placeholder="Oven recipe", on_change=self.update_table).props("debounce=300").bind_value(self, "oven_Recipe")
+                    # product
                     ui.input("Enter the product name", placeholder="Product name", on_change=self.update_table).props("debounce=300").bind_value(self, "product")
+                    # load profile
                     ui.input("Enter the load profile", placeholder="Load profile", on_change=self.update_table).props("debounce=300").bind_value(self, "load_profile")
+                    # comment
                     ui.input("Enter the comment", placeholder="Comment", on_change=self.update_table).props("debounce=300").bind_value(self, "comment")
 
             with ui.card().classes("w-full min-h-96"):
@@ -60,7 +67,7 @@ class PlotPage_selectData(SubPage):
         """clears plot container and redraws with fresh plot"""
         
         #check whether the container already exists
-        if not hasattr(self, "tableContainer"):
+        if not hasattr(self, "tableContainer") or self.tableContainer is None:
             return
         
         self.tableContainer.clear()
@@ -69,7 +76,7 @@ class PlotPage_selectData(SubPage):
         filter_data = {
             str(MetaNames.DATE): self.date,
             str(MetaNames.START_TIME): self.time,
-            str(MetaNames.OVEN_NR): int(self.oven_nr) if self.oven_nr.isdigit() else 0,
+            str(MetaNames.OVEN_NR): self.oven_nr,
             str(MetaNames.OVEN_RECIPE): self.oven_Recipe,
             str(MetaNames.PRODUCT): self.product,
             str(MetaNames.LOAD_PROFILE): self.load_profile,
