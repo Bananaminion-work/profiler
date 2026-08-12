@@ -205,15 +205,22 @@ class DatabricksClient:
             # 4) COPY INTO ausfuehren
             t_copy = _now()
             copy_query = f"""
-                COPY INTO {table_name}
+            COPY INTO {table_name}
+            FROM (
+                SELECT
+                    measurement_id::STRING AS measurement_id,
+                    ReadTime::STRING AS ReadTime,
+                    channel::STRING AS channel,
+                    value::DOUBLE AS value
                 FROM '{volume_file_path}'
-                FILEFORMAT = CSV
-                FORMAT_OPTIONS (
-                    'header' = 'true',
-                    'inferSchema' = 'false',
-                    'delimiter' = ','
-                )
-            """
+            )
+            FILEFORMAT = CSV
+            FORMAT_OPTIONS (
+                'header' = 'true',
+                'inferSchema' = 'false',
+                'delimiter' = ','
+            )
+        """
             self.execute_query(copy_query)
             print(f"[BULK INSERT] COPY INTO abgeschlossen ({_now() - t_copy:.1f}s)")
 
