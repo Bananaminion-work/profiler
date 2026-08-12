@@ -114,28 +114,27 @@ class TableFactory:
         # ovennr
         filter_oven_nr = getattr(filter, MetaNames.OVEN_NR, "")
         if filter_oven_nr != "":
-            
-            mask &= (content[MetaNames.OVEN_NR] == filter_oven_nr)
+            mask &= content[MetaNames.OVEN_NR].astype(str).str.contains(filter_oven_nr, case=False, na=False, regex=False)
 
         # product
         filter_product = getattr(filter, MetaNames.PRODUCT, "")
         if filter_product:
-            mask &= content[MetaNames.PRODUCT].astype(str).str.contains(filter_product, case=False, na=False)
+            mask &= content[MetaNames.PRODUCT].astype(str).str.contains(filter_product, case=False, na=False, regex=False)
 
         # recipe
         filter_recipe = getattr(filter, MetaNames.OVEN_RECIPE, "")
         if filter_recipe:
-            mask &= content[MetaNames.OVEN_RECIPE].astype(str).str.contains(filter_recipe, case=False, na=False)
+            mask &= content[MetaNames.OVEN_RECIPE].astype(str).str.contains(filter_recipe, case=False, na=False, regex=False)
         
         # load profile
         filter_profile = getattr(filter, MetaNames.LOAD_PROFILE, "")
         if filter_profile:
-            mask &= content[MetaNames.LOAD_PROFILE].astype(str).str.contains(filter_profile, case=False, na=False)
+            mask &= content[MetaNames.LOAD_PROFILE].astype(str).str.contains(filter_profile, case=False, na=False, regex=False)
 
         # comment
         filter_comment = getattr(filter, MetaNames.COMMENT, "")
         if filter_comment:
-            mask &= content[MetaNames.COMMENT].astype(str).str.contains(filter_comment, case=False, na=False)
+            mask &= content[MetaNames.COMMENT].astype(str).str.contains(filter_comment, case=False, na=False, regex=False)
             
         # date
         filter_date = getattr(filter, MetaNames.DATE, None)
