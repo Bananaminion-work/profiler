@@ -149,7 +149,7 @@ class TableFactory:
         if filter_time:
             # convert string to datetime.time
             targetTime = pd.to_datetime(filter_time, format="%H:%M").strftime("%H:%M")
-            mask &= (content[MetaNames.START_TIME] >= targetTime)
+            mask &= (content[MetaNames.START_TIME].astype(str).str[:5] >= targetTime)
         
         # always show selected ids
         selectionMask = content[MetaNames.MEASUREMENT_ID].isin(selected_ids)
