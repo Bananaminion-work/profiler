@@ -104,6 +104,7 @@ class BasePlotConfig(ABC):
     def apply_bottom_legend(self, fig: go.Figure) -> go.Figure:
         """applies a bottom legend to the figure
         """
+        print(f"Version of Plotly: {plotly.__version__}")
         
         fig.update_layout(
             legend=dict(
@@ -117,7 +118,6 @@ class BasePlotConfig(ABC):
             autosize=True
         )
         
-        print(f"Version of Plotly: {plotly.__version__}")
         
         return fig
     
