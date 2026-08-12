@@ -3,4 +3,4 @@ databricks-sdk
 databricks-sql-connector
 requests
 pandas
-plotly>=5.20.0
+plotly==6.7.0
