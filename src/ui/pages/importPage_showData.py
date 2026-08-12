@@ -32,7 +32,7 @@ class ImportPage_showData(SubPage):
     cooling_time_2: str = ""
     cooling_time_3: str = ""
     cooling_time_4: str = ""
-    config: str = "standard"
+    config: str = "Standard"
     bulkheadZeropoint: str = ""
     firstInjectionZeropoint: str = ""
     above235Zeropoint: str = ""
@@ -80,12 +80,13 @@ class ImportPage_showData(SubPage):
             
             # section 1: Config
             with ui.row().classes("items-center"):
-                ui.label("Choose config and zeropoint").classes('text-lg')
+                ui.label("Choose config, zeropoint and scope").classes('text-lg')
                 
                 # get options
                 configs = self.controller.load_plot_configs()
-                if "standard" not in configs:
-                    configs.insert(0, "standard")
+                # add Standard config to the first position if not already present
+                if "Standard" not in configs:
+                    configs.insert(0, "Standard")
                 
                 with ui.row().classes("w-full"):
                     ui.select(
@@ -111,9 +112,6 @@ class ImportPage_showData(SubPage):
                     
                     # load options
                     scopeOptions = self.controller.load_scope_options()
-                    # add "none" as option on the first postion
-                    if "none" not in scopeOptions:
-                        scopeOptions.insert(0, "none")
                     
                     ui.select(
                         options=scopeOptions,
@@ -124,7 +122,7 @@ class ImportPage_showData(SubPage):
                     
                     
             # section 2: Plot
-            with ui.card().classes("w-full h-[65vh] relative") as plotCard:
+            with ui.card().classes("w-full h-[65vh] relative flex flex-col p-0") as plotCard:
                     #fullscreen button 
                     ui.button(
                                     icon='fullscreen',
@@ -134,7 +132,7 @@ class ImportPage_showData(SubPage):
                                 ).props('flat round').classes('absolute bottom-2 right-2 z-10') #orientation of the button
                     
                     # create container for specialist to draw in
-                    self.plotContainer = ui.column().classes("w-full h-full")
+                    self.plotContainer = ui.column().classes("w-full h-full flex-1 p-0 m-0")
                     # call function to draw plot (init)
                     self.update_plot_preview()
                     
@@ -210,7 +208,7 @@ class ImportPage_showData(SubPage):
         """clears plot container and redraws with fresh plot"""
         
         if not hasattr(self, 'plotContainer') or self.plotContainer.is_deleted:
-            return  # controller is not set yet, do nothing
+            return  # container is not set yet, do nothing
         
         self.plotContainer.clear()
         
@@ -223,7 +221,7 @@ class ImportPage_showData(SubPage):
         if plotContent is not None:
             # with function enables the call of handle-method on the container object
             with self.plotContainer:
-                ui.plotly(plotContent).classes("w-full h-full")
+                ui.plotly(plotContent).classes("w-full h-full").props("responsive=True")
 
                 
                 
@@ -245,36 +243,44 @@ class ImportPage_showData(SubPage):
         
         
     def update_plot_config(self):
+        if self.config == None:
+            return  # do nothing if config is not set
+        
         self.chosenZeropoint_show = "none"
         self.update_plot_preview()
         self.update_vvt_table()
     
 
-    async def on_save_click(self) -> None:
-        # fields that must have a value
-        requiredFields = [
-            "oven_Recipe",
-            "oven_Nr",
-            "product",
-            "load",
-            "pos",
-            "count",
-            "prod_test",
-            "nozzlefield",
-            "profile_name",
-            "injection_1",
-            "waiting_1",
-            "cooling_freq_1",
-            "cooling_time_1",
-        ]
+    async def on_save_click(self, saveButton) -> None:
         
-        for field in requiredFields:
+        
+        # fields that must have a value
+        requiredFields = {
+            "nozzlefield"           : "Nozzlefield",
+            "profile_name"          : "Profilename",
+            "oven_Recipe"           : "Oven recipe",
+            "oven_Nr"               : "Oven number",
+            "product"               : "Product",
+            "load"                  : "Load profile",
+            "pos"                   : "Position measurement cooler",
+            "count"                 : "Amount of coolers",
+            "injection_1"           : "Injection volume 1",
+            "waiting_1"             : "Holding time 1",
+            "cooling_freq_1"        : "Cooling frequency 1",
+            "cooling_time_1"        : "Cooling time 1",
+        }
+        
+        for field in requiredFields.keys():
             value = getattr(self, field)
             
             # cancel if field value is missing
             if not value:
-                ui.notify(f"Please fill in the required field: {field}", color="negative")
+                ui.notify(f"Please fill in the required field: {requiredFields[field]}", color="negative")
                 return
+        
+        
+        # turn off the button to prevent multiple clicks
+        saveButton.sender.disable()
         
         
         # create a metadta dict with static names from shared/meta_names.py
@@ -363,4 +369,4 @@ class ImportPage_showData(SubPage):
         self.cooling_time_2 = ""
         self.cooling_time_3 = ""
         self.cooling_time_4 = ""
-        self.config = "standard"
+        self.config = "Standard"

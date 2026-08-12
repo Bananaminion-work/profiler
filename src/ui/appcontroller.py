@@ -352,10 +352,7 @@ class AppController:
     
     def load_measurement_options(self) -> dict[str,str]:
         """returns a list of the current measurements being displayed in the multiple-plot"""
-        if not self.data.measurement_name_mapping:
-            return {}
-        else:
-            return self.data.measurement_name_mapping
+        return self.data.measurement_name_mapping
         
         
         
@@ -461,6 +458,9 @@ class AppController:
         # get gold-data with the selected ids from the database
         self.data.current_gold_data_for_plot  = self.database.get_gold_data_by_id(self.data.measurement_ids)
         
+        # create dict for base-mapping
+        baseMapping = {}
+        
         # calculate zeropoints for the selected measurements and save them in dict
         for id, df in self.data.current_gold_data_for_plot.items():
             
@@ -475,7 +475,7 @@ class AppController:
             # get metadata for the id
             metaDf = self.database.get_measurement_metadata(id)
             
-            # if there is metadata we build a new name
+            # if there is metadata, build a new name
             if not metaDf.empty:
                 oven = metaDf[MetaNames.OVEN_NR].values[0]
                 date = metaDf[MetaNames.DATE].values[0]
@@ -487,8 +487,25 @@ class AppController:
             else:
                 displayName = f"Messung: {id[:4]}"
             
-            # save the display name in the mapping dict
-            self.data.measurement_name_mapping[id] = displayName
+            # save the base-mapping
+            baseMapping[id] = displayName
+            
+        # count measurements with the same name
+        name_count = {}
+        for name in baseMapping.values():
+            name_count[name] = name_count.get(name, 0) + 1
+        
+        # create final mapping and save to data
+        self.data.measurement_name_mapping = {}
+        current_counts = {}
+        
+        # assemble names
+        for id, name in baseMapping.items():
+            if name_count[name] > 1:
+                current_counts[name] = current_counts.get(name, 0) + 1
+                self.data.measurement_name_mapping[id] = f"({current_counts[name]}) {name}"
+            else:
+                self.data.measurement_name_mapping[id] = name
         
         # navigate to plot page
         self.handle_navigation_request('plot-show')
@@ -504,15 +521,15 @@ class AppController:
         
         #create dict with zeropoints for the plot based on the selected zeropoint
         zeropointsDict = {}
-        for id, zeropointContainer in self.data.current_gold_zeropoints.items():
+        for m_id, zeropointContainer in self.data.current_gold_zeropoints.items():
             
             # set offset as 0 if chosen none
             if zeropoint == "none":
-                zeropointsDict[id] = 0
+                zeropointsDict[m_id] = 0
             
             # set zeropoint from calculation
             else:
-                zeropointsDict[id] = zeropointContainer.get_zeropoints()[zeropoint]
+                zeropointsDict[m_id] = zeropointContainer.get_zeropoints()[zeropoint]
         
         # apply scope to the dataframes for the plot based on the chosen config
         df_for_plot = {}
@@ -521,13 +538,14 @@ class AppController:
         df_for_plot = self.data.scope_data_multiple(preset)
         
         # create display-names
-        mapping = self.data.measurement_name_mapping
+        mapping = self.data.measurement_name_mapping    
         
         # create new dicts
-        displayDfDict = {mapping.get(id,id): df for id, df in df_for_plot.items()}
+        displayDfDict = {mapping.get(m_id,m_id): df for m_id, df in df_for_plot.items()}
+        
         displayZeroDict = {
-            str(mapping.get(id,id)): int(offset) 
-            for id, offset in zeropointsDict.items()
+            str(mapping.get(m_id,m_id)): int(offset) 
+            for m_id, offset in zeropointsDict.items()
             }
         
         # call plot factory to draw plot

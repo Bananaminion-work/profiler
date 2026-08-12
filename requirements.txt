@@ -1,3 +1,5 @@
 nicegui
 databricks-sdk
+databricks-sql-connector
+requests
 pandas
