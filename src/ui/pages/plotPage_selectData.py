@@ -61,7 +61,8 @@ class PlotPage_selectData(SubPage):
                     )
                 )
 
-
+        # init the table
+        self.update_table()
     
     def update_table(self):
         """clears plot container and redraws with fresh plot"""
