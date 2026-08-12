@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 import nicegui as ui
+import plotly
 import plotly.graph_objects as go
 import pandas as pd
-
 
 class BasePlotConfig(ABC):
     
@@ -116,6 +116,8 @@ class BasePlotConfig(ABC):
             ),
             autosize=True
         )
+        
+        print(f"Version of Plotly: {plotly.__version__}")
         
         return fig
     
