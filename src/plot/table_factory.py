@@ -112,8 +112,8 @@ class TableFactory:
         # filter df for each attribute
         
         # ovennr
-        filter_oven_nr = getattr(filter, MetaNames.OVEN_NR, 0) 
-        if filter_oven_nr > 0:
+        filter_oven_nr = getattr(filter, MetaNames.OVEN_NR, "")
+        if filter_oven_nr != "":
             
             mask &= (content[MetaNames.OVEN_NR] == filter_oven_nr)
 
@@ -141,14 +141,14 @@ class TableFactory:
         filter_date = getattr(filter, MetaNames.DATE, None)
         if filter_date:
             # convert string to datetime
-            targetDate = pd.to_datetime(filter_date, format="%Y-%m-%d").date()
+            targetDate = str(pd.to_datetime(filter_date, format="%Y-%m-%d").date())
             mask &= (content[MetaNames.DATE] == targetDate)
             
         # time
         filter_time = getattr(filter, MetaNames.START_TIME, None)
         if filter_time:
             # convert string to datetime.time
-            targetTime = pd.to_datetime(filter_time, format="%H:%M").time()
+            targetTime = pd.to_datetime(filter_time, format="%H:%M").strftime("%H:%M")
             mask &= (content[MetaNames.START_TIME] >= targetTime)
         
         # always show selected ids
