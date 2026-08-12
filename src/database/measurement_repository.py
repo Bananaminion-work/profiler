@@ -289,7 +289,7 @@ class MeasurementRepoDatabricks(MeasurementRepository):
         records = list(df.itertuples(index=False, name=None))
         
         #self.client.execute_batch_insert(table_name, records, columns)
-        self.client.bulk_insert_copy_into(table_name, df)
+        self.client.bulk_insert_parquet(table_name, df)
         
         
     

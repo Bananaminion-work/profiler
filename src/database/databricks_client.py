@@ -8,7 +8,7 @@ from typing import Optional
 
 import random
 import requests
-from io import StringIO
+from io import StringIO, BytesIO
 
 from src.shared.table_names import TableNames
 
@@ -245,6 +245,88 @@ class DatabricksClient:
             except Exception:
                 pass
             raise
+            
+            
+    def bulk_insert_parquet(
+        self,
+        table_name: str,
+        df: "DataFrame",
+        volume_path: str = TableNames.EXCHANGE):
+
+        # 1) Eindeutige ID generieren (8-stellige Zufallszahl)
+        unique_id = random.randint(10_000_000, 99_999_999)
+        file_name = f"upload_{unique_id}.parquet"
+
+        # REST API erwartet Pfad OHNE fuehrenden Slash
+        api_file_path = f"{volume_path.lstrip('/')}/{file_name}"
+        upload_url = f"https://{self.host}/api/2.0/fs/files/{api_file_path}"
+
+        # Volume-Pfad fuer COPY INTO (mit fuehrendem Slash)
+        volume_file_path = f"{volume_path}/{file_name}"
+
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/octet-stream",
+        }
+
+        start = _now()
+        print(f"[BULK INSERT] Start | Ziel: {table_name} | Datei: {file_name} | Zeilen: {len(df)}")
+
+        try:
+            # 2) DataFrame -> Parquet bytes im RAM
+            #    Typen explizit setzen damit Parquet das korrekte Schema schreibt
+            df_typed = df.copy()
+            df_typed["measurement_id"] = df_typed["measurement_id"].astype(str)
+            df_typed["ReadTime"] = df_typed["ReadTime"].astype(str)
+            df_typed["channel"] = df_typed["channel"].astype(str)
+            df_typed["value"] = df_typed["value"].astype(float)
+
+            parquet_buffer = BytesIO()
+            df_typed.to_parquet(parquet_buffer, index=False, engine="pyarrow")
+            parquet_bytes = parquet_buffer.getvalue()
+            print(f"[BULK INSERT] Parquet erzeugt ({len(parquet_bytes) / 1024:.1f} KB)")
+
+            # 3) Parquet per REST API ins Volume hochladen
+            t_upload = _now()
+            response = requests.put(upload_url, headers=headers, data=parquet_bytes)
+            response.raise_for_status()
+            print(f"[BULK INSERT] Upload ins Volume abgeschlossen ({_now() - t_upload:.1f}s)")
+
+            # 4) COPY INTO ausfuehren
+            #    Kein Schema-Cast noetig - Parquet traegt die Typen bereits in sich
+            t_copy = _now()
+            copy_query = f"""
+                COPY INTO {table_name}
+                FROM '{volume_file_path}'
+                FILEFORMAT = PARQUET
+            """
+            self.execute_query(copy_query)
+            print(f"[BULK INSERT] COPY INTO abgeschlossen ({_now() - t_copy:.1f}s)")
+
+            # 5) Datei im Volume wieder loeschen
+            t_delete = _now()
+            del_response = requests.delete(upload_url, headers=headers)
+            del_response.raise_for_status()
+            print(f"[BULK INSERT] Datei geloescht ({_now() - t_delete:.1f}s)")
+
+            duration = _now() - start
+            print(f"[BULK INSERT] Fertig. Gesamtdauer: {duration:.1f}s")
+
+        except requests.exceptions.HTTPError as e:
+            print(f"[BULK INSERT] REST API Fehler: {e.response.status_code} - {e.response.text}")
+            raise
+        except Exception as e:
+            print(f"[BULK INSERT] Fehler: {type(e).__name__}: {e}")
+            # Aufraeumen: Datei loeschen falls sie schon hochgeladen wurde
+            try:
+                requests.delete(upload_url, headers=headers)
+                print("[BULK INSERT] Datei im Volume wurde aufgeraeumt.")
+            except Exception:
+                pass
+            raise
+            
+            
+            
             
     #def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
     #    try:
