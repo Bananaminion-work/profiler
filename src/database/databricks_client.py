@@ -210,11 +210,8 @@ class DatabricksClient:
                 FILEFORMAT = CSV
                 FORMAT_OPTIONS (
                     'header' = 'true',
-                    'inferSchema' = 'true',
+                    'inferSchema' = 'false',
                     'delimiter' = ','
-                )
-                COPY_OPTIONS (
-                    'mergeSchema' = 'true'
                 )
             """
             self.execute_query(copy_query)
