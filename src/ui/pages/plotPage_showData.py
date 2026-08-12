@@ -4,7 +4,7 @@ from nicegui import ui
 
 class PlotPage_showData(SubPage):
     pageName = "plot-show"
-    config: str = "standard"
+    config: str = "Standard"
     chosenZeropoint: str = "none"
     chosenScope: str = "Default"
 
@@ -20,8 +20,8 @@ class PlotPage_showData(SubPage):
                     
                     # get options
                     configs = self.controller.load_plot_configs()
-                    if "standard" not in configs:
-                        configs.insert(0, "standard")
+                    if "Standard" not in configs:
+                        configs.insert(0, "Standard")
                     
                     ui.select(
                             configs,
@@ -43,7 +43,7 @@ class PlotPage_showData(SubPage):
                         value=zeropointOptions[0],
                         label="choose zeropoint for plot",
                         on_change=self.update_plot_and_vvt
-                    ).bind_value(self,"chosenZeropoint_show").classes("w-100")
+                    ).bind_value(self,"chosenZeropoint").classes("w-100")
                     
                         
                         
@@ -169,7 +169,7 @@ class PlotPage_showData(SubPage):
                 
     def reset(self):
         """resets the page to default state, e.g. after loading new data"""
-        self.config = "standard"
+        self.config = "Standard"
         self.chosenZeropoint_show = "none"
         self.selectedMeasurementId = ""
         self.selectedVVT = ""

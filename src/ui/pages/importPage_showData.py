@@ -77,65 +77,64 @@ class ImportPage_showData(SubPage):
         
         with ui.column().classes("w-full gap-4"):
             
-            
-            # section 1: Config
-            with ui.row().classes("items-center"):
-                ui.label("Choose config, zeropoint and scope").classes('text-lg')
-                
-                # get options
-                configs = self.controller.load_plot_configs()
-                # add Standard config to the first position if not already present
-                if "Standard" not in configs:
-                    configs.insert(0, "Standard")
-                
-                with ui.row().classes("w-full"):
-                    ui.select(
-                        configs,
-                        value=configs[0],
-                        label="choose config for plot",
-                        on_change=self.update_plot_config
-                    ).bind_value(self,"config").classes("w-100")
-                    
-                    # load options
-                    zeropointOptions = self.controller.load_zeropoint_options()
-                    # add "none" as option on the first postion
-                    if "none" not in zeropointOptions:
-                        zeropointOptions.insert(0, "none")
-                    
-                    ui.select(
-                        options=zeropointOptions,
-                        value=zeropointOptions[0],
-                        label="choose zeropoint for plot",
-                        on_change=self.update_vvt_selection
-                    ).bind_value(self,"chosenZeropoint_show").classes("w-100")
-                    
-                    
-                    # load options
-                    scopeOptions = self.controller.load_scope_options()
-                    
-                    ui.select(
-                        options=scopeOptions,
-                        value=scopeOptions[0],
-                        label="choose scope for plot",
-                        on_change=self.update_plot_config
-                    ).bind_value(self,"chosenScope").classes("w-100")
-                    
-                    
-            # section 2: Plot
+            # section 1: analysis area
             with ui.card().classes("w-full h-[65vh] relative flex flex-col p-0") as plotCard:
-                    #fullscreen button 
-                    ui.button(
-                                    icon='fullscreen',
-                                    on_click=lambda: ui.run_javascript(
-                                            f'document.fullscreenElement ? document.exitFullscreen() : getElement({plotCard.id}).$el.requestFullscreen()'
-                                        )
-                                ).props('flat round').classes('absolute bottom-2 right-2 z-10') #orientation of the button
+                
+                # section 1: Config
+                with ui.row().classes("items-center"):
+                    ui.label("Choose config, zeropoint and scope").classes('text-lg')
                     
-                    # create container for specialist to draw in
-                    self.plotContainer = ui.column().classes("w-full h-full flex-1 p-0 m-0")
-                    # call function to draw plot (init)
-                    self.update_plot_preview()
+                    # get options
+                    configs = self.controller.load_plot_configs()
+                    # add Standard config to the first position if not already present
+                    if "Standard" not in configs:
+                        configs.insert(0, "Standard")
                     
+                    with ui.row().classes("w-full"):
+                        ui.select(
+                            configs,
+                            value=configs[0],
+                            label="choose config for plot",
+                            on_change=self.update_plot_config
+                        ).bind_value(self,"config").classes("w-100")
+                        
+                        # load options
+                        zeropointOptions = self.controller.load_zeropoint_options()
+                        # add "none" as option on the first postion
+                        if "none" not in zeropointOptions:
+                            zeropointOptions.insert(0, "none")
+                        
+                        ui.select(
+                            options=zeropointOptions,
+                            value=zeropointOptions[0],
+                            label="choose zeropoint for plot",
+                            on_change=self.update_vvt_selection
+                        ).bind_value(self,"chosenZeropoint_show").classes("w-100")
+                        
+                        
+                        # load options
+                        scopeOptions = self.controller.load_scope_options()
+                        
+                        ui.select(
+                            options=scopeOptions,
+                            value=scopeOptions[0],
+                            label="choose scope for plot",
+                            on_change=self.update_plot_config
+                        ).bind_value(self,"chosenScope").classes("w-100")
+                        
+                        #fullscreen button 
+                        ui.button(
+                                        icon='fullscreen',
+                                        on_click=lambda: ui.run_javascript(
+                                                f'document.fullscreenElement ? document.exitFullscreen() : getElement({plotCard.id}).$el.requestFullscreen()'
+                                            )
+                                    ).props('flat round').classes('absolute bottom-2 right-2 z-10') #orientation of the button
+                        
+                        # create container for specialist to draw in
+                        self.plotContainer = ui.column().classes("w-full h-full flex-1 p-0 m-0")
+                        # call function to draw plot (init)
+                        self.update_plot_preview()
+                        
                     
                     
             # section 3: vvt dropdown and table
