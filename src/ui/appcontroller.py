@@ -455,11 +455,23 @@ class AppController:
             ui.notify("No measurements selected. Please select measurements from the table to show them in the plot.", color="negative")
             return
         
+        try:
+            # fetch the data in a separate thread to avoid blocking the UI
+            await run.io_bound(self.fetch_plot_data)
+            
+            # switch page
+            self.handle_navigation_request('plot-show')
+            
+        except Exception as e:
+            ui.notify(f"Error while fetching data for selected measurements: {e}", color="negative")
+            print(f"Error while fetching data for selected measurements: {e}")
+        
+        
+        
+    def fetch_plot_data(self):
+        
         # get gold-data with the selected ids from the database
         self.data.current_gold_data_for_plot  = self.database.get_gold_data_by_id(self.data.measurement_ids)
-        
-        # create dict for base-mapping
-        baseMapping = {}
         
         # calculate zeropoints for the selected measurements and save them in dict
         for id, df in self.data.current_gold_data_for_plot.items():
@@ -469,6 +481,9 @@ class AppController:
             
             #set zeropoints for the measurement in dict with measurement_id as key
             self.data.current_gold_zeropoints[id] = zeropointList
+        
+        # create dict for base-mapping
+        baseMapping = {}
             
         # build name mapping for display
         for id in self.data.measurement_ids:
