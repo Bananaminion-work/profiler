@@ -8,7 +8,6 @@ from src.database.measurement_repository import MeasurementRepository, Measureme
 from src.database.metadata_repository import MetadataRepository, MetadataRepoCsv, MetadataRepoDatabricks
 from src.database.vvt_repositorys import VvtRepoCsv, VvtRepoDatabricks, VvtRepository
 from src.shared.data_composition import DataComposition
-from nicegui import ui
 import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
@@ -45,20 +44,19 @@ class DatabaseManager:
             raise ValueError(f"Invalid source '{source}' for VVT repository.")
         
     def _detect_source(self):
-        # load dotenv for databricks credentials
-        dotenv_path = Path(__file__).parent.parent / '.env'
-        load_dotenv(dotenv_path=dotenv_path)
         
-        # check if all required environment variables for Databricks are set
-        has_host = bool(os.environ.get("DATABRICKS_HOST"))
-        has_token = bool(os.environ.get("DATABRICKS_TOKEN"))
-        has_path = bool(os.environ.get("DATABRICKS_HTTP_PATH"))
-        
-        # set database accordingly
-        if has_host and has_token and has_path:
+        # check if app is deployed in DB environ
+        if os.environ.get("DATABRICKS_HOST"):
             return "databricks"
-        else:
-            return "csv"
+        
+        # else load .env and use csv as default
+        dotenv_path = Path(__file__).parent.parent.parent / ".env"
+        if dotenv_path.exists():
+            load_dotenv(dotenv_path)
+            if os.environ.get("DATABRICKS_HOST"):
+                return "databricks"
+            
+        return "csv"
 
     def save_measurement(self, measurement: DataComposition):
         """saves the measurement to the database"""
@@ -144,7 +142,7 @@ class DatabaseManager:
         try:
             metaDf = self.list_saved_measurements()
         except FileNotFoundError as e:
-            ui.notify(f"Error while fetching saved measurements: {e}", color="red")
+            print(f"FileNotFoundError: {e}")
             return False
         
         # if metadata is empty return false
