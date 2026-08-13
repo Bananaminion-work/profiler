@@ -467,8 +467,8 @@ class AppController:
             print(f"Error while fetching data for selected measurements: {e}")
         
         
-        
     def fetch_plot_data(self):
+        """Fetches the plot data for the selected measurements."""
         
         # get gold-data with the selected ids from the database
         self.data.current_gold_data_for_plot  = self.database.get_gold_data_by_id(self.data.measurement_ids)

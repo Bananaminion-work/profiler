@@ -4,6 +4,9 @@ import plotly
 import plotly.graph_objects as go
 import pandas as pd
 
+from src.shared.channel_names import ChannelNames
+from src.shared.confi_names import ConfigNames
+
 class BasePlotConfig(ABC):
     
     @abstractmethod
@@ -16,16 +19,57 @@ class BasePlotConfig(ABC):
         used for dynamic axes application"""
         
         # convert column name to lowercase for easier matching
-        col_lower = col_name.lower()
         
-        if 'gradient' in col_lower or "average" in col_lower:
-            return 'y3'  # Axis 3: Gradients
-        elif 'vacuum' in col_lower:
-            return 'y2'  # Axis 2: Vacuum
-        elif 'ch1' in col_lower or 'ch2' in col_lower or 'ch3' in col_lower or 'ch4' in col_lower or 'ch5' in col_lower or 'ch6' in col_lower:
-            return 'y1'   # Axis 1: Temperature
+        
+        ## define the right axis based on the column name
+        
+        # gradients
+        if col_name in{
+            
+            ChannelNames.CH1_GRADIENT,
+            ChannelNames.CH2_GRADIENT,
+            ChannelNames.CH3_GRADIENT,
+            ChannelNames.CH4_GRADIENT,
+            ChannelNames.CH5_GRADIENT,
+            ChannelNames.CH6_GRADIENT,
+            
+            ChannelNames.CH1_GRADIENT_ROLLING_AVG,
+            ChannelNames.CH2_GRADIENT_ROLLING_AVG,
+            ChannelNames.CH3_GRADIENT_ROLLING_AVG,
+            ChannelNames.CH4_GRADIENT_ROLLING_AVG,
+            ChannelNames.CH5_GRADIENT_ROLLING_AVG,
+            ChannelNames.CH6_GRADIENT_ROLLING_AVG,
+            
+            }:
+            return 'y3'  # Gradients in K/s
+        
+        # pressure
+        elif col_name == ChannelNames.VACUUM:
+            return 'y2'  # Vacuum in mBar
+        
+        
+        # temperature
+        elif col_name in {
+            ChannelNames.CH1,
+            ChannelNames.CH2,
+            ChannelNames.CH3,
+            ChannelNames.CH4,
+            ChannelNames.CH5,
+            ChannelNames.CH6,
+            
+            ChannelNames.HEATER_BOTTOM1_ACTUAL,
+            ChannelNames.HEATER_BOTTOM2_ACTUAL,
+            ChannelNames.HEATER_BOTTOM3_ACTUAL,
+            ChannelNames.HEATER_BOTTOM4_ACTUAL,
+        }:
+            return 'y1'  # Temperature in °C
+        
+        # fallback
         else:
-            return 'y4'  # Axis 4: Unknown Channels (Fallback)
+            return 'y4'  # Other channels
+        
+        
+        
         
     
     def apply_dynamic_axes(self, fig: go.Figure, usedAxes: list[str]) -> go.Figure:
@@ -145,13 +189,16 @@ class BasePlotConfig(ABC):
 
 
 
+
+
+
+
+
+
         
 class StandardConfig(BasePlotConfig):
     
-    # DONT CHANGE THE NAME!
-    # if the name is changed, please change it in the "show" pages as well, otherwise the config will not be found
-    
-    configName = "Standard"
+    configName = ConfigNames.STANDARD_BOTTOM
     
     def build_figure(self, dataDict: dict[str, pd.DataFrame])-> go.Figure:
         
@@ -169,7 +216,7 @@ class StandardConfig(BasePlotConfig):
     
 class SideLegendConfig(BasePlotConfig):
     
-    configName = "Standard with Side Legend"
+    configName = ConfigNames.STANDARD_SIDE
     
     def build_figure(self, dataDict: dict[str, pd.DataFrame])-> go.Figure:
         
@@ -182,3 +229,31 @@ class SideLegendConfig(BasePlotConfig):
         fig = self.apply_side_legend(fig)
         
         return fig
+    
+    
+#########-------- [INFO] ---------#########
+# If you want to add a new config, please create it here
+
+#you can use this blueprint as a template:
+
+                        #class NewConfig(BasePlotConfig):
+                        #    
+                        #    configName = ConfigNames.YOUR_NEW_CONFIG_NAME
+                        #    
+                        #    def build_figure(self, dataDict: dict[str, pd.DataFrame])-> go.Figure:
+                        #        
+                        #        fig = self.apply_std_layout(dataDict)
+                        #        
+                        #        fig.update_layout(
+                        #            title_text = "New Config Plot for VPS"
+                        #        )
+                        #        
+                        #        # choose either bottom or side legend
+                        #        fig = self.apply_bottom_legend(fig)
+                        #        # fig = self.apply_side_legend(fig)
+                        #        
+                        #        return fig
+                        
+# please make sure to use a unique name for the config and add it to the ConfigNames class in src/shared/confi_names.py
+
+# this ensures that the APP will run smoothly and you can change the Name as you like

@@ -63,3 +63,5 @@ class ChannelNames:
     UNLOAD_UNIT_SENSOR2 = "UnLoadUnitSensor2"
     INLET_CHAMBER_SENSOR2 = "InletChamberSensor2"
     INLET_CHAMBER_SENSOR1 = "InletChamberSensor1"  
+    
+    MON_PRC_CHA = "MonPrcChamb|Actual Value"

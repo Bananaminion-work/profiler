@@ -1,4 +1,5 @@
 from nicegui import ui
+from src.shared.confi_names import ConfigNames
 from src.ui.pages.base_pages import SubPage
 from src.shared.meta_names import MetaNames
 
@@ -32,7 +33,7 @@ class ImportPage_showData(SubPage):
     cooling_time_2: str = ""
     cooling_time_3: str = ""
     cooling_time_4: str = ""
-    config: str = "Standard"
+    config: str = ConfigNames.STANDARD_BOTTOM
     bulkheadZeropoint: str = ""
     firstInjectionZeropoint: str = ""
     above235Zeropoint: str = ""
@@ -87,8 +88,8 @@ class ImportPage_showData(SubPage):
                     # get options
                     configs = self.controller.load_plot_configs()
                     # add Standard config to the first position if not already present
-                    if "Standard" not in configs:
-                        configs.insert(0, "Standard")
+                    if ConfigNames.STANDARD_BOTTOM not in configs:
+                        configs.insert(0, ConfigNames.STANDARD_BOTTOM)
                     
                     ui.select(
                         configs,
@@ -367,4 +368,4 @@ class ImportPage_showData(SubPage):
         self.cooling_time_2 = ""
         self.cooling_time_3 = ""
         self.cooling_time_4 = ""
-        self.config = "Standard"
+        self.config = ConfigNames.STANDARD_BOTTOM

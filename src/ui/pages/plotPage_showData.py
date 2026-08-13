@@ -1,10 +1,11 @@
+from src.shared.confi_names import ConfigNames
 from src.ui.pages.base_pages import SubPage
 from nicegui import ui
 
 
 class PlotPage_showData(SubPage):
     pageName = "plot-show"
-    config: str = "Standard"
+    config: str = ConfigNames.STANDARD_BOTTOM
     chosenZeropoint: str = "none"
     chosenScope: str = "Default"
 
@@ -20,8 +21,8 @@ class PlotPage_showData(SubPage):
                     
                     # get options
                     configs = self.controller.load_plot_configs()
-                    if "Standard" not in configs:
-                        configs.insert(0, "Standard")
+                    if ConfigNames.STANDARD_BOTTOM not in configs:
+                        configs.insert(0, ConfigNames.STANDARD_BOTTOM)
                     
                     ui.select(
                             configs,
@@ -166,7 +167,7 @@ class PlotPage_showData(SubPage):
                 
     def reset(self):
         """resets the page to default state, e.g. after loading new data"""
-        self.config = "Standard"
+        self.config = ConfigNames.STANDARD_BOTTOM
         self.chosenZeropoint_show = "none"
         self.selectedMeasurementId = ""
         self.selectedVVT = ""
