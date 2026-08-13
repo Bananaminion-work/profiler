@@ -23,22 +23,35 @@ class PlotPage_selectData(SubPage):
             
             # section 1 - filters
             with ui.card().classes("w-full"):
-                with ui.grid(columns=3).classes("w-full gap-3"):
-                    ui.label("Select the filters for the measurement table").classes("text-lg col-span-3")
-                    # date
-                    ui.date("Pick the date", on_change=self.update_table).props("type=date").bind_value(self, "date")
-                    # time
-                    ui.time("Enter the time", on_change=self.update_table).props("format24h").bind_value(self, "time")
-                    # ovennr
-                    ui.input("Enter the oven number", placeholder="Oven number", on_change=self.update_table).props("debounce=300").bind_value(self, "oven_nr")
-                    # ovenRecipe
-                    ui.input("Enter the oven recipe", placeholder="Oven recipe", on_change=self.update_table).props("debounce=300").bind_value(self, "oven_Recipe")
-                    # product
-                    ui.input("Enter the product name", placeholder="Product name", on_change=self.update_table).props("debounce=300").bind_value(self, "product")
-                    # load profile
-                    ui.input("Enter the load profile", placeholder="Load profile", on_change=self.update_table).props("debounce=300").bind_value(self, "load_profile")
-                    # comment
-                    ui.input("Enter the comment", placeholder="Comment", on_change=self.update_table).props("debounce=300").bind_value(self, "comment")
+                ui.label("Select the filters for the measurement table").classes("text-lg col-span-3")
+                
+                with ui.grid(columns=2).classes("w-full gap-4 p-4"):
+                        
+                    with ui.column().classes("w-full gap-4 centering"):
+                        # load options for autocomplete
+                        ovenOptions = self.controller.load_oven_options()
+                        # ovennr
+                        ui.input("Enter the oven number", placeholder="Oven number", on_change=self.update_table, autocomplete=ovenOptions).props("debounce=150").bind_value(self, "oven_nr").classes("w-full")
+                        # ovenRecipe
+                        ui.input("Enter the oven recipe", placeholder="Oven recipe", on_change=self.update_table).props("debounce=150").bind_value(self, "oven_Recipe").classes("w-full")
+                        # product
+                        ui.input("Enter the product name", placeholder="Product name", on_change=self.update_table).props("debounce=150").bind_value(self, "product").classes("w-full")
+                        # load profile
+                        ui.input("Enter the load profile", placeholder="Load profile", on_change=self.update_table).props("debounce=150").bind_value(self, "load_profile").classes("w-full")
+                        # comment
+                        ui.input("Enter the comment", placeholder="Comment", on_change=self.update_table).props("debounce=150").bind_value(self, "comment").classes("w-full")
+                        
+                    with ui.grid(columns=2).classes("w-full gap-4"):
+                        with ui.row().classes("w-full gap-4 items-center justify-center"):
+                            # date
+                            ui.date("Pick the date", on_change=self.update_table).props("type=date").bind_value(self, "date")
+                            # reset
+                            ui.button("Reset Date", on_click=self.reset_date).classes("w-full")
+                        with ui.row().classes("w-full gap-4 items-center justify-center"):
+                            # time
+                            ui.time("Enter the time", on_change=self.update_table).props("format24h").bind_value(self, "time")
+                            # reset
+                            ui.button("Reset Time", on_click=self.reset_time).classes("w-full")
 
             with ui.card().classes("w-full min-h-96"):
                 self.tableContainer = ui.column().classes("w-full h-full")
@@ -88,6 +101,14 @@ class PlotPage_selectData(SubPage):
         
         with self.tableContainer:
             self.controller.handle_measurement_table_request(filter)
+
+    def reset_time(self):
+        self.time = None
+        self.update_table()
+        
+    def reset_date(self):
+        self.date = None
+        self.update_table()
 
 
     def reset(self) -> None:

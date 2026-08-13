@@ -54,15 +54,9 @@ class DatabricksClient:
                 # execute the query and return the result as a DataFrame
                 cursor = connection.cursor()
                 cursor.execute(query)
-                results = cursor.fetchall()
                 
-                # get column names from cursor description and create DataFrame
-                if cursor.description is not None:
-                    columns = [desc[0] for desc in cursor.description]
-                else:
-                    columns = []
-                    
-                return DataFrame(results, columns=columns)
+                # fetch all results
+                return cursor.fetchall_arrow().to_pandas()
             
             
         except Exception as e:

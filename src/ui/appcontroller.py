@@ -448,8 +448,8 @@ class AppController:
         self.data.measurement_ids = selected_ids
         
         
-        
-    def handle_show_selected_request(self):
+    # async method to make sure the UI does not freeze while the data is being fetched from the database
+    async def handle_show_selected_request(self):
         
         if not self.data.measurement_ids:
             ui.notify("No measurements selected. Please select measurements from the table to show them in the plot.", color="negative")
