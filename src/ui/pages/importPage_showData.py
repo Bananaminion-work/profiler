@@ -2,6 +2,7 @@ from nicegui import ui
 from src.shared.confi_names import ConfigNames
 from src.ui.pages.base_pages import SubPage
 from src.shared.meta_names import MetaNames
+from src.shared.vvt_names import VvtNames
 
 
 class ImportPage_showData(SubPage):
@@ -148,7 +149,7 @@ class ImportPage_showData(SubPage):
                     # load options
                     vvtOptions = self.controller.load_vvt_options()
                     #set first option as value
-                    self.selectedVVT = vvtOptions[0] if vvtOptions else ""
+                    self.selectedVVT = VvtNames.VPS_MAIN if vvtOptions else ""
                     
                     ui.select(
                         vvtOptions,

@@ -4,6 +4,7 @@ import pandas as pd
 from pandas import DataFrame
 from src.shared.channel_names import ChannelNames
 from src.shared.violation import Violation
+from src.shared.vvt_names import VvtNames
 
 
 class ViolationDetector:
@@ -45,10 +46,10 @@ class ViolationDetector:
         foundViolations = []
         
         # create base rules
-        baseRules = self._vvt[self._vvt['vvt_name'] == 'VPS-Process']
+        baseRules = self._vvt[self._vvt['vvt_name'] == VvtNames.VPS_MAIN]
         
         # if only baserules are selected, only load them
-        if vvt == 'VPS-Process':
+        if vvt == VvtNames.VPS_MAIN:
             rules = baseRules 
         
         # if any other vvt is selected, load these as well
@@ -62,7 +63,7 @@ class ViolationDetector:
             rules = combined_rules.drop_duplicates(subset=['rule_id'], keep ='first').copy() #type:ignore
             
             # change position for better ux
-            rules['is_base'] = rules['vvt_name'] == 'VPS-Process'
+            rules['is_base'] = rules['vvt_name'] == VvtNames.VPS_MAIN
             rules = rules.sort_values(by='is_base', ascending=False).drop(columns='is_base')
         
         # iterate through rules and ignore index

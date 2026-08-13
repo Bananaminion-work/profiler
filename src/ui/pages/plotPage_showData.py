@@ -1,4 +1,5 @@
 from src.shared.confi_names import ConfigNames
+from src.shared.vvt_names import VvtNames
 from src.ui.pages.base_pages import SubPage
 from nicegui import ui
 
@@ -10,6 +11,7 @@ class PlotPage_showData(SubPage):
     chosenScope: str = "Default"
 
     def build_content(self) -> None:
+        
         with ui.column().classes("w-full gap-4"):
             
             # section 1: analysis area
@@ -85,7 +87,7 @@ class PlotPage_showData(SubPage):
                     # load options
                     vvtOptions = self.controller.load_vvt_options()
                     #set first option as value
-                    self.selectedVVT = vvtOptions[0] if vvtOptions else ""
+                    self.selectedVVT = VvtNames.VPS_MAIN if vvtOptions else ""
                     
                     measurements = self.controller.load_measurement_options()
                     self.selectedMeasurementId = list(measurements.keys())[0] if measurements else ""
@@ -111,7 +113,6 @@ class PlotPage_showData(SubPage):
                 
         # init table and plot
         self.update_vvt_table()
-        self.update_plot()
                 
                 
                 
