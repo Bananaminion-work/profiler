@@ -29,8 +29,11 @@ class LandingPage(BasePage):
                     
                     ui.label("choose the database type").classes("text-sm text-gray-500")
                 
+                    self.options = ["Auto", "CSV", "Databricks"]
+                    self.dbType = self.options[0]  # defaults to auto
+                
                     ui.radio(
-                        ["Auto", "CSV", "Databricks"]
+                        self.options
                     ).props("inline").bind_value(self, "dbType")
                     
                     

@@ -131,7 +131,7 @@ class ImportPage_showData(SubPage):
                             ).props('flat round').classes('absolute bottom-2 right-2 z-10') #orientation of the button
                     
                 # create container for specialist to draw in
-                self.plotContainer = ui.column().classes("w-full h-full flex-1 p-0 m-0")
+                self.plotContainer = ui.column().classes("w-full flex-1 p-0 m-0 min-h-0 minw-0")
                 # call function to draw plot (init)
                 self.update_plot_preview()
                         
