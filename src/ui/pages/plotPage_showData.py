@@ -30,8 +30,6 @@ class PlotPage_showData(SubPage):
                             on_change=self.update_plot
                         ).bind_value(self,"config").classes("w-100")
                     
-                    
-                    
                     # load options
                     zeropointOptions = self.controller.load_zeropoint_options()
                     # add "none" as option on the first postion
@@ -45,7 +43,6 @@ class PlotPage_showData(SubPage):
                         on_change=self.update_plot_and_vvt
                     ).bind_value(self,"chosenZeropoint").classes("w-100")
                     
-                        
                         
                     # load options
                     scopeOptions = self.controller.load_scope_options()

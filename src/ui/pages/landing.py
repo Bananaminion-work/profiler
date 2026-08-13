@@ -30,7 +30,7 @@ class LandingPage(BasePage):
                     ui.label("choose the database type").classes("text-sm text-gray-500")
                 
                     ui.radio(
-                        ["CSV", "Databricks"]
+                        ["Auto", "CSV", "Databricks"]
                     ).props("inline").bind_value(self, "dbType")
                     
                     

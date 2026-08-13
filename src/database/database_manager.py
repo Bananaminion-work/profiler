@@ -1,4 +1,5 @@
 from dataclasses import asdict
+import os
 import uuid
 
 from pandas import DataFrame
@@ -9,6 +10,8 @@ from src.database.vvt_repositorys import VvtRepoCsv, VvtRepoDatabricks, VvtRepos
 from src.shared.data_composition import DataComposition
 from nicegui import ui
 import pandas as pd
+from pathlib import Path
+from dotenv import load_dotenv
 
 from src.shared.data_models import Data
 from src.shared.exceptions import WrongInputError
@@ -21,9 +24,15 @@ class DatabaseManager:
     _metadataRepository : MetadataRepository
     
     def __init__(self,source: str):
+        # convert into lowercase for easier matching
+        source = source.lower()
+        
+        # check the source
+        if source == "auto":
+            source = self._detect_source()
         
         # create repos object based on source parameter
-        if source == "csv":
+        elif source == "csv":
             self._vvtRepository = VvtRepoCsv()
             self._measurementRepository = MeasurementRepoCsv()
             self._metadataRepository = MetadataRepoCsv()
@@ -35,7 +44,21 @@ class DatabaseManager:
         else:
             raise ValueError(f"Invalid source '{source}' for VVT repository.")
         
+    def _detect_source(self):
+        # load dotenv for databricks credentials
+        dotenv_path = Path(__file__).parent.parent / '.env'
+        load_dotenv(dotenv_path=dotenv_path)
         
+        # check if all required environment variables for Databricks are set
+        has_host = bool(os.environ.get("DATABRICKS_HOST"))
+        has_token = bool(os.environ.get("DATABRICKS_TOKEN"))
+        has_path = bool(os.environ.get("DATABRICKS_HTTP_PATH"))
+        
+        # set database accordingly
+        if has_host and has_token and has_path:
+            return "databricks"
+        else:
+            return "csv"
 
     def save_measurement(self, measurement: DataComposition):
         """saves the measurement to the database"""

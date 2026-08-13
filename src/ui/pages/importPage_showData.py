@@ -81,7 +81,7 @@ class ImportPage_showData(SubPage):
             with ui.card().classes("w-full h-[65vh] relative flex flex-col p-0") as plotCard:
                 
                 # section 1: Config
-                with ui.row().classes("items-center"):
+                with ui.row().classes("w-full p-4 items-center gap-4 bg-gray-50 shrink-0"):
                     ui.label("Choose config, zeropoint and scope").classes('text-lg')
                     
                     # get options
@@ -90,37 +90,36 @@ class ImportPage_showData(SubPage):
                     if "Standard" not in configs:
                         configs.insert(0, "Standard")
                     
-                    with ui.row().classes("w-full"):
-                        ui.select(
-                            configs,
-                            value=configs[0],
-                            label="choose config for plot",
-                            on_change=self.update_plot_config
-                        ).bind_value(self,"config").classes("w-100")
-                        
-                        # load options
-                        zeropointOptions = self.controller.load_zeropoint_options()
-                        # add "none" as option on the first postion
-                        if "none" not in zeropointOptions:
-                            zeropointOptions.insert(0, "none")
-                        
-                        ui.select(
-                            options=zeropointOptions,
-                            value=zeropointOptions[0],
-                            label="choose zeropoint for plot",
-                            on_change=self.update_vvt_selection
-                        ).bind_value(self,"chosenZeropoint_show").classes("w-100")
-                        
-                        
-                        # load options
-                        scopeOptions = self.controller.load_scope_options()
-                        
-                        ui.select(
-                            options=scopeOptions,
-                            value=scopeOptions[0],
-                            label="choose scope for plot",
-                            on_change=self.update_plot_config
-                        ).bind_value(self,"chosenScope").classes("w-100")
+                    ui.select(
+                        configs,
+                        value=configs[0],
+                        label="choose config for plot",
+                        on_change=self.update_plot_config
+                    ).bind_value(self,"config").classes("w-100")
+                    
+                    # load options
+                    zeropointOptions = self.controller.load_zeropoint_options()
+                    # add "none" as option on the first postion
+                    if "none" not in zeropointOptions:
+                        zeropointOptions.insert(0, "none")
+                    
+                    ui.select(
+                        options=zeropointOptions,
+                        value=zeropointOptions[0],
+                        label="choose zeropoint for plot",
+                        on_change=self.update_vvt_selection
+                    ).bind_value(self,"chosenZeropoint_show").classes("w-100")
+                    
+                    
+                    # load options
+                    scopeOptions = self.controller.load_scope_options()
+                    
+                    ui.select(
+                        options=scopeOptions,
+                        value=scopeOptions[0],
+                        label="choose scope for plot",
+                        on_change=self.update_plot_config
+                    ).bind_value(self,"chosenScope").classes("w-100")
                         
                     #fullscreen button 
                     ui.button(
