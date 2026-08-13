@@ -32,7 +32,7 @@ class DatabaseManager:
             source = self._detect_source()
         
         # create repos object based on source parameter
-        elif source == "csv":
+        if source == "csv":
             self._vvtRepository = VvtRepoCsv()
             self._measurementRepository = MeasurementRepoCsv()
             self._metadataRepository = MetadataRepoCsv()
