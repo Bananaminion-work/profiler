@@ -119,7 +119,7 @@ class PlotPage_showData(SubPage):
     def update_plot(self):
         """callback to let specialist draw the plot into the container"""
         
-        if not hasattr(self, 'plotContainer'):
+        if not hasattr(self, 'plotContainer') or self.plotContainer.is_deleted:
             return  # controller is not set yet, do nothing
         
         # clear container for fresh plot
@@ -144,7 +144,7 @@ class PlotPage_showData(SubPage):
     def update_vvt_table(self):
         
         # check if table already exists
-        if not hasattr(self, 'tableContainer'):
+        if not hasattr(self, 'tableContainer') or self.tableContainer.is_deleted:
             return  # controller is not set yet, do nothing
         
         self.tableContainer.clear()
