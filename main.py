@@ -17,4 +17,10 @@ controller = UiShell()
 # databricks port
 cloutPort = int(os.environ.get("PORT", 8000))
 
-ui.run(host="0.0.0.0", port=cloutPort, title="Temp-Profiler", reload=False)
+ui.run(
+    host="0.0.0.0",
+    port=cloutPort,
+    title="Temp-Profiler",
+    reload=False,
+    socket_io_options={'max_http_buffer_size': 50*1024*1024}
+)

@@ -129,7 +129,7 @@ class PlotPage_showData(SubPage):
         # call controller to get plotcontent
         plotContent = self.controller.handle_plot_measurements_request(
                 self.config,
-                self.chosenZeropoint_show,
+                self.chosenZeropoint,
                 self.chosenScope
             )
         

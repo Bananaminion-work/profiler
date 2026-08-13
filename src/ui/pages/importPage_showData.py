@@ -122,18 +122,18 @@ class ImportPage_showData(SubPage):
                             on_change=self.update_plot_config
                         ).bind_value(self,"chosenScope").classes("w-100")
                         
-                        #fullscreen button 
-                        ui.button(
-                                        icon='fullscreen',
-                                        on_click=lambda: ui.run_javascript(
-                                                f'document.fullscreenElement ? document.exitFullscreen() : getElement({plotCard.id}).$el.requestFullscreen()'
-                                            )
-                                    ).props('flat round').classes('absolute bottom-2 right-2 z-10') #orientation of the button
-                        
-                        # create container for specialist to draw in
-                        self.plotContainer = ui.column().classes("w-full h-full flex-1 p-0 m-0")
-                        # call function to draw plot (init)
-                        self.update_plot_preview()
+                    #fullscreen button 
+                    ui.button(
+                                    icon='fullscreen',
+                                    on_click=lambda: ui.run_javascript(
+                                            f'document.fullscreenElement ? document.exitFullscreen() : getElement({plotCard.id}).$el.requestFullscreen()'
+                                        )
+                                ).props('flat round').classes('absolute bottom-2 right-2 z-10') #orientation of the button
+                    
+                    # create container for specialist to draw in
+                    self.plotContainer = ui.column().classes("w-full h-full flex-1 p-0 m-0")
+                    # call function to draw plot (init)
+                    self.update_plot_preview()
                         
                     
                     

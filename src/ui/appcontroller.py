@@ -503,9 +503,9 @@ class AppController:
         for id, name in baseMapping.items():
             if name_count[name] > 1:
                 current_counts[name] = current_counts.get(name, 0) + 1
-                self.data.measurement_name_mapping[id] = f"({current_counts[name]}) {name}"
+                self.data.measurement_name_mapping[str(id)] = f"({current_counts[name]}) {name}"
             else:
-                self.data.measurement_name_mapping[id] = name
+                self.data.measurement_name_mapping[str(id)] = name
         
         # navigate to plot page
         self.handle_navigation_request('plot-show')
@@ -541,10 +541,10 @@ class AppController:
         mapping = self.data.measurement_name_mapping    
         
         # create new dicts
-        displayDfDict = {mapping.get(m_id,m_id): df for m_id, df in df_for_plot.items()}
+        displayDfDict = {mapping.get(str(m_id),str(m_id)): df for m_id, df in df_for_plot.items()}
         
         displayZeroDict = {
-            str(mapping.get(m_id,m_id)): int(offset) 
+            str(mapping.get(str(m_id),str(m_id))): int(offset)
             for m_id, offset in zeropointsDict.items()
             }
         

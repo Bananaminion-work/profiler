@@ -31,33 +31,62 @@ class DatabricksClient:
         os.environ.pop('DATABRICKS_TOKEN', None)
         # delete the two lines above (or comment them out) if you want to use the App with public tables
         
-        
-        
-        
+        # errorhandling if connection fails
         if not self.token or not self.http_path or not self.host or self.token == "db_token_vps":
-            print("kritischer fehler: .env nicht richtig geladen oder variablen fehlen")
-            print(f"verwendete .env: {dotenv_path} (exists={dotenv_path.exists()})")
-            print(f"versucht zu verbinden zu: host={self.host}, http_path={self.http_path}")
+            print("critical error: .env not loaded correctly or variables are missing")
+            print(f"used .env: {dotenv_path} (exists={dotenv_path.exists()})")
+            print(f"attempted to connect to: host={self.host}, http_path={self.http_path}")
             print(f"token={self.token}")
             return
+        
+        # connect initially
+        self._connection = None
+        self._connect()
+        
+        
+        
+    def _connect(self):
+        try:
+            self._connection = sql.connect(
+                server_hostname=self.host,
+                http_path=self.http_path,
+                access_token=self.token
+            )
+            print("Databricks connection established successfully.")
+        except Exception as e:
+            print(f"[DATABRICKS CLIENT] Error while connecting to Databricks: {e}")
+            raise
+    
+    
+    def _get_cursor(self):
+        try:
+            # connect if not connected
+            if self._connection is None or not self._connection.open:
+                self._connect()
+            # return a cursor from the connection    
+            return self._connection.cursor() #type: ignore
+        except Exception:
+            self._connect()
+            return self._connection.cursor() #type: ignore
+        
+        
+        
+    def close(self):
+        if self._connection and self._connection.open:
+            self._connection.close()
+            self._connection = None
+        
         
         
     def get_data(self, query:str) -> DataFrame:
         
         try:
-            # use contents of .env
-            with sql.connect(
-                server_hostname=self.host,
-                http_path=self.http_path,
-                access_token=self.token
-            ) as connection:
-                # execute the query and return the result as a DataFrame
-                cursor = connection.cursor()
-                cursor.execute(query)
-                
-                # fetch all results
-                return cursor.fetchall_arrow().to_pandas()
-            
+            # get cursor
+            cursor = self._get_cursor()
+            # execute query
+            cursor.execute(query)
+            # return df
+            return cursor.fetchall_arrow().to_pandas() 
             
         except Exception as e:
             print(f"Error while fetching data from Databricks: {e}")
@@ -68,22 +97,17 @@ class DatabricksClient:
         
     def execute_query(self, query:str):
         try:
-            # use contents of .env
-            with sql.connect(
-                server_hostname=self.host,
-                http_path=self.http_path,
-                access_token=self.token
-            ) as connection:
-                # execute the query
-                cursor = connection.cursor()
-                cursor.execute(query)
+            # get cursor
+            cursor = self._get_cursor()
+            # execute query
+            cursor.execute(query)
                 
         except Exception as e:
             print(f"Error while executing query on Databricks: {e}")
             raise
 
     
-    
+    ################# ------ UNUSED VERSION ------ #################
     def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
 
         # chunk size, lenth of records, and column string for SQL query
@@ -116,39 +140,34 @@ class DatabricksClient:
             # save the time for evaluation
             start = _now()
             
-            # create connector and cursor
-            with sql.connect(
-                server_hostname=self.host,
-                http_path=self.http_path,
-                access_token=self.token
-            ) as connection:
-                cursor = connection.cursor()
+            # get cursor
+            cursor = self._get_cursor()
                 
                 
-                # insert chunks one by one
-                for idx, chunk in enumerate(chunks):
-                    # starttime for evaluation
-                    start_chunk = _now()
+            # insert chunks one by one
+            for idx, chunk in enumerate(chunks):
+                # starttime for evaluation
+                start_chunk = _now()
+                
+                print(f"[DATABRICKS CLIENT] Inserting chunk {idx + 1}/{total_chunks} with {len(chunk)} records...")
+                
+                # create the value strings for the SQL insert
+                value_strings = [
+                    f"({', '.join(_format_value(val) for val in r)})"
+                    for r in chunk
+                ]
+                
+                # create the insert query
+                insert_query = f"INSERT INTO {table_name}{col_string} VALUES " + ", ".join(value_strings)
+                
+                # execute query
+                cursor.execute(insert_query)
+                
+                duration = _now() - start_chunk
+                print(f"[DATABRICKS CLIENT] Chunk {idx + 1}/{total_chunks} inserted in {duration:.1f}s.")
                     
-                    print(f"[DATABRICKS CLIENT] Inserting chunk {idx + 1}/{total_chunks} with {len(chunk)} records...")
                     
-                    # create the value strings for the SQL insert
-                    value_strings = [
-                        f"({', '.join(_format_value(val) for val in r)})"
-                        for r in chunk
-                    ]
-                    
-                    # create the insert query
-                    insert_query = f"INSERT INTO {table_name}{col_string} VALUES " + ", ".join(value_strings)
-                    
-                    # execute query
-                    cursor.execute(insert_query)
-                    
-                    duration = _now() - start_chunk
-                    print(f"[DATABRICKS CLIENT] Chunk {idx + 1}/{total_chunks} inserted in {duration:.1f}s.")
-                    
-                    
-                cursor.close()
+            cursor.close()
 
             duration = _now() - start
             print(f"[DATABRICKS CLIENT] Batch insert completed. Total duration: {duration:.1f}s")
@@ -214,7 +233,7 @@ class DatabricksClient:
                 'inferSchema' = 'false',
                 'delimiter' = ','
             )
-        """
+            """
             self.execute_query(copy_query)
             print(f"[BULK INSERT] COPY INTO abgeschlossen ({_now() - t_copy:.1f}s)")
 
