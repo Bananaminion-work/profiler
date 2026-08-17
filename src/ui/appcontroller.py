@@ -1,11 +1,6 @@
 from typing import Any, cast
 from nicegui import ui
-import importlib
-from pathlib import Path
-import inspect
 from nicegui import run
-
-from pandas import DataFrame
 
 # import components
 from src.plot.plot_factory import PlotFactory
@@ -28,12 +23,6 @@ from src.shared.zeropoint_container import ZeropointContainer
 from src.shared.plot_presets import PlotPresets
 
 # import pages
-import src.ui.pages
-from src.ui.pages.importPage_getData import ImportPage_getData
-from src.ui.pages.importPage_showData import ImportPage_showData
-from src.ui.pages.landing import LandingPage
-from src.ui.pages.plotPage_selectData import PlotPage_selectData
-from src.ui.pages.plotPage_showData import PlotPage_showData
 from src.ui.pages.popup_pages import Popup_confirm, Popup_warning
 
 # import exceptions
@@ -52,6 +41,9 @@ class AppController:
     table : TableFactory
     analyzer : Analyzer
     
+    user : str
+    isAdmin : bool = False
+    
     # Attributes:
     
     #current_session_measurement : DataComposition
@@ -66,7 +58,7 @@ class AppController:
     
     # Functions:
     
-    def __init__(self, pageContainer, terminalContainer):
+    def __init__(self, pageContainer, terminalContainer, user):
         """
         creates all Pages in a dictionary
         creates the UiView
@@ -78,8 +70,8 @@ class AppController:
         self.terminalContainer = terminalContainer
         self.terminalContent = terminalContainer
         self._layout = pageContainer.parent_slot.parent
-        #self.selected_measurement_ids = set()
-        #self.data.current_gold_data_for_plot  = {}
+        
+        self.user = str(user)
             
         # create UiView
         self.ui = UiView(self.pageContainer,self)
@@ -93,9 +85,6 @@ class AppController:
         # create PlotFactory
         self.plot = PlotFactory()
         
-        #create DatabaseManager
-        #self.database = DatabaseManager("csv")
-        
         # create Analyzer
         self.analyzer = Analyzer()
         
@@ -103,7 +92,6 @@ class AppController:
         self.table = TableFactory()
         
         # instanciate current session measurement with empty data
-        #self.current_session_measurement = DataComposition()
         self.data.current_import_measurement = DataComposition()
         
         # show initial page
@@ -141,12 +129,12 @@ class AppController:
     
     
     def init_database(self, db_type:str):
-        """initializes the database with the given type"""
+        """initializes the database with the given type once and if type changes"""
         self.database = DatabaseManager(db_type.lower())
 
 
 
-    def handle_navigation_request(self, pageName: str):
+    def handle_navigation_request(self, pageName: str, **kwargs):
         """calls UiView to switch the page\n
         resets user input of the pages
         """
@@ -166,6 +154,10 @@ class AppController:
             # clear current session
             self.data.current_import_measurement = DataComposition()
 
+        # if callback was used with kwargs, use intel
+        if kwargs:
+            self.pages[pageName].configure(**kwargs)
+        
         self.ui.switch_page(pageName)
         
         
@@ -359,6 +351,14 @@ class AppController:
     def load_plot_configs(self)-> list[str]:
         """returns a list of the available plot-configs from the plot-factory"""
         return self.plot.get_available_configs()
+    
+    
+    
+    def load_date_and_starttime(self) -> dict[str,str]:
+        
+        metadata = self.data.current_import_measurement.get_metadata().get_metadata_dict()
+        
+        return {MetaNames.DATE: metadata.get(MetaNames.DATE,""), MetaNames.START_TIME: metadata.get(MetaNames.START_TIME,"")}
         
         
     
@@ -569,3 +569,73 @@ class AppController:
             displayZeroDict,
             config
         )
+        
+    
+    # async for spinner
+    async def handle_admin_check(self):
+        
+        spinner = ui.notification("Checking admin rights...", type="ongoing", spinner=True, color="info")
+        
+        # only use admin if the database source is databricks
+        if self.database.source != "databricks":
+            ui.notify("Admin check is only available for Databricks source.", color="negative")
+            return
+        
+        # check if user has admin rights
+        self.isAdmin = await run.io_bound(self.database.check_admin, self.user)
+        
+        spinner.dismiss()#type: ignore
+        
+        if self.isAdmin:
+            self.handle_navigation_request('admin_landing')
+            
+        else:
+            ui.notify("You do not have admin rights.", color="negative")
+            
+            
+        
+    def load_user(self):
+        """returns the user of the current session"""
+        return str(self.user)
+    
+    
+    
+    async def handle_delete_measurements(self):
+        """deletes the selected measurements from the database"""
+        
+        # load ids
+        selected_ids = self.data.measurement_ids
+
+        # delete asynchronous with spinner
+        async def _delete():
+            notification = ui.notification(
+                "Deleting measurements...",
+                type="ongoing",
+                spinner=True,
+            )
+
+            # run the deletion in a separate thread to avoid blocking the UI
+            await run.io_bound(self.database.delete_measurements, selected_ids)
+
+            # dismiss the notification and close the dialog
+            notification.dismiss()
+            dialog.close()
+            
+            # notify how many measurements were deleted and return to admin landing
+            ui.notify(f"{len(selected_ids)} measurements deleted.", type="positive")
+            self.handle_navigation_request("admin_landing")
+
+
+
+        # Confirmation-Dialog
+        with ui.dialog() as dialog, ui.card().classes("p-6"):
+            ui.label("Confirm Deletion").classes("text-lg font-bold")
+            ui.label(
+                f"Are you sure you want to delete {len(selected_ids)} "
+                f"selected measurements? This action cannot be undone."
+            )
+            with ui.row().classes("w-full justify-end gap-2 mt-4"):
+                ui.button("Cancel", on_click=dialog.close)
+                ui.button("Delete", color="red", on_click=_delete)
+
+        dialog.open()

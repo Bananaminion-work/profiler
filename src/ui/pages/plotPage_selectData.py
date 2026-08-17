@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Callable, Optional
 
 from nicegui import ui
 from src.shared.filter_composition import FilterComposition
@@ -16,6 +16,21 @@ class PlotPage_selectData(SubPage):
     product: str = ""
     load_profile: str = ""
     comment: str = ""
+    
+    confirmationLabel = "Save"
+    configured_callback: Callable
+    
+    def configure(self, mode: str = "user"):
+        """configures the page for the given mode, either "user" or "admin" """
+        
+        if mode == "admin":
+            self.confirmationLabel = "Select"
+            self.configured_callback = self.controller.handle_delete_measurements
+            
+        elif mode == "user":
+            self.confirmationLabel = "Save"
+            self.configured_callback = self.controller.handle_show_selected_request
+    
 
     def build_content(self) -> None:
         
@@ -53,6 +68,7 @@ class PlotPage_selectData(SubPage):
                             # reset
                             ui.button("Reset Time", on_click=self.reset_time).classes("w-full")
 
+            # section 2 - table
             with ui.card().classes("w-full min-h-96"):
                 self.tableContainer = ui.column().classes("w-full h-full")
                 self.update_table()
@@ -60,8 +76,8 @@ class PlotPage_selectData(SubPage):
             # section 3 - buttons
             with ui.row().classes("justify-end w-full"):
                 ui.button(
-                    "Show selected",
-                    on_click=lambda: self.controller.handle_show_selected_request()
+                    self.confirmationLabel,
+                    on_click=lambda: self.configured_callback()
                     )
                 
                 ui.button(

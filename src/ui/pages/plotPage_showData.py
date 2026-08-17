@@ -1,4 +1,4 @@
-from src.shared.confi_names import ConfigNames
+from src.shared.config_names import ConfigNames
 from src.shared.vvt_names import VvtNames
 from src.ui.pages.base_pages import SubPage
 from nicegui import ui
@@ -15,7 +15,7 @@ class PlotPage_showData(SubPage):
         with ui.column().classes("w-full gap-4"):
             
             # section 1: analysis area
-            with ui.card().classes("w-full h-[65vh] relative flex flex-col p-0") as plotCard:
+            with ui.card().classes("w-full h-[85vh] relative flex flex-col p-0") as plotCard:
   
                 # section 1: plot modification options
                 with ui.row().classes("w-full p-4 items-center gap-4 bg-gray-50 shrink-0"):

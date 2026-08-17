@@ -10,6 +10,7 @@ import random
 import requests
 from io import StringIO, BytesIO
 
+from src.shared.app_name import AppName
 from src.shared.table_names import TableNames
 
 
@@ -337,3 +338,32 @@ class DatabricksClient:
             except Exception:
                 pass
             raise
+        
+        
+    def check_admin(self, user, app:str = AppName.APP_NAME) -> bool:
+        """checks if the user has admin rights"""
+        
+        # define url and header
+        url = f"https://{self.host}/api/2.0/permissions/apps/{app}"
+        headers = {"Authorization": f"Bearer {self.token}"}
+        
+        try:
+            # response
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            
+            # get list of users and their permissions, check if the user has admin rights
+            for acl in response.json().get("access_control_list", []):
+                if acl.get("user_name", "").lower() == user.lower():
+                    for permission in acl.get("all_permissions", []):
+                        if permission.get("permission_level") == "CAN_MANAGE":
+                            return True
+            
+            return False
+        
+        except requests.exceptions.HTTPError as e:
+            print(f"[CHECK ADMIN] REST API Error: {e.response.status_code} - {e.response.text}")
+            return False
+        except Exception as e:
+            print(f"[CHECK ADMIN] Error: {type(e).__name__}: {e}")
+            return False

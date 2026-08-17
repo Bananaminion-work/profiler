@@ -21,27 +21,30 @@ class DatabaseManager:
     _vvtRepository : VvtRepository
     _measurementRepository : MeasurementRepository
     _metadataRepository : MetadataRepository
+    _client : DatabricksClient
+    
+    source : str = ""
     
     def __init__(self,source: str):
-        # convert into lowercase for easier matching
-        source = source.lower()
+        
+        self.source = source.lower()
         
         # check the source
-        if source == "auto":
-            source = self._detect_source()
+        if self.source == "auto":
+            self.source = self._detect_source()
         
         # create repos object based on source parameter
-        if source == "csv":
+        if self.source == "csv":
             self._vvtRepository = VvtRepoCsv()
             self._measurementRepository = MeasurementRepoCsv()
             self._metadataRepository = MetadataRepoCsv()
-        elif source == "databricks":
-            self.databricksClient = DatabricksClient()
-            self._vvtRepository = VvtRepoDatabricks(self.databricksClient)
-            self._measurementRepository = MeasurementRepoDatabricks(self.databricksClient)
-            self._metadataRepository = MetadataRepoDatabricks(self.databricksClient)
+        elif self.source == "databricks":
+            self._client = DatabricksClient()
+            self._vvtRepository = VvtRepoDatabricks(self._client)
+            self._measurementRepository = MeasurementRepoDatabricks(self._client)
+            self._metadataRepository = MetadataRepoDatabricks(self._client)
         else:
-            raise ValueError(f"Invalid source '{source}' for VVT repository.")
+            raise ValueError(f"Invalid source '{self.source}' for database.")
         
     def _detect_source(self):
         
@@ -180,3 +183,15 @@ class DatabaseManager:
     def get_measurement_metadata(self, measurement_id)-> DataFrame:
         """Returns the metadata for a given id as a DataFrame"""
         return self._metadataRepository.get_measurement_metadata(measurement_id)
+    
+    
+    def check_admin(self, user:str)-> bool:
+        
+        return self._client.check_admin(user)
+    
+    def delete_measurements(self, ids: set):
+        
+        for id in ids:
+            self._measurementRepository.delete_measurement(id)
+            self._metadataRepository.delete_measurement_metadata(id)
+        

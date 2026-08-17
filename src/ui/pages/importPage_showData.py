@@ -1,5 +1,5 @@
 from nicegui import ui
-from src.shared.confi_names import ConfigNames
+from src.shared.config_names import ConfigNames
 from src.ui.pages.base_pages import SubPage
 from src.shared.meta_names import MetaNames
 from src.shared.vvt_names import VvtNames
@@ -80,7 +80,7 @@ class ImportPage_showData(SubPage):
         with ui.column().classes("w-full gap-4"):
             
             # section 1: analysis area
-            with ui.card().classes("w-full h-[65vh] relative flex flex-col p-0") as plotCard:
+            with ui.card().classes("w-full h-[85vh] relative flex flex-col p-0") as plotCard:
                 
                 # section 1: Config
                 with ui.row().classes("w-full p-4 items-center gap-4 bg-gray-50 shrink-0"):
@@ -165,9 +165,15 @@ class ImportPage_showData(SubPage):
             
             # section 4: Metadata and details
             with ui.card().classes("w-full"):
-                ui.label("input Metadata to be saved to database").classes('text-lg')
+                ui.label("Input Metadata to be saved to database").classes('text-xl')
             
                 with ui.grid(columns=2).classes("w-full gap-3"):
+                    
+                    # get date and starttime
+                    dateAndStart = self.controller.load_date_and_starttime()
+                    
+                    ui.label(f"Date of measurement: {dateAndStart[MetaNames.DATE]}").classes("text-lg")
+                    ui.label(f"Start time of measurement: {dateAndStart[MetaNames.START_TIME]}").classes("text-lg")
                     
                     # get options for dropdowns from controller
                     ovenOptions = self.controller.load_oven_options()

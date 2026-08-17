@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import pandas as pd
 
 from src.shared.channel_names import ChannelNames
-from src.shared.confi_names import ConfigNames
+from src.shared.config_names import ConfigNames
 
 class BasePlotConfig(ABC):
     
@@ -61,6 +61,11 @@ class BasePlotConfig(ABC):
             ChannelNames.HEATER_BOTTOM2_ACTUAL,
             ChannelNames.HEATER_BOTTOM3_ACTUAL,
             ChannelNames.HEATER_BOTTOM4_ACTUAL,
+            
+            ChannelNames.HEATER_SIDEBACK_ACTUAL,
+            ChannelNames.HEATER_SIDEFRONT_ACTUAL,
+            ChannelNames.HEATER_SIDELEFT_ACTUAL,
+            ChannelNames.HEATER_SIDERIGHT_ACTUAL,
         }:
             return 'y1'  # Temperature in °C
         

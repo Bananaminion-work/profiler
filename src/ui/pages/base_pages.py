@@ -19,6 +19,9 @@ class BasePage(ABC):
 
     def reset(self) -> None:
         pass
+    
+    def configure(self, mode: str = "user") -> None:
+        pass
 
 
 class SubPage(BasePage):

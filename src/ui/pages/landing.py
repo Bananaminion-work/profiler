@@ -24,10 +24,10 @@ class LandingPage(BasePage):
                     ui.button(
                         "Show measurements from database",
                         icon="show_chart",
-                        on_click=lambda: start_analyzing("plot-select"),
+                        on_click=lambda: start_analyzing("plot-select", mode="user"),
                     ).classes("w-72")
                     
-                    ui.label("choose the database type").classes("text-sm text-gray-500")
+                    ui.label("choose the database type:").classes("text-sm text-gray-500")
                 
                     self.options = ["Auto", "CSV", "Databricks"]
                     self.dbType = self.options[0]  # defaults to auto
@@ -36,7 +36,22 @@ class LandingPage(BasePage):
                         self.options
                     ).props("inline").bind_value(self, "dbType")
                     
+                    ui.separator().classes("my-4")
                     
-        def start_analyzing(pageName: str):
+                    ui.button(
+                        "ADMIN",
+                        icon="admin_panel_settings",
+                        on_click= self.handle_admin_check,
+                    ).classes("w-72")
+                    
+                    
+        def start_analyzing(pageName: str, mode: str = "user"):
             self.controller.init_database(self.dbType)
-            self.controller.handle_navigation_request(pageName)
+            self.controller.handle_navigation_request(pageName, mode=mode)
+            
+    async def handle_admin_check(self):
+        # create db
+        self.controller.init_database(self.dbType)
+        
+        # call callback in controller for admin check
+        await self.controller.handle_admin_check()
