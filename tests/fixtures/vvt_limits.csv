@@ -1,6 +1,6 @@
 vvt_name,rule_id,rule_name,channel,condition,threshold,param1,param2,param3,scope
 VPS-Process,R01,max_heatup_rate_avg10s,CH1_gradient_rolling_avg,max,3,,,,
-VPS-Process,R02,max_time_above_217C,CH1,max_duration_above,330,217,,,
+VPS-Process,R02,CH1 over 217 for maximum 330s,CH1,max_duration_above,330,217,,,
 VPS-Process,R03,max_temp,CH1,max,245,,,,
 VPS-Process,R04,max_cooling_rate_avg10s,CH1_gradient_rolling_avg,min,-3,,,,
 VPS-Process,R05,above 230°C for at least 150s,CH1,min_duration_above,230,150,,,process
@@ -12,7 +12,7 @@ Gen4VL,R06,vacuum below 15mBar for at least 10s,VacuumActualV in mBar,main_vacuu
 Gen4FL,R10,max_cooling_rate_in_range,CH1_gradient,rate_in_range,-0.7,218,206,,
 Gen4FL,R04,max_cooling_rate_avg10s,CH1_gradient_rolling_avg,min,-1,,,,
 Gen4FL,R06,vacuum below 15mBar for at least 10s,VacuumActualV in mBar,main_vacuum_minimum,15,,,,
-Gen4FL,R11,CH1 above 217°C for at least 280s,CH1,min_duration_above,217,280,,,
+Gen4FL,R11,CH1 above 217°C for maximum 280s,CH1,min_duration_above,217,280,,,
 PM6 PMoC ECO,R12,max cooling rate of CH1 between 218 and 206°C,CH1_gradient,rate_in_range,-0.7,218,206,,
 PM6 PMoC ECO,R04,max cooling rate of rolling avg of 10s,CH1_gradient_rolling_avg,min,-1,,,,
 PM6 PMoC ECO,R06,vacuum below 50mBar for at least 10s,VacuumActualV in mBar,main_vacuum_minimum,50,,,

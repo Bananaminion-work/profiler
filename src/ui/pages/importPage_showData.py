@@ -184,7 +184,7 @@ class ImportPage_showData(SubPage):
                     
                     ui.select(ovenOptions, label="Select the oven-number").bind_value(self, "oven_Nr")
                     ui.select(productOptions, label="Select the product").bind_value(self, "product")
-                    ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Load of the profile type").bind_value(self, "load")
+                    ui.select(["25%", "50%", "75%", "100%"], value="25%", label="Loading-condition").bind_value(self, "load")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Position of measurement cooler").bind_value(self, "pos")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Amount of coolers").bind_value(self, "count")
                     ui.radio(["Production", "Test"], value="Test").props("inline").bind_value(self, "prod_test")

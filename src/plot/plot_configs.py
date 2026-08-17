@@ -66,6 +66,8 @@ class BasePlotConfig(ABC):
             ChannelNames.HEATER_SIDEFRONT_ACTUAL,
             ChannelNames.HEATER_SIDELEFT_ACTUAL,
             ChannelNames.HEATER_SIDERIGHT_ACTUAL,
+            
+            ChannelNames.MON_PRC_CHA
         }:
             return 'y1'  # Temperature in °C
         

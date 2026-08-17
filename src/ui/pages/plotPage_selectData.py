@@ -24,11 +24,11 @@ class PlotPage_selectData(SubPage):
         """configures the page for the given mode, either "user" or "admin" """
         
         if mode == "admin":
-            self.confirmationLabel = "Select"
+            self.confirmationLabel = "Delete selected measurements"
             self.configured_callback = self.controller.handle_delete_measurements
             
         elif mode == "user":
-            self.confirmationLabel = "Save"
+            self.confirmationLabel = "Show selected measurements"
             self.configured_callback = self.controller.handle_show_selected_request
     
 

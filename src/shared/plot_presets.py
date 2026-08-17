@@ -23,25 +23,6 @@ class PlotPresets:
             ],
         
         
-        "Default with Gradients" : [
-            ChannelNames.CH1,
-            ChannelNames.CH2,
-            ChannelNames.CH3,
-            ChannelNames.CH4,
-            ChannelNames.CH5,
-            ChannelNames.CH6,
-            ChannelNames.CH1_GRADIENT,
-            ChannelNames.CH2_GRADIENT,
-            ChannelNames.CH3_GRADIENT,
-            ChannelNames.CH4_GRADIENT,
-            ChannelNames.CH5_GRADIENT,
-            ChannelNames.CH6_GRADIENT,
-            ChannelNames.VACUUM,
-            ChannelNames.COOLING_FAN_SPEED,
-            ChannelNames.MEDIUM_PUMP,
-        ],
-        
-        
         "Default with Gradients and Rolling Avg" : [
             ChannelNames.CH1,
             ChannelNames.CH2,
