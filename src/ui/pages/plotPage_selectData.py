@@ -9,13 +9,15 @@ from datetime import datetime
 
 class PlotPage_selectData(SubPage):
     pageName = "plot-select"
-    date: Optional[datetime] = None
+    date: Optional[dict] = None
     time: Optional[datetime] = None
     oven_nr: str = ""
     oven_Recipe: str = ""
     product: str = ""
     load_profile: str = ""
     comment: str = ""
+    description: str = ""
+    file_name: str = ""
     
     confirmationLabel = "Save"
     configured_callback: Callable
@@ -55,11 +57,15 @@ class PlotPage_selectData(SubPage):
                         ui.input("Enter the load profile", placeholder="Load profile", on_change=self.update_table).props("debounce=150").bind_value(self, "load_profile").classes("w-full")
                         # comment
                         ui.input("Enter the comment", placeholder="Comment", on_change=self.update_table).props("debounce=150").bind_value(self, "comment").classes("w-full")
+                        # description
+                        ui.input("Enter the description", placeholder="Description", on_change=self.update_table).props("debounce=150").bind_value(self, "description").classes("w-full")
+                        # file name
+                        ui.input("Enter the file name", placeholder="File name", on_change=self.update_table).props("debounce=150").bind_value(self, "file_name").classes("w-full")
                         
                     with ui.grid(columns=2).classes("w-full gap-4"):
                         with ui.row().classes("w-full gap-4 items-center justify-center"):
                             # date
-                            ui.date("Pick the date", on_change=self.update_table).props("type=date").bind_value(self, "date")
+                            ui.date("Pick the date or range", on_change=self.update_table).props("range").bind_value(self, "date")
                             # reset
                             ui.button("Reset Date", on_click=self.reset_date).classes("w-full")
                         with ui.row().classes("w-full gap-4 items-center justify-center"):
@@ -110,7 +116,9 @@ class PlotPage_selectData(SubPage):
             str(MetaNames.OVEN_RECIPE): self.oven_Recipe,
             str(MetaNames.PRODUCT): self.product,
             str(MetaNames.LOAD_PROFILE): self.load_profile,
-            str(MetaNames.COMMENT): self.comment
+            str(MetaNames.COMMENT): self.comment,
+            str(MetaNames.DESCRIPTION): self.description,
+            str(MetaNames.FILENAME): self.file_name
         }
         
         filter = FilterComposition(**filter_data)

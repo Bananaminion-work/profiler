@@ -12,7 +12,7 @@ class Metadata:
     oven_nr:str = ""
     oven_recipe:str = ""
     product:str = ""
-    load_profile:float = 0.0
+    load_profile:str = ""
     position_measurement_cooler:str =""
     test_cooler_flag:bool = False
     cooler_count_on_tray:int = 0
@@ -35,6 +35,8 @@ class Metadata:
     cooling_time_4:str = ""
     profile_name:str = ""
     comment:str = ""
+    description:str = ""
+    file_name:str = ""
     
     def set_user_input(self, metadata: dict[str,str]):
         
@@ -42,7 +44,7 @@ class Metadata:
         self.oven_recipe = metadata.get(MetaNames.OVEN_RECIPE, "")
         self.oven_nr = metadata.get(MetaNames.OVEN_NR, "")
         self.product = metadata.get(MetaNames.PRODUCT, "")
-        self.load_profile = float(metadata.get(MetaNames.LOAD_PROFILE, 0.0))
+        self.load_profile = metadata.get(MetaNames.LOAD_PROFILE, "")
         self.position_measurement_cooler = metadata.get(MetaNames.POSITION_MEASUREMENT_COOLER, "")
         
         # check if prod_test is "Test" or "Production" and set testCooler_flag accordingly
@@ -81,3 +83,9 @@ class Metadata:
         
     def get_metadata_dict(self) -> dict:
         return asdict(self)
+    
+    def set_description(self, description:str):
+        self.description = description
+        
+    def set_file_name(self, file_name:str):
+        self.file_name = file_name

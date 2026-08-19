@@ -172,6 +172,7 @@ class MetadataRepoDatabricks(MetadataRepository):
             MetaNames.POSITION_MEASUREMENT_COOLER,            MetaNames.TEST_COOLER_FLAG,
             MetaNames.COOLER_COUNT_ON_TRAY,            MetaNames.NOZZLEFIELD,
             MetaNames.PROFILE_NAME,            MetaNames.COMMENT,
+            MetaNames.DESCRIPTION,            MetaNames.FILENAME,
             MetaNames.INJECTION_1,            MetaNames.INJECTION_2,
             MetaNames.INJECTION_3,            MetaNames.INJECTION_4,
             MetaNames.WAITING_1,            MetaNames.WAITING_2,

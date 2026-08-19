@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, cast
 from nicegui import ui
 from nicegui import run
@@ -52,9 +53,6 @@ class AppController:
     pageContainer : Any
     _layout : Any
     pages={}
-    #selected_measurement_ids: set
-    #current_gold_dataframe_for_plot: dict[str,DataFrame]
-    #current_gold_zeropoints: dict[str,ZeropointContainer]
     
     # Functions:
     
@@ -97,15 +95,14 @@ class AppController:
         # show initial page
         self.handle_navigation_request('landing')
     
-        
     
     
     def log(self, text: str):
         with self.terminalContent:
             ui.label(text)
         self.terminalContent.update()
-    
-    
+        
+        
     
     @property
     def layout(self)->Any:
@@ -169,13 +166,26 @@ class AppController:
         
         
     def create_data_composition(self, uploadContainer: UploadContainer, source:str):
+        
+        # attributes
+        medallionObjects: dict[str,Data]
+        dateTime: datetime
+        description: str
+        
         # saves medallionobjects in current session, as well as the datetime of the measurement (from silver data)
-        medallionObjects, dateTime = self.data.create_data_from_measurement(uploadContainer, source)
+        medallionObjects, dateTime, description = self.data.create_data_from_measurement(uploadContainer, source)
+        
         
         if isinstance(medallionObjects, dict):
+            # save medallion data
             self.data.current_import_measurement.set_medallion_data(medallionObjects)
-            
+            # save datetime in metadata
             self.data.current_import_measurement.get_metadata().set_datetime(dateTime)
+            # save description in metadata
+            self.data.current_import_measurement.get_metadata().set_description(description)
+            # save filename in metadata
+            self.data.current_import_measurement.get_metadata().set_file_name(uploadContainer.fileName)
+                        
         else:
             raise WrongInputError(f"Expected a dict of Data objects, got {type(medallionObjects)} instead.")
         
@@ -183,6 +193,9 @@ class AppController:
         
     def handle_data_import_request(self, uploadContainer: UploadContainer, source:str):
         """creates the medallion objects from input data"""
+        
+        # save the name 
+        self.data.fileName = uploadContainer.fileName
         
         #create medallion data
         self.create_data_composition(uploadContainer, source)
@@ -229,13 +242,17 @@ class AppController:
         
         # get offset for the chosen zeropoint from current session measurement
         offsetList = self.data.current_import_measurement.get_zeropoint_container().get_zeropoints()
-        offset = offsetList[zeropoint]
+        
+        # fallback to 0 if the chosen zeropoint is not in the list
+        if zeropoint not in offsetList or zeropoint is None:
+            offset = 0
+        else:
+            offset = offsetList[zeropoint]
         
         # apply scope to the gold-dataframe for the plot based on the chosen scope
         df_for_plot = self.data.scope_data_single(scope)
         
         # copy gold-data and apply offset, create plot with offset
-        #goldData = self.goldDataframe.copy()
         return self.plot.create_plot_single(df_for_plot, config, offset)
         
        
@@ -293,7 +310,7 @@ class AppController:
         self.database.save_measurement(self.data.current_import_measurement)
         
         # reset current session after saving
-        self.data.current_import_measurement = DataComposition()
+        self.data.reset()
     
     
     
@@ -359,6 +376,16 @@ class AppController:
         metadata = self.data.current_import_measurement.get_metadata().get_metadata_dict()
         
         return {MetaNames.DATE: metadata.get(MetaNames.DATE,""), MetaNames.START_TIME: metadata.get(MetaNames.START_TIME,"")}
+    
+    
+    
+    def load_file_name(self) -> str:
+        """returns the file name of the current session measurement"""
+        return self.data.current_import_measurement.get_metadata().get_metadata_dict().get(MetaNames.FILENAME,"")
+
+    def load_description(self) -> str:
+        """returns the description of the current session measurement"""
+        return self.data.current_import_measurement.get_metadata().get_metadata_dict().get(MetaNames.DESCRIPTION,"")
         
         
     

@@ -15,3 +15,5 @@ class FilterComposition:
     oven_recipe: str = ""
     load_profile: str = ""
     comment: str = ""
+    description: str = ""
+    file_name: str = ""

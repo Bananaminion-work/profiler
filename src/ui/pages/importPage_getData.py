@@ -25,7 +25,7 @@ class ImportPage_getData(SubPage):
                 ui.label("Please select your source of Data:")
                 
                 # create options and set the default
-                sourceOptions = ["Rehm-recorder", "Solderstar (direct copy, withour Rehm-recorder)",  "Datapaq"]
+                sourceOptions = ["Rehm-recorder", "Solderstar (direct copy, without Rehm-recorder)",  "Datapaq"]
                 self.source = sourceOptions[0]
                 
                 ui.radio(
@@ -70,6 +70,6 @@ class ImportPage_getData(SubPage):
 
 
     def reset(self) -> None:
-        self.source = "Solderstar"
+        self.source = "Rehm-recorder"
         self.uploaded_file_name = ""
         self.uploaded_content = b""

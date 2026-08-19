@@ -55,41 +55,6 @@ class VvtRepoDatabricks(VvtRepository):
     def delete_vvt(self,name:str) -> None:
         pass
     
-    #def _initialize_vvt_table(self):
-    #    
-    #    #create query
-    #    query = f"""
-    #    CREATE TABLE IF NOT EXISTS {self._vvtTable} (
-    #        vvt_name STRING,
-    #        rule_id STRING,
-    #        rule_name STRING,
-    #        channel STRING,
-    #        condition STRING,
-    #        threshold DOUBLE,
-    #        param1 DOUBLE,
-    #        param2 DOUBLE,
-    #        param3 DOUBLE,
-    #        scope STRING
-    #    )
-    #    """        
-    #    #execute query
-    #    self.client.execute_query(query)
-    #    
-    #    #check if tables is empty, if yes, insert default vvt
-    #    check_query = f"SELECT * FROM {self._vvtTable} LIMIT 1"
-    #    checkDf = self.client.get_data(check_query)
-    #    
-    #    if checkDf.empty:
-    #        
-    #        # load default vvt from csv
-    #        default_vvt_path = PROJECT_ROOT / "tests" / "fixtures" / "vvt_limits.csv"
-    #        default_vvt_df = pd.read_csv(default_vvt_path)
-    #        default_vvt_tuple = list(default_vvt_df.itertuples(index=False, name=None))
-    #        
-    #        # fill sql table with default vvt from csv file
-    #        self.client.execute_batch_insert(self._vvtTable, default_vvt_tuple)
-    #        
-    #    #else:
-    #    #    print(f"VVT table '{self._vvtTable}' already contains data. Skipping default VVT insertion.")
+    
             
             

@@ -11,14 +11,15 @@ class DataManager():
     _creator: Creator
     _measurementObjects:dict[str, Data]
     _dateTime: datetime
+    _description: str = ""
     
     def __init__(self):
         self._creator = Creator()
         self._store = DataStore()
         
     def create_data_from_measurement(self,uploadContainer: UploadContainer, source:str):
-        self._measurementObjects,self._dateTime = self._creator.create_data_objects(uploadContainer, source)
-        return self._measurementObjects,self._dateTime
+        self._measurementObjects,self._dateTime,self._description = self._creator.create_data_objects(uploadContainer, source)
+        return self._measurementObjects,self._dateTime,self._description
         
     def get_measurement_objects(self)->dict[str,Data]:
         return self._measurementObjects
@@ -53,6 +54,11 @@ class DataManager():
     def measurement_name_mapping(self) -> dict[str,str]:
         return self._store.measurement_name_mapping
     
+    @property
+    def fileName(self) -> str:
+        return self._store.fileName
+    
+    
     @current_import_measurement.setter
     def current_import_measurement(self, composition: DataComposition):
         self._store.current_import_measurement = composition
@@ -72,4 +78,17 @@ class DataManager():
     @measurement_name_mapping.setter
     def measurement_name_mapping(self, mapping: dict[str,str]):
         self._store.measurement_name_mapping = mapping
-    
+
+    @fileName.setter
+    def fileName(self, name: str):
+        self._store.fileName = name
+        
+        
+    def reset(self):
+        """resets the current session data"""
+        self._store.current_import_measurement = DataComposition()
+        self._store.current_gold_data_for_plot = {}
+        self._store.current_gold_zeropoints = {}
+        self._store.measurement_ids = set()
+        self._store.measurement_name_mapping = {}
+        self._store.fileName = ""

@@ -3,7 +3,8 @@ from src.shared.config_names import ConfigNames
 from src.ui.pages.base_pages import SubPage
 from src.shared.meta_names import MetaNames
 from src.shared.vvt_names import VvtNames
-
+from src.shared.zeropoint_names import ZeropointNames
+from src.shared.plot_presets import PlotPresets
 
 class ImportPage_showData(SubPage):
     
@@ -11,7 +12,7 @@ class ImportPage_showData(SubPage):
     oven_Recipe: str = ""
     oven_Nr: str = "1234"
     product: str = "PM6"
-    load: str = "8"
+    load: str = "25%"
     pos: str = "8"
     count: str = "8"
     prod_test: str = "Test"
@@ -39,8 +40,8 @@ class ImportPage_showData(SubPage):
     firstInjectionZeropoint: str = ""
     above235Zeropoint: str = ""
     ventilate2Zeropoint: str = ""
-    chosenZeropoint_show: str = "none"
-    chosenScope: str = "Default"
+    chosenZeropoint_show: str = ZeropointNames.NONE
+    chosenScope: str = PlotPresets.DEFAULT
     activeZeropoint: str = ""
     selectedVVT: str = ""
 
@@ -101,9 +102,6 @@ class ImportPage_showData(SubPage):
                     
                     # load options
                     zeropointOptions = self.controller.load_zeropoint_options()
-                    # add "none" as option on the first postion
-                    if "none" not in zeropointOptions:
-                        zeropointOptions.insert(0, "none")
                     
                     ui.select(
                         options=zeropointOptions,
@@ -119,7 +117,7 @@ class ImportPage_showData(SubPage):
                     ui.select(
                         options=scopeOptions,
                         value=scopeOptions[0],
-                        label="choose scope for plot",
+                        label="choose data preset for plot",
                         on_change=self.update_plot_config
                     ).bind_value(self,"chosenScope").classes("w-100")
                         
@@ -166,14 +164,23 @@ class ImportPage_showData(SubPage):
             # section 4: Metadata and details
             with ui.card().classes("w-full"):
                 ui.label("Input Metadata to be saved to database").classes('text-xl')
+                
+                # get date and starttime
+                dateAndStart = self.controller.load_date_and_starttime()
+                
+                # get file name
+                fileName = self.controller.load_file_name()
+                description = self.controller.load_description()
+                
+                with ui.card().classes("p-3 gap-2 bg-slate-50"):
+                    ui.label(f"Date of measurement: {dateAndStart[MetaNames.DATE]}").classes("text-lg")
+                    ui.label(f"Start time of measurement: {dateAndStart[MetaNames.START_TIME]}").classes("text-lg")
+
+                    ui.label(f"File name: {fileName}").classes("text-lg")
+                    ui.label(f"Measurenemt description from XML-file: {description}").classes("text-lg")
             
                 with ui.grid(columns=2).classes("w-full gap-3"):
                     
-                    # get date and starttime
-                    dateAndStart = self.controller.load_date_and_starttime()
-                    
-                    ui.label(f"Date of measurement: {dateAndStart[MetaNames.DATE]}").classes("text-lg")
-                    ui.label(f"Start time of measurement: {dateAndStart[MetaNames.START_TIME]}").classes("text-lg")
                     
                     # get options for dropdowns from controller
                     ovenOptions = self.controller.load_oven_options()
@@ -184,18 +191,19 @@ class ImportPage_showData(SubPage):
                     
                     ui.select(ovenOptions, label="Select the oven-number").bind_value(self, "oven_Nr")
                     ui.select(productOptions, label="Select the product").bind_value(self, "product")
-                    ui.select(["25%", "50%", "75%", "100%"], value="25%", label="Loading-condition").bind_value(self, "load")
+                    loadOptions = ["25%", "50%", "75%", "100%"]
+                    ui.select(loadOptions, value=loadOptions[0], label="Loading-condition").bind_value(self, "load")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Position of measurement cooler").bind_value(self, "pos")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Amount of coolers").bind_value(self, "count")
                     ui.radio(["Production", "Test"], value="Test").props("inline").bind_value(self, "prod_test")
 
                 ui.separator()
                 with ui.row().classes("w-full"):
-                    ui.input("Nozzlefield", placeholder="Dreifachdüsenfeld").bind_value(self, "nozzlefield").classes("w-200")
-                    ui.input("Profilename", placeholder="used profilename").bind_value(self, "profile_name").classes("w-200")
-                    ui.input("Oven recipe", placeholder="oven recipe").bind_value(self, "oven_Recipe").classes("w-200")
+                    ui.input(MetaNames.NOZZLEFIELD, placeholder="Dreifachdüsenfeld").bind_value(self, "nozzlefield").classes("w-200")
+                    ui.input(MetaNames.PROFILE_NAME, placeholder="used profilename").bind_value(self, "profile_name").classes("w-200")
+                    ui.input(MetaNames.OVEN_RECIPE, placeholder="oven recipe").bind_value(self, "oven_Recipe").classes("w-200")
                 self._create_accordion()
-                ui.textarea("Comment", placeholder="enter your comment..").bind_value(self, "comment").classes("w-full") 
+                ui.textarea(MetaNames.COMMENT, placeholder="enter your comment..").bind_value(self, "comment").classes("w-full") 
                     
                     
                     
@@ -252,7 +260,7 @@ class ImportPage_showData(SubPage):
         if self.config == None:
             return  # do nothing if config is not set
         
-        self.chosenZeropoint_show = "none"
+        self.chosenZeropoint_show = ZeropointNames.NONE
         self.update_plot_preview()
         self.update_vvt_table()
     
@@ -262,18 +270,18 @@ class ImportPage_showData(SubPage):
         
         # fields that must have a value
         requiredFields = {
-            "nozzlefield"           : "Nozzlefield",
-            "profile_name"          : "Profilename",
-            "oven_Recipe"           : "Oven recipe",
-            "oven_Nr"               : "Oven number",
-            "product"               : "Product",
-            "load"                  : "Load profile",
-            "pos"                   : "Position measurement cooler",
-            "count"                 : "Amount of coolers",
-            "injection_1"           : "Injection volume 1",
-            "waiting_1"             : "Holding time 1",
-            "cooling_freq_1"        : "Cooling frequency 1",
-            "cooling_time_1"        : "Cooling time 1",
+            "nozzlefield"           : MetaNames.NOZZLEFIELD,
+            "profile_name"          : MetaNames.PROFILE_NAME,
+            "oven_Recipe"           : MetaNames.OVEN_RECIPE,
+            "oven_Nr"               : MetaNames.OVEN_NR,
+            "product"               : MetaNames.PRODUCT,
+            "load"                  : MetaNames.LOAD_PROFILE,
+            "pos"                   : MetaNames.POSITION_MEASUREMENT_COOLER,
+            "count"                 : MetaNames.COOLER_COUNT_ON_TRAY,
+            "injection_1"           : MetaNames.INJECTION_1,
+            "waiting_1"             : MetaNames.WAITING_1,
+            "cooling_freq_1"        : MetaNames.COOLING_FREQ_1,
+            "cooling_time_1"        : MetaNames.COOLING_TIME_1,
         }
         
         for field in requiredFields.keys():

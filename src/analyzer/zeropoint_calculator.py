@@ -2,6 +2,7 @@ from nicegui import ui
 from pandas import DataFrame
 from src.shared.channel_names import ChannelNames
 from src.shared.zeropoint_container import ZeropointContainer
+from src.shared.zeropoint_names import ZeropointNames
 
 
 class ZeropointCalculator:
@@ -20,11 +21,11 @@ class ZeropointCalculator:
         self.df = df
         
         # calc and set bulkhead-zeropoint
-        newZeros.set_inlet_bulkhead(self.caclulate_inlet_bulkhead_zeropoint())
-        newZeros.set_outlet_bulkhead(self.caclulate_outlet_bulkhead_zeropoint())
-        newZeros.set_first_injection(self.calculate_first_injection_zeropoint())
-        newZeros.set_above235(self.calculate_above235_zeropoint())
-        newZeros.set_ventilate2(self.calculate_ventilate2_zeropoint())
+        newZeros.set(ZeropointNames.INLET_BULKHEAD,self.caclulate_inlet_bulkhead_zeropoint())
+        newZeros.set(ZeropointNames.OUTLET_BULKHEAD,self.caclulate_outlet_bulkhead_zeropoint())
+        newZeros.set(ZeropointNames.FIRST_INJECTION,self.calculate_first_injection_zeropoint())
+        newZeros.set(ZeropointNames.ABOVE_235,self.calculate_above235_zeropoint())
+        newZeros.set(ZeropointNames.VENTILATE_2,self.calculate_vacuum_done_zeropoint())
         
         self.df = DataFrame() # reset dataframe to release memory
         
@@ -126,8 +127,8 @@ class ZeropointCalculator:
     
     
     
-    def calculate_ventilate2_zeropoint(self):
-        """calculates the offset to ReadTime of the defined ventilation done - zeropoint"""
+    def calculate_vacuum_done_zeropoint(self):
+        """calculates the offset to ReadTime of the defined vacuum done - zeropoint"""
         
         
         minVacuum = 100
@@ -136,7 +137,7 @@ class ZeropointCalculator:
         # check if necessary columns are present in the dataframe
         required_columns = [ChannelNames.CH1, ChannelNames.VACUUM]
         if not all(col in self.df.columns for col in required_columns):
-            ui.notify("Required columns for ventilate2 zeropoint calculation are missing in the dataframe.")
+            ui.notify(f"Required columns for \"{ZeropointNames.VENTILATE_2}\" zeropoint calculation are missing in the dataframe.")
             return 0
         
         # copy df
@@ -145,22 +146,27 @@ class ZeropointCalculator:
         # calc gradient
         dfSelection["gradient"] = dfSelection[ChannelNames.VACUUM].diff()
         
-        # save the minimum vacuum value up to the current row
+        # check if vacuum was below minimum and safe time index of first occurance
         dfSelection['MinVacuumHistory'] = dfSelection[ChannelNames.VACUUM].cummin()
         
-        # check if vacuum is static
+        # scope the dataframe from the first row where CH1 is above 205°C
+        dfSelection = dfSelection[dfSelection[ChannelNames.CH1] > tempThreshold]
+        
+        # create gradient with shift of 30
+        dfSelection["gradient_max_30s"] = dfSelection["gradient"].rolling(window=30, min_periods=1).max()
+        
+        # check if gradient is static
         vacuumSettled = dfSelection["gradient"].abs() < 3
         
-        # merge conditions
         foundRows = dfSelection[
-            (dfSelection[ChannelNames.CH1] > tempThreshold) &
             (dfSelection['MinVacuumHistory'] < minVacuum) &
-            (dfSelection[ChannelNames.VACUUM]> 850) &
+            (dfSelection[ChannelNames.VACUUM] > 850)&
+            (dfSelection["gradient_max_30s"].abs() > 30) &
             vacuumSettled
         ]
         
         if foundRows.empty:
-            ui.notify("No ventilate2 zeropoint was found")
+            ui.notify(f'No "{ZeropointNames.VENTILATE_2}" zeropoint was found')
             return 0
         
         return int(foundRows.index[0])

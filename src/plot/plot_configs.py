@@ -212,7 +212,7 @@ class StandardConfig(BasePlotConfig):
         fig = self.apply_std_layout(dataDict)
         
         fig.update_layout(
-            title_text = "Standard Plot for VPS"
+            title_text = "One window Plot for VPS"
         )
         
         fig = self.apply_bottom_legend(fig)
@@ -230,7 +230,7 @@ class SideLegendConfig(BasePlotConfig):
         fig = self.apply_std_layout(dataDict)
         
         fig.update_layout(
-            title_text = "Standard Plot for VPS"
+            title_text = "One window Plot for VPS"
         )
         
         fig = self.apply_side_legend(fig)

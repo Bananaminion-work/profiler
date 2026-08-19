@@ -1,12 +1,12 @@
-measurement_id,date,start_time,data_source,oven_recipe,oven_nr,product,load_profile,position_measurement_cooler,test_cooler_flag,cooler_count_on_tray,nozzlefield,profile_name,comment,injection_1,injection_2,injection_3,injection_4,waiting_1,waiting_2,waiting_3,waiting_4,cooling_freq_1,cooling_freq_2,cooling_freq_3,cooling_freq_4,cooling_time_1,cooling_time_2,cooling_time_3,cooling_time_4
-4649a449-e35b-480e-a153-ec6880cbd366,2025-12-02,13:19:10,Rehm-recorder,rezept,1234,PM6,8.0,8,True,8,düse,profil,"messung von sören unverändert, alles im soll",1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
-21f169ce-805d-4033-9c56-cbea81ed3b5a,2025-12-02,13:19:10,Rehm-recorder,rezept,1234,PM6,8.0,8,True,8,düse,profil,messung von sören mit abweichung um vvt zu triggern,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
-f5bc0441-27aa-4c2a-b616-a8a863c2adda,2025-11-27,10:31:15,Rehm-recorder,rezept,1234,VOLVO-ERAD,8.0,8,True,8,düse,profil,Messung aus ungarn unverändert aber mit komischem Vakuum,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
-f5e5d393-111f-41d6-b696-d65d73e617b7,2025-12-02,13:19:10,Rehm-recorder,a,1234,PM6,8.0,8,True,8,a,a,a,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
-213dd39c-6782-43fe-9d63-925912fcf946,2025-12-02,13:19:10,Rehm-recorder,b,1234,PM6,8.0,8,True,8,b,b,duplicate-test,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
-0776a9a9-572a-4628-8014-b4c12f4e366a,2025-11-27,10:31:15,Rehm-recorder,rezept,1234,PM6,8.0,8,True,8,düse,prfil,comment,1,2,3,4,1,2,3,43,1,2,3,43,1,2,2,3
-dc49a1ec-63a6-4988-89be-df9059203efe,2025-12-02,13:19:10,Rehm-recorder,a,Rtp2 PM5 - 5418,PM5: VW-ECO,8.0,8,True,8,a,a,aaaaa,q,,,,12,,,,14,,,,15,,,
-918bcf14-a7c3-4cd1-a35a-c0f6b312c3a0,2025-11-27,10:31:15,Rehm-recorder,a,Rtp2 PM5 - 5418,PM5: VW-ECO,8.0,8,True,8,a,a,aaaa,1,,,,1,,,,1,,,,1,,,
-fc02b53a-fd88-4290-bb33-ba1fbbb90aaa,2025-12-02,13:19:10,Rehm-recorder,recipe,HtvP L2 Oven 6 - 6155,PM6: BASE,4.0,4,True,4,field,name,test für parallele Mehrfachnutzung,1,2,3,4,1,2,3,4,1,2,3,4,2,3,4,5
-926f21d2-fed3-43d4-ae07-204784c958cb,2025-12-02,13:19:10,Rehm-recorder,mock,Other,PM6: VOLVO-ERAD,8.0,8,True,8,mock,mock,MOCK MEASUREMENT TEST,1,1,,,2,2,,,1,3,,,2,4,,
-d62562af-61e6-4cb2-8074-17936388ff8b,2024-09-10,13:47:21,Rehm-recorder,c,Other,PM6: BASE,2.0,1,True,3,a,b,"KAPUTTE MESSUNG VON MICHA, NUR HEIZELEMENTE UND VAKUUM",1,,,,2,,,,1,,,,2,,,
+measurement_id,date,start_time,data_source,oven_recipe,oven_nr,product,load_profile,position_measurement_cooler,test_cooler_flag,cooler_count_on_tray,nozzlefield,profile_name,comment,description,injection_1,injection_2,injection_3,injection_4,waiting_1,waiting_2,waiting_3,waiting_4,cooling_freq_1,cooling_freq_2,cooling_freq_3,cooling_freq_4,cooling_time_1,cooling_time_2,cooling_time_3,cooling_time_4
+4649a449-e35b-480e-a153-ec6880cbd366,2025-12-02,13:19:10,Rehm-recorder,rezept,1234,PM6,8.0,8,True,8,düse,profil,"messung von sören unverändert, alles im soll",,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
+21f169ce-805d-4033-9c56-cbea81ed3b5a,2025-12-02,13:19:10,Rehm-recorder,rezept,1234,PM6,8.0,8,True,8,düse,profil,messung von sören mit abweichung um vvt zu triggern,,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
+f5bc0441-27aa-4c2a-b616-a8a863c2adda,2025-11-27,10:31:15,Rehm-recorder,rezept,1234,VOLVO-ERAD,8.0,8,True,8,düse,profil,Messung aus ungarn unverändert aber mit komischem Vakuum,,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
+f5e5d393-111f-41d6-b696-d65d73e617b7,2025-12-02,13:19:10,Rehm-recorder,a,1234,PM6,8.0,8,True,8,a,a,a,,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
+213dd39c-6782-43fe-9d63-925912fcf946,2025-12-02,13:19:10,Rehm-recorder,b,1234,PM6,8.0,8,True,8,b,b,duplicate-test,,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4
+0776a9a9-572a-4628-8014-b4c12f4e366a,2025-11-27,10:31:15,Rehm-recorder,rezept,1234,PM6,8.0,8,True,8,düse,prfil,comment,,1,2,3,4,1,2,3,43,1,2,3,43,1,2,2,3
+dc49a1ec-63a6-4988-89be-df9059203efe,2025-12-02,13:19:10,Rehm-recorder,a,Rtp2 PM5 - 5418,PM5: VW-ECO,8.0,8,True,8,a,a,aaaaa,,q,,,,12,,,,14,,,,15,,,
+918bcf14-a7c3-4cd1-a35a-c0f6b312c3a0,2025-11-27,10:31:15,Rehm-recorder,a,Rtp2 PM5 - 5418,PM5: VW-ECO,8.0,8,True,8,a,a,aaaa,,1,,,,1,,,,1,,,,1,,,
+fc02b53a-fd88-4290-bb33-ba1fbbb90aaa,2025-12-02,13:19:10,Rehm-recorder,recipe,HtvP L2 Oven 6 - 6155,PM6: BASE,4.0,4,True,4,field,name,test für parallele Mehrfachnutzung,,1,2,3,4,1,2,3,4,1,2,3,4,2,3,4,5
+926f21d2-fed3-43d4-ae07-204784c958cb,2025-12-02,13:19:10,Rehm-recorder,mock,Other,PM6: VOLVO-ERAD,8.0,8,True,8,mock,mock,MOCK MEASUREMENT TEST,,1,1,,,2,2,,,1,3,,,2,4,,
+d62562af-61e6-4cb2-8074-17936388ff8b,2024-09-10,13:47:21,Rehm-recorder,c,Other,PM6: BASE,2.0,1,True,3,a,b,"KAPUTTE MESSUNG VON MICHA, NUR HEIZELEMENTE UND VAKUUM",,1,,,,2,,,,1,,,,2,,,

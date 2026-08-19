@@ -15,16 +15,18 @@ class BronzeCreator():
     xmlContent: bytes | None = None
     csvContent: bytes | None = None
     bronzeObject : BronzeData
+    description: str = ""
     
     xml_dict: dict[str,str] = {}
     csvData: DataFrame
     
-    def create_bronze_object(self,uploadContainer: UploadContainer, source:str)->Data:
+    def create_bronze_object(self,uploadContainer: UploadContainer, source:str)->tuple[BronzeData, str]:
         
         # if else check for source is made here
         if source == "Rehm-recorder":
-            self.extract_zip(uploadContainer) #get zip
+            self.extract_zip(uploadContainer) # get zip
             self.parse_xml() # read xml
+            self.read_description() # read description
             self.parse_csv() # read csv
             self.change_id_to_names() # create final dataframe
             self.csvData.set_index('ReadTime', inplace=True)
@@ -43,7 +45,7 @@ class BronzeCreator():
         #build Object
         self.bronzeObject = BronzeData(self.csvData)
 
-        return self.bronzeObject
+        return self.bronzeObject, self.description
     
     
     
@@ -74,10 +76,10 @@ class BronzeCreator():
             raise NoDataToWorkWithError("No XML content found in the uploaded zip file.")
         
         else:
-            #get selected datapoints from xml
+            # get selected datapoints from xml
             selectedDataPoints = ET.fromstring(self.xmlContent).find('SelectedDataPoints')
             
-            #check if selectedDataPoints is None, if yes raise error, else continue
+            # check if selectedDataPoints is None, if yes raise error, else continue
             if selectedDataPoints is None:
                 raise NoDataToWorkWithError("No SelectedDataPoints found in the XML content.")
             
@@ -102,6 +104,23 @@ class BronzeCreator():
                     else:
                         raise NoDataToWorkWithError("Id and/or Name tag not found in the XML content.")
     
+    
+    def read_description(self):
+        
+        # check if xml content is found
+        if self.xmlContent is None:
+            raise NoDataToWorkWithError("No XML content found in the uploaded zip file.")
+        
+        else:
+            # parse the xml content and find the description element
+            root = ET.fromstring(self.xmlContent)
+            description_element = root.find('Description')
+            
+            # save content of description element to the description attribute, if it exists
+            if description_element is not None and description_element.text is not None:
+                self.description = description_element.text
+            else:
+                self.description = ""
     
     
     

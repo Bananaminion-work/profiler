@@ -13,6 +13,8 @@ class MetaNames:
     NOZZLEFIELD = "nozzlefield"
     PROFILE_NAME = "profile_name"
     COMMENT = "comment"
+    DESCRIPTION = "description"
+    FILENAME = "file_name"
     INJECTION_1 = "injection_1"
     INJECTION_2 = "injection_2"
     INJECTION_3 = "injection_3"

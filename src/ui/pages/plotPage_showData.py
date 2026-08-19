@@ -1,4 +1,6 @@
 from src.shared.config_names import ConfigNames
+from src.shared.plot_presets import PlotPresets
+from src.shared.zeropoint_names import ZeropointNames
 from src.shared.vvt_names import VvtNames
 from src.ui.pages.base_pages import SubPage
 from nicegui import ui
@@ -7,8 +9,8 @@ from nicegui import ui
 class PlotPage_showData(SubPage):
     pageName = "plot-show"
     config: str = ConfigNames.STANDARD_BOTTOM
-    chosenZeropoint: str = "none"
-    chosenScope: str = "Default"
+    chosenZeropoint: str = ZeropointNames.NONE
+    chosenScope: str = PlotPresets.DEFAULT
 
     def build_content(self) -> None:
         
@@ -35,9 +37,6 @@ class PlotPage_showData(SubPage):
                     
                     # load options
                     zeropointOptions = self.controller.load_zeropoint_options()
-                    # add "none" as option on the first postion
-                    if "none" not in zeropointOptions:
-                        zeropointOptions.insert(0, "none")
                         
                     ui.select(
                         options=zeropointOptions,

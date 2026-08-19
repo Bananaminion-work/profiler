@@ -13,6 +13,8 @@ class DataStore:
         self.measurement_ids: set = set()
         self.measurement_name_mapping: dict[str,str] = {}
         
+        self.fileName: str = ""
+        
     ##### Attribute access #####
     
     

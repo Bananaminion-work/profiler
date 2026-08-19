@@ -4,13 +4,17 @@ class PlotPresets:
     
     # dict with all presets
     
+    DEFAULT = "Default"
+    DEFAULT_WITH_GRADIENTS_AND_ROLLING_AVG = "Default with Gradients and Rolling Avg"
+    BOTTOM_HEATERS = "Bottom Heaters"
+    
     ####### CREATE A NEW ONE IF NEEDED #######
     PRESETS = {
         
         "All" : None,
         
         
-        "Default" : [
+        DEFAULT : [
             ChannelNames.CH1,
             ChannelNames.CH2,
             ChannelNames.CH3,
@@ -23,7 +27,7 @@ class PlotPresets:
             ],
         
         
-        "Default with Gradients and Rolling Avg" : [
+        DEFAULT_WITH_GRADIENTS_AND_ROLLING_AVG : [
             ChannelNames.CH1,
             ChannelNames.CH2,
             ChannelNames.CH3,
@@ -41,7 +45,7 @@ class PlotPresets:
             ChannelNames.MEDIUM_PUMP,
         ],
         
-        "Bottom Heaters" : [
+        BOTTOM_HEATERS : [
             ChannelNames.HEATER_BOTTOM1_ACTUAL,
             ChannelNames.HEATER_BOTTOM2_ACTUAL,
             ChannelNames.HEATER_BOTTOM3_ACTUAL,

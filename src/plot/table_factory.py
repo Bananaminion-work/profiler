@@ -136,12 +136,40 @@ class TableFactory:
         if filter_comment:
             mask &= content[MetaNames.COMMENT].astype(str).str.contains(filter_comment, case=False, na=False, regex=False)
             
+        # description
+        filter_description = getattr(filter, MetaNames.DESCRIPTION, "")
+        if filter_description:
+            mask &= content[MetaNames.DESCRIPTION].astype(str).str.contains(filter_description, case=False, na=False, regex=False)
+            
+        # file name
+        filter_file_name = getattr(filter, MetaNames.FILENAME, "")
+        if filter_file_name:
+            mask &= content[MetaNames.FILENAME].astype(str).str.contains(filter_file_name, case=False, na=False, regex=False)
+            
         # date
         filter_date = getattr(filter, MetaNames.DATE, None)
         if filter_date:
-            # convert string to datetime
-            targetDate = str(pd.to_datetime(filter_date, format="%Y-%m-%d").date())
-            mask &= (content[MetaNames.DATE] == targetDate)
+            
+            # check if it is a range or just one date
+            if isinstance(filter_date, str):
+                date_from = filter_date.replace("/", "-")
+                date_to = date_from
+                
+            else:
+                # define range limits
+                date_from = filter_date.get("from", "").replace("/", "-")
+                date_to = filter_date.get("to", "").replace("/", "-")
+            
+            # convert to datetime
+            content_dates = pd.to_datetime(content[MetaNames.DATE], errors='coerce').dt.date #type:ignore
+            
+            # apply the date filter to the mask
+            if date_from:
+                date_from = pd.to_datetime(date_from, format="%Y-%m-%d").date()
+                mask &= (content_dates >= date_from)
+            if date_to:
+                date_to = pd.to_datetime(date_to, format="%Y-%m-%d").date()
+                mask &= (content_dates <= date_to)
             
         # time
         filter_time = getattr(filter, MetaNames.START_TIME, None)
