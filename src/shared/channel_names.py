@@ -1,4 +1,7 @@
-class ChannelNames:
+from enum import Enum
+
+
+class ChannelNames(str, Enum):
     """This class contains the names which the code uses from the silverobject on everywhere else
     
     here the names are set once and for all!"""
@@ -65,3 +68,8 @@ class ChannelNames:
     INLET_CHAMBER_SENSOR1 = "InletChamberSensor1"  
     
     MON_PRC_CHA = "MonPrcChamb|Actual Value"
+    
+    @classmethod
+    def get_options(cls):
+        """Return a list of available preset names"""
+        return list(cls)

@@ -101,7 +101,7 @@ class PlotPage_showData(SubPage):
                     ui.select(
                         measurements,
                         label="Select Measurement",
-                        on_change=self.update_vvt_table
+                        on_change=self.update_by_measurement
                         ).bind_value(self, "selectedMeasurementId").classes("w-100"
                     )
                     
@@ -155,16 +155,39 @@ class PlotPage_showData(SubPage):
                 self.chosenZeropoint_show,
                 self.selectedMeasurementId
             )
-                
+    
+    
+    
+    def update_by_measurement(self):
+        
+        # choose vvt automatically
+        self.change_vvt_preset()
+        self.update_vvt_table()
+    
                 
                 
     def update_plot_and_vvt(self):
         """calls the update functions for plot and vvt-table, to update both at the same time when zeropoint selection is changed"""
         self.update_plot()
         self.update_vvt_table()
-                
-                
-                
+        
+        
+        
+    def change_vvt_preset(self):
+        """reads the product of the selected measurement and sets the vvt accordingly by using the mapping in the controller"""
+        
+        mapping = self.controller.load_product_vvt_mapping()
+        
+        measurement = self.selectedMeasurementId
+        
+        product = self.controller.load_product_of_measurement(measurement)
+        
+        if product in mapping:
+            self.selectedVVT = mapping[product]
+        else:
+            self.selectedVVT = VvtNames.VPS_MAIN  # default value if product not found in mapping
+        
+        
     def reset(self):
         """resets the page to default state, e.g. after loading new data"""
         self.config = ConfigNames.STANDARD_BOTTOM

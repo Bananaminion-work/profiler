@@ -15,6 +15,7 @@ class Creator():
     _goldCreator: GoldCreator
     _dateTime: datetime
     _description: str
+    _config_name: str
     
     def __init__(self):
         self._bronzeCreator = BronzeCreator()
@@ -23,14 +24,14 @@ class Creator():
         self._dateTime = datetime.now()
         self._description = ""
     
-    def create_data_objects(self,uploadContainer: UploadContainer, source:str)->tuple[dict[str,Data], datetime,str]:
+    def create_data_objects(self,uploadContainer: UploadContainer, source:str)->tuple[dict[str,Data], datetime,str,str]:
         """takes in the zip content and source of measurement to process and create 
         all data obejcts (bronze, silver, gold) and returns them in a dict"""
         
         dataObjects = dict[str,Data]()
         
-        dataObjects["bronze"],self._description = self._bronzeCreator.create_bronze_object(uploadContainer, source)
+        dataObjects["bronze"],self._description, self._config_name = self._bronzeCreator.create_bronze_object(uploadContainer, source)
         dataObjects["silver"],self._dateTime = self._silverCreator.create_silver_object(dataObjects["bronze"],source)
         dataObjects["gold"] = self._goldCreator.create_gold_object(dataObjects["silver"],source)
             
-        return dataObjects, self._dateTime, self._description
+        return dataObjects, self._dateTime, self._description, self._config_name

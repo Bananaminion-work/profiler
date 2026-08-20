@@ -25,4 +25,10 @@ class AdminLanding(SubPage):
                     on_click=lambda: self.controller.handle_navigation_request("plot-select", mode="admin"),
                 ).classes("w-72")
                 
+                ui.button(
+                    "Manage VVTs",
+                    icon="table_chart",
+                    on_click=lambda: self.controller.handle_navigation_request("admin_vvt"),
+                ).classes("w-72")
+                
                 

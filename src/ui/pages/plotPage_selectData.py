@@ -87,7 +87,7 @@ class PlotPage_selectData(SubPage):
                     )
                 
                 ui.button(
-                    "Discard",
+                    "Return to Home",
                     color="negative",
                     on_click=lambda: self.controller.handle_popup(
                         "confirm",

@@ -1,3 +1,5 @@
+import re
+
 from nicegui import ui
 from src.shared.config_names import ConfigNames
 from src.ui.pages.base_pages import SubPage
@@ -145,12 +147,12 @@ class ImportPage_showData(SubPage):
                     ui.label("Choose VVT to be checked")
                     
                     # load options
-                    vvtOptions = self.controller.load_vvt_options()
+                    self.vvtOptions = self.controller.load_vvt_options()
                     #set first option as value
-                    self.selectedVVT = VvtNames.VPS_MAIN if vvtOptions else ""
+                    self.selectedVVT = VvtNames.VPS_MAIN if self.vvtOptions else ""
                     
                     ui.select(
-                        vvtOptions,
+                        self.vvtOptions,
                         label="Select VVT",
                         on_change=self.update_vvt_table
                         ).bind_value(self, "selectedVVT").classes("w-100")
@@ -165,34 +167,34 @@ class ImportPage_showData(SubPage):
             with ui.card().classes("w-full"):
                 ui.label("Input Metadata to be saved to database").classes('text-xl')
                 
-                # get date and starttime
+                # get intel
                 dateAndStart = self.controller.load_date_and_starttime()
-                
-                # get file name
                 fileName = self.controller.load_file_name()
                 description = self.controller.load_description()
+                self.configName = self.controller.load_config_name()
                 
-                with ui.card().classes("p-3 gap-2 bg-slate-50"):
+                with ui.card().classes("w-full p-3 gap-2 bg-slate-50"):
+                    
                     ui.label(f"Date of measurement: {dateAndStart[MetaNames.DATE]}").classes("text-lg")
                     ui.label(f"Start time of measurement: {dateAndStart[MetaNames.START_TIME]}").classes("text-lg")
 
                     ui.label(f"File name: {fileName}").classes("text-lg")
                     ui.label(f"Measurenemt description from XML-file: {description}").classes("text-lg")
+                    ui.label(f"Config name from XML-file: {self.configName}").classes("text-lg")
             
                 with ui.grid(columns=2).classes("w-full gap-3"):
                     
                     
                     # get options for dropdowns from controller
-                    ovenOptions = self.controller.load_oven_options()
-                    self.oven_Nr = ovenOptions[0] if ovenOptions else "" # set first option as default value
+                    self.ovenOptions = self.controller.load_oven_options()
                     
-                    productOptions = self.controller.load_product_options()
-                    self.product = productOptions[0] if productOptions else "" # set first option as default value
+                    self.productOptions = self.controller.load_product_options()
+                    self.product = self.productOptions[0] if self.productOptions else "" # set first option as default value
                     
-                    ui.select(ovenOptions, label="Select the oven-number").bind_value(self, "oven_Nr")
-                    ui.select(productOptions, label="Select the product").bind_value(self, "product")
-                    loadOptions = ["25%", "50%", "75%", "100%"]
-                    ui.select(loadOptions, value=loadOptions[0], label="Loading-condition").bind_value(self, "load")
+                    ui.select(self.ovenOptions, label="Select the oven-number").bind_value(self, "oven_Nr")
+                    ui.select(self.productOptions, label="Select the product", on_change=self.change_vvt_preset).bind_value(self, "product")
+                    carrierloadOptions = ["25%", "50%", "75%", "100%"]
+                    ui.select(carrierloadOptions, value=carrierloadOptions[0], label="Loading-condition").bind_value(self, "load")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Position of measurement cooler").bind_value(self, "pos")
                     ui.select(["1", "2", "3", "4", "5", "6", "7", "8"], value="8", label="Amount of coolers").bind_value(self, "count")
                     ui.radio(["Production", "Test"], value="Test").props("inline").bind_value(self, "prod_test")
@@ -203,7 +205,7 @@ class ImportPage_showData(SubPage):
                     ui.input(MetaNames.PROFILE_NAME, placeholder="used profilename").bind_value(self, "profile_name").classes("w-200")
                     ui.input(MetaNames.OVEN_RECIPE, placeholder="oven recipe").bind_value(self, "oven_Recipe").classes("w-200")
                 self._create_accordion()
-                ui.textarea(MetaNames.COMMENT, placeholder="enter your comment..").bind_value(self, "comment").classes("w-full") 
+                ui.textarea(MetaNames.COMMENT, placeholder="enter your comment..").bind_value(self, "comment").classes("w-full")
                     
                     
                     
@@ -212,9 +214,10 @@ class ImportPage_showData(SubPage):
                 
                 with ui.row().classes("justify-end w-full"):
                     ui.button("Save", on_click=self.on_save_click)
-                    ui.button("Discard", color="negative", on_click=self.on_discard_click)
+                    ui.button("Return to Home", color="negative", on_click=self.on_discard_click)
                     
         # init plot and table
+        self.change_oven_preset()
         self.update_plot_preview()
         self.update_vvt_table()
         
@@ -360,7 +363,7 @@ class ImportPage_showData(SubPage):
         self.oven_Nr = "1234"
         self.oven_Recipe = ""
         self.product = "PM6"
-        self.load = "8"
+        self.load = "25%"
         self.pos = "8"
         self.count = "8"
         self.prod_test = "Test"
@@ -384,3 +387,37 @@ class ImportPage_showData(SubPage):
         self.cooling_time_3 = ""
         self.cooling_time_4 = ""
         self.config = ConfigNames.STANDARD_BOTTOM
+        
+    def change_vvt_preset(self):
+               
+        product_vvt_mapping = self.controller.load_product_vvt_mapping()
+        
+        if self.product in product_vvt_mapping:
+            # set vvt selection to the mapped value for the selected product
+            self.selectedVVT = product_vvt_mapping[self.product]
+            
+        else:
+            self.selectedVVT = VvtNames.VPS_MAIN  # default value if product not found in mapping
+            
+            
+    def change_oven_preset(self):
+        """selects the oven number depending on the config name"""
+        
+        if not self. configName:
+            return  # do nothing if configName is not set
+        
+        numberInConfig = re.findall(r"\d+", self.configName)
+        
+        if not numberInConfig:
+            return  # do nothing if no number is found in configName
+        
+        if self.ovenOptions is not None:
+            
+            # search for the number of the configname
+            for number in numberInConfig:
+                for option in self.ovenOptions:
+                    if number in option:
+                        self.oven_Nr = option
+                        return  # exit the function after setting the oven number
+        
+        return  # do nothing if no matching oven number is found in ovenOptions

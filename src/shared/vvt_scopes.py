@@ -1,12 +1,9 @@
 from enum import Enum
 
-
-class VvtNames(str,Enum):
+class VvtScopes(str, Enum):
     
-    VPS_MAIN = "VPS-Process"
-    GEN4_FL = "GEN4FL"
-    GEN4_VL = "GEN4VL"
-    PM6_PMOC_ECO = "PM6 PMoC ECO"
+    PROCESS = "process"
+    BULKHEAD_OPEN = "outlet_bulkhead_open"
     
     @classmethod
     def get_options(cls):

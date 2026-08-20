@@ -12,14 +12,15 @@ class DataManager():
     _measurementObjects:dict[str, Data]
     _dateTime: datetime
     _description: str = ""
+    _config_name: str = ""
     
     def __init__(self):
         self._creator = Creator()
         self._store = DataStore()
         
     def create_data_from_measurement(self,uploadContainer: UploadContainer, source:str):
-        self._measurementObjects,self._dateTime,self._description = self._creator.create_data_objects(uploadContainer, source)
-        return self._measurementObjects,self._dateTime,self._description
+        self._measurementObjects,self._dateTime,self._description,self._config_name = self._creator.create_data_objects(uploadContainer, source)
+        return self._measurementObjects,self._dateTime,self._description,self._config_name
         
     def get_measurement_objects(self)->dict[str,Data]:
         return self._measurementObjects

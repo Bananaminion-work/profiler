@@ -10,6 +10,9 @@ from typing import cast
 
 
 class TableFactory:
+    
+    def __init__(self):
+        self.vvt_df = DataFrame()
         
     def update_violation_table(self, violations: list[Violation], offset: int):
         """draws a table with a given list of violation-objects and applys the given offset to the 'Time of Occurance' column of the table"""
@@ -186,3 +189,68 @@ class TableFactory:
 
         # return the df with only the rows that passed all tests
         return cast(DataFrame, content.loc[mask])
+
+
+    def build_admin_vvt_table(self, df: DataFrame, registry: dict, container)->None:
+        
+        # copy input df for safety
+        self.vvt_df = df.copy()
+        
+        with container:
+            
+            with ui.column().classes("w-full overflow-x-auto gap-0"):
+                
+                # display headers
+                with ui.row().classes("min-w-max flex-nowrap gap-1 bg-gray-200 p-2 sticky top-0"):
+                    for col, col_def in registry.items():
+                        ui.label(col_def.label).classes("w-60 font-bold text-sm shrink-0")
+                
+                
+                # create data-rows
+                for row_idx, row in self.vvt_df.iterrows():
+                    with ui.row().classes("min-w-max flex-nowrap gap-1 p-1 border-b"):
+                
+                        # iterate over the columns in the registry to create the widgets for each column
+                        for col, col_def in registry.items():
+                        
+                            # get actual value
+                            value = row.get(col, "")
+                            
+                            # bugfix: if value is nan, set it to empty string
+                            if pd.isna(value):
+                                value = ""
+                            
+                            # if option is dropdown ui select will be created
+                            if col_def.widget == "dropdown":
+                                options = col_def.option_source.get_options()
+                                ui.select(
+                                    options,
+                                    value=value if value in options else None,
+                                    label=col_def.label,
+                                    # on_change will be called when the value of the select changes, it will call the _on_edit method with the row index, column name and new value
+                                    on_change=lambda e, r=row_idx, c=col: self._on_edit(r, c, e.value)
+                                ).classes("w-60 shrink-0").props("dense borderless")
+                                
+                            elif col_def.widget == "text":                                
+                                ui.input(
+                                    value=str(value),
+                                    label=col_def.label,
+                                    on_change=lambda e, r=row_idx, c=col: self._on_edit(r, c, e.value)
+                                ).classes("w-60 shrink-0").props("dense borderless")
+                            
+                            
+                            
+                            
+    def _on_edit(self, row_idx, col_name, new_value):
+        """updates the value of the cell in the dataframe when a widget is changed"""
+        self.vvt_df.at[row_idx, col_name] = new_value
+        
+    def get_vvt_df(self) -> DataFrame:
+        """returns the current state of the vvt dataframe"""
+        return self.vvt_df.copy()
+    
+    def reset_vvt_df(self):
+        """resets the vvt dataframe to the given dataframe"""
+        self.vvt_df = DataFrame()
+        
+    

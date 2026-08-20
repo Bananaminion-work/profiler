@@ -59,6 +59,10 @@ class ImportPage_getData(SubPage):
             ui.notify("Please upload a file before submitting.", color="negative")
             return
         
+        elif self.source in ["Solderstar (direct copy, without Rehm-recorder)","Datapaq"]:
+            ui.notify(f"Source '{self.source}' is not yet supported.", color="negative")
+            return
+        
         
         uploadContainer = UploadContainer(self.uploaded_file_name, self.uploaded_content)
         

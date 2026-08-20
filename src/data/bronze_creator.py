@@ -20,13 +20,14 @@ class BronzeCreator():
     xml_dict: dict[str,str] = {}
     csvData: DataFrame
     
-    def create_bronze_object(self,uploadContainer: UploadContainer, source:str)->tuple[BronzeData, str]:
+    def create_bronze_object(self,uploadContainer: UploadContainer, source:str)->tuple[BronzeData, str, str]:
         
         # if else check for source is made here
         if source == "Rehm-recorder":
             self.extract_zip(uploadContainer) # get zip
             self.parse_xml() # read xml
             self.read_description() # read description
+            self.read_config_name() # read config name
             self.parse_csv() # read csv
             self.change_id_to_names() # create final dataframe
             self.csvData.set_index('ReadTime', inplace=True)
@@ -45,7 +46,7 @@ class BronzeCreator():
         #build Object
         self.bronzeObject = BronzeData(self.csvData)
 
-        return self.bronzeObject, self.description
+        return self.bronzeObject, self.description, self.config_name
     
     
     
@@ -122,6 +123,22 @@ class BronzeCreator():
             else:
                 self.description = ""
     
+    
+    def read_config_name(self):
+        # check if xml content is found
+        if self.xmlContent is None:
+            raise NoDataToWorkWithError("No XML content found in the uploaded zip file.")
+        
+        else:
+            # parse the xml content and find the config name element
+            root = ET.fromstring(self.xmlContent)
+            config_name_element = root.find('ConfigurationName')
+            
+            # save content of config name element to the config_name attribute, if it exists
+            if config_name_element is not None and config_name_element.text is not None:
+                self.config_name = config_name_element.text
+            else:
+                self.config_name = ""
     
     
     def parse_csv(self):

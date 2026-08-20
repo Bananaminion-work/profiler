@@ -40,7 +40,8 @@ class DatabaseManager:
             self._metadataRepository = MetadataRepoCsv()
         elif self.source == "databricks":
             self._client = DatabricksClient()
-            self._vvtRepository = VvtRepoDatabricks(self._client)
+            # only use csv as vvt repo for now. methods are still available
+            self._vvtRepository = VvtRepoCsv()
             self._measurementRepository = MeasurementRepoDatabricks(self._client)
             self._metadataRepository = MetadataRepoDatabricks(self._client)
         else:
@@ -195,3 +196,9 @@ class DatabaseManager:
             self._measurementRepository.delete_measurement(id)
             self._metadataRepository.delete_measurement_metadata(id)
         
+        
+    
+    def admin_rewrite_vvt(self, new_vvt_df: DataFrame):
+        """rewrites the vvt table in the database with the new vvt df"""
+        
+        self._vvtRepository.rewrite_vvt(new_vvt_df)

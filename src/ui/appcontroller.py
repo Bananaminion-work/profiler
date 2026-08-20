@@ -14,6 +14,8 @@ from src.data.data_manager import DataManager
 from src.database.database_manager import DatabaseManager
 from src.analyzer.analyzer import Analyzer
 from src.plot.table_factory import TableFactory
+from src.shared.product_vvt_mapping import ProductVvtMapping
+from src.plot.vvt_table_registry import COLUMN_REGISTRY
 
 # import helping classes and containers
 from src.shared.metadata import Metadata
@@ -173,7 +175,7 @@ class AppController:
         description: str
         
         # saves medallionobjects in current session, as well as the datetime of the measurement (from silver data)
-        medallionObjects, dateTime, description = self.data.create_data_from_measurement(uploadContainer, source)
+        medallionObjects, dateTime, description, config_name = self.data.create_data_from_measurement(uploadContainer, source)
         
         
         if isinstance(medallionObjects, dict):
@@ -183,6 +185,8 @@ class AppController:
             self.data.current_import_measurement.get_metadata().set_datetime(dateTime)
             # save description in metadata
             self.data.current_import_measurement.get_metadata().set_description(description)
+            # save config_name in metadata
+            self.data.current_import_measurement.get_metadata().set_config_name(config_name)
             # save filename in metadata
             self.data.current_import_measurement.get_metadata().set_file_name(uploadContainer.fileName)
                         
@@ -379,15 +383,34 @@ class AppController:
     
     
     
+    def load_product_vvt_mapping(self)-> dict[str,str]:
+        """returns a dict with product as key and vvt as value from the database"""
+        return {k.value: v for k, v in ProductVvtMapping.asdict().items()}
+    
+    
+    
     def load_file_name(self) -> str:
         """returns the file name of the current session measurement"""
         return self.data.current_import_measurement.get_metadata().get_metadata_dict().get(MetaNames.FILENAME,"")
 
+
+
     def load_description(self) -> str:
         """returns the description of the current session measurement"""
         return self.data.current_import_measurement.get_metadata().get_metadata_dict().get(MetaNames.DESCRIPTION,"")
+    
+    
+    
+    def load_config_name(self) -> str:
+        """returns the config name of the current session measurement"""
+        return self.data.current_import_measurement.get_metadata().get_metadata_dict().get(MetaNames.CONFIG_NAME,"")
         
         
+    
+    def load_product_of_measurement(self, measurement_id:str) -> str:
+        """returns the product of the given measurement id from the database"""
+        return str(self.database.get_measurement_metadata(measurement_id)[MetaNames.PRODUCT])
+    
     
     
     def handle_violation_table_update_request(self, vvtName:str, zeropoint:str):
@@ -666,3 +689,34 @@ class AppController:
                 ui.button("Delete", color="red", on_click=_delete)
 
         dialog.open()
+        
+        
+        
+    def handle_admin_vvt_table(self, tableContainer):
+        
+        # get the current vvt
+        vvt_df = self.database.load_vvt()
+        
+        # create registry once for the session
+        if not hasattr(self, 'registry') or self.registry is None:
+            self.registry = COLUMN_REGISTRY
+        
+        self.table.build_admin_vvt_table(
+            vvt_df,
+            self.registry,
+            tableContainer
+        )
+        
+        
+        
+    def handle_admin_rewrite_vvts(self):
+        
+        # get the df from the table
+        vvt_df = self.table.get_vvt_df()
+        
+        # rewrite the vvts in the database
+        self.database.admin_rewrite_vvt(vvt_df)
+        
+        ui.notify("VVTs rewritten successfully.", color="positive")
+        
+        self.handle_navigation_request('admin_landing')     

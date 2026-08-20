@@ -1,6 +1,6 @@
 from src.shared.channel_names import ChannelNames
 
-class PlotPresets:
+class PlotPresets():
     
     # dict with all presets
     

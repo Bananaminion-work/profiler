@@ -37,6 +37,7 @@ class Metadata:
     comment:str = ""
     description:str = ""
     file_name:str = ""
+    config_name:str = ""
     
     def set_user_input(self, metadata: dict[str,str]):
         
@@ -89,3 +90,6 @@ class Metadata:
         
     def set_file_name(self, file_name:str):
         self.file_name = file_name
+        
+    def set_config_name(self, config_name:str):
+        self.config_name = config_name

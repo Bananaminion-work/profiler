@@ -19,6 +19,10 @@ class VvtRepository(ABC):
     @abstractmethod
     def delete_vvt(self,name:str) -> None:
         pass
+    
+    @abstractmethod
+    def rewrite_vvt(self, df: DataFrame) -> None:
+        pass
 
 
 
@@ -36,6 +40,10 @@ class VvtRepoCsv(VvtRepository):
     
     def delete_vvt(self,name:str) -> None:
         pass
+    
+    def rewrite_vvt(self, df: DataFrame) -> None:
+        """rewrites the vvt table in the csv file with the new vvt df"""
+        df.to_csv(self._pathToCsv, index=False)
     
     
 class VvtRepoDatabricks(VvtRepository):
@@ -55,6 +63,5 @@ class VvtRepoDatabricks(VvtRepository):
     def delete_vvt(self,name:str) -> None:
         pass
     
-    
-            
-            
+    def rewrite_vvt(self, df: DataFrame) -> None:
+        pass      
