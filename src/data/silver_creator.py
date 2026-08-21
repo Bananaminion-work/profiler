@@ -44,6 +44,8 @@ class SilverCreator():
             return SilverData(self.silverDataFrame),dateTime
     
     def rename_attributes_for_legend(self):
+        """method to rename the attributes of the silver dataframe for better legend display in plots"""
+        
         
         renameColumns = {
             

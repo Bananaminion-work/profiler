@@ -100,6 +100,8 @@ class AppController:
     
     
     def log(self, text: str):
+        """prints given text into the terminal container"""
+        
         with self.terminalContent:
             ui.label(text)
         self.terminalContent.update()
@@ -114,7 +116,6 @@ class AppController:
     
     @property    
     def goldDataframe(self):
-        
         """returns the DataFrame of the current import-session's gold data
         
         does type-cheking for you"""
@@ -162,17 +163,22 @@ class AppController:
         
         
     def reset_all_pages(self):
+        """calls the reset method of all pages to reset user input and state"""
         for pageObject in self.pages.values():
             pageObject.reset()
         
         
         
     def create_data_composition(self, uploadContainer: UploadContainer, source:str):
+        """creates the medallion objects from the uploaded data and saves them in the current session measurement"""
         
         # attributes
         medallionObjects: dict[str,Data]
         dateTime: datetime
         description: str
+        
+        # get metadata
+        meta = self.data.current_import_measurement.get_metadata()
         
         # saves medallionobjects in current session, as well as the datetime of the measurement (from silver data)
         medallionObjects, dateTime, description, config_name = self.data.create_data_from_measurement(uploadContainer, source)
@@ -182,13 +188,13 @@ class AppController:
             # save medallion data
             self.data.current_import_measurement.set_medallion_data(medallionObjects)
             # save datetime in metadata
-            self.data.current_import_measurement.get_metadata().set_datetime(dateTime)
+            meta.set_datetime(dateTime)
             # save description in metadata
-            self.data.current_import_measurement.get_metadata().set_description(description)
+            meta.set_description(description)
             # save config_name in metadata
-            self.data.current_import_measurement.get_metadata().set_config_name(config_name)
+            meta.set_config_name(config_name)
             # save filename in metadata
-            self.data.current_import_measurement.get_metadata().set_file_name(uploadContainer.fileName)
+            meta.set_file_name(uploadContainer.fileName)
                         
         else:
             raise WrongInputError(f"Expected a dict of Data objects, got {type(medallionObjects)} instead.")
@@ -263,6 +269,13 @@ class AppController:
         
     # asynchronous method to save in separate thread, so the ui does not freeze while saving
     async def handle_save_request(self, metadata: dict[str,str]):
+        """takes in metadata from the user input
+        
+        saves the current session measurement to the database, and checks if there is a duplicate
+        
+        method is async to avoid freezing the ui while saving to the database
+        
+        calls _save_measurement_to_database() to do the actual saving in a separate thread"""
         
         # set metadata for current session measurement
         self.data.current_import_measurement.get_metadata().set_user_input(metadata)
@@ -301,6 +314,9 @@ class AppController:
         
         
     def _save_measurement_to_database(self):
+        """saves the current session measurement to the database
+        
+        resets the current session after saving to avoid artefacts in the next measurement"""
         
         # check if current session objects are valid
         for data in self.data.current_import_measurement.get_medallion_data().values():
@@ -376,6 +392,9 @@ class AppController:
     
     
     def load_date_and_starttime(self) -> dict[str,str]:
+        """returns the date and starttime of the current measurement when measurement is imported
+        
+        returns empty string as fallback"""
         
         metadata = self.data.current_import_measurement.get_metadata().get_metadata_dict()
         
@@ -500,6 +519,9 @@ class AppController:
         
     # async method to make sure the UI does not freeze while the data is being fetched from the database
     async def handle_show_selected_request(self):
+        """handles the plotting of the selected measurements
+        
+        is async to avoid freezing the UI while fetching data from the database"""
         
         if not self.data.measurement_ids:
             ui.notify("No measurements selected. Please select measurements from the table to show them in the plot.", color="negative")
@@ -518,7 +540,7 @@ class AppController:
         
         
     def fetch_plot_data(self):
-        """Fetches the plot data for the selected measurements."""
+        """fetches the plot data for the selected measurements"""
         
         # get gold-data with the selected ids from the database
         self.data.current_gold_data_for_plot  = self.database.get_gold_data_by_id(self.data.measurement_ids)
@@ -623,6 +645,9 @@ class AppController:
     
     # async for spinner
     async def handle_admin_check(self):
+        """checks if the user has admin rights and navigates to the admin landing page if true, otherwise shows a notification
+        
+        async if the check might take too long"""        
         
         spinner = ui.notification("Checking admin rights...", type="ongoing", spinner=True, color="info")
         
@@ -693,6 +718,9 @@ class AppController:
         
         
     def handle_admin_vvt_table(self, tableContainer):
+        """handles the request to display the vvt table in the admin page
+        
+        takes in the container for the table to be displayed in"""
         
         # get the current vvt
         vvt_df = self.database.load_vvt()
@@ -710,6 +738,7 @@ class AppController:
         
         
     def handle_admin_rewrite_vvts(self):
+        """handles the request to rewrite the vvts in the database with the new vvt df from the table"""
         
         # get the df from the table
         vvt_df = self.table.get_vvt_df()
@@ -719,4 +748,16 @@ class AppController:
         
         ui.notify("VVTs rewritten successfully.", color="positive")
         
-        self.handle_navigation_request('admin_landing')     
+        self.handle_navigation_request('admin_landing')
+        
+        
+        
+    def handle_bulk_import_request(self, content: list[UploadContainer]):
+        """handles the bulk import of measurements from a list of UploadContainers"""
+        
+        # read data from uploaded files
+        information = self.data.get_information_bulk_import(content)
+        
+        print(f"Bulk import information: {information}")
+        
+        self.handle_navigation_request('bulkImportPage')

@@ -26,18 +26,22 @@ class ViolationDetector:
         }
 
     def set_vvt(self, vvt: DataFrame):
+        """sets the vvt to be used for violation detection
+        
+        converst from string to float"""
         
         #set vvts in attribute
         self._vvt = vvt
         
         #convert to floats in case it is a string
-        columnsToConvert = ['threshold', 'param1', 'param2']
+        columnsToConvert = ['threshold', 'param1', 'param2', 'param3', 'param4']
         for column in columnsToConvert:
             if column in self._vvt.columns:
                 self._vvt[column] = pd.to_numeric(self._vvt[column], errors='coerce')
     
+    
+    
     def detect_violations(self, df: DataFrame, vvt:str):
-        
         """Detects violations in the given DataFrame based on the rules defined in the VVT for the selected VVT name.
         
         returns a list of Violation objects representing the detected violations."""
@@ -112,6 +116,10 @@ class ViolationDetector:
     
         
     def handle_max(self,df: DataFrame, channel:str, threshold:float, **kwargs):
+        """checks if given channel in given DataFrame is above given threshold
+        
+        returns Violation objects if any were found"""
+        
         # check for rows where channel value is above threshold and return these rows
         violatedRows = df[df[channel] > threshold]
         
@@ -130,6 +138,10 @@ class ViolationDetector:
     
     
     def handle_min(self,df: DataFrame, channel:str, threshold:float, **kwargs):
+        """checks if given channel in given DataFrame is below given threshold
+        
+        returns Violation objects if any were found"""
+        
         # check for rows where channel value is below threshold and return these rows
         violatedRows = df[df[channel] < threshold]
         
@@ -188,6 +200,9 @@ class ViolationDetector:
         
         
     def crop_dataframe_while_process(self,df: DataFrame):
+        """crops the given DataFrame between inlet-bulkhead open and outlet-bulkhead open
+        
+        scopes relatively on the main process"""
         
         #check if the channels are present in the dataframe
         if ChannelNames.INLET_BULKHEAD_OPEN not in df.columns or ChannelNames.OUTLET_BULKHEAD_OPEN not in df.columns:
@@ -217,6 +232,7 @@ class ViolationDetector:
     
     
     def crop_dataframe_bulkhead_open(self,df: DataFrame):
+        """crops the given DataFrame to the data after outlet-bulkhead open to the end of the DataFrame"""
         
         # check if column exists
         if ChannelNames.OUTLET_BULKHEAD_OPEN not  in df.columns:
@@ -303,6 +319,9 @@ class ViolationDetector:
         
     
     def handle_main_vacuum_minimum(self, df: DataFrame, vvt_name:str, rule_name:str, channel:str, threshold:float, **kwargs):
+        """checks vacuum before outlet-bulkhead is opened
+        
+        checks if vacuum is below given threshold"""
         
         # check if positioning channel is in dataframe
         if ChannelNames.OUTLET_BULKHEAD_OPEN not in df.columns:

@@ -192,7 +192,7 @@ class TableFactory:
 
 
     def build_admin_vvt_table(self, df: DataFrame, registry: dict, container)->None:
-        
+        """builds a table for the admin view of the vvt table with the given dataframe and registry of columns and their definitions"""
         # copy input df for safety
         self.vvt_df = df.copy()
         

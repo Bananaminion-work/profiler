@@ -1,4 +1,6 @@
 class MetaNames:
+    """names of the metadata attributes that are used in the database"""
+    
     MEASUREMENT_ID = "measurement_id"
     DATE = "date"
     START_TIME = "start_time"

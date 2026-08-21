@@ -1,3 +1,4 @@
+from src.data.bulk_import_reader import BulkImportReader
 from src.data.data_store import DataStore
 from src.shared.data_composition import DataComposition
 from src.shared.data_models import Data
@@ -17,21 +18,36 @@ class DataManager():
     def __init__(self):
         self._creator = Creator()
         self._store = DataStore()
+        self._reader = BulkImportReader()
         
     def create_data_from_measurement(self,uploadContainer: UploadContainer, source:str):
+        """uses creator to create medallion data-objects from the uploaded zip file and source and returns them"""
         self._measurementObjects,self._dateTime,self._description,self._config_name = self._creator.create_data_objects(uploadContainer, source)
         return self._measurementObjects,self._dateTime,self._description,self._config_name
         
+        
+        
     def get_measurement_objects(self)->dict[str,Data]:
+        """returns the current measurement objects (bronze, silver, gold)"""
         return self._measurementObjects
     
     def scope_data_single(self, preset:str):
         """Return a DataFrame with the data for the given preset, or an empty DataFrame if no measurement is loaded"""
         return self._store.get_scoped_data_single(preset)
     
+    
+    
     def scope_data_multiple(self, preset:str)->dict[str, DataFrame]:
         """Return a dict of DataFrames with the data for the given preset, or an empty DataFrame if no measurement is loaded"""
         return self._store.get_scoped_data_multiple(preset)
+    
+    
+    
+    def get_information_bulk_import(self, content: list[UploadContainer]):
+        """returns a list of BulkImportInformation objects with the information of the imported measurements"""
+        return self._reader.read_input_files(content)
+    
+    
     
     
     

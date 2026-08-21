@@ -47,7 +47,12 @@ class DatabaseManager:
         else:
             raise ValueError(f"Invalid source '{self.source}' for database.")
         
+        
+        
     def _detect_source(self):
+        """detects the source of the database based on the environment variables and .env file
+        
+        returns source accordingly (databricks or csv)"""
         
         # check if app is deployed in DB environ
         if os.environ.get("DATABRICKS_HOST"):
@@ -99,26 +104,22 @@ class DatabaseManager:
     
     def load_vvt(self)-> DataFrame:
         """loads the vvt from the database"""
-        
         # returns the whole vvt table
         return self._vvtRepository.load_vvt()
+    
+    
     
     def list_saved_measurements(self):
         """lists all saved measurements in the database"""
         return self._metadataRepository.get_saved_measurements()
+    
+    
     
     def get_gold_data_by_id(self, measurement_ids: set):
         """retrieves gold data for a given measurement id"""
         
         #load all gold data for given ids
         goldDf = self._measurementRepository.get_gold_data_by_id(measurement_ids)
-        
-        ## change format to wide for easier use in the plots
-        #goldDf = goldDf.pivot_table(
-        #    index=['measurement_id','ReadTime'],
-        #    columns='channel',
-        #    values='value'
-        #    ).reset_index()
         
         # split the df according to the measurement_id
         measurementsDict = {}
@@ -181,17 +182,21 @@ class DatabaseManager:
         return False
     
     
+    
     def get_measurement_metadata(self, measurement_id)-> DataFrame:
         """Returns the metadata for a given id as a DataFrame"""
         return self._metadataRepository.get_measurement_metadata(measurement_id)
     
     
+    
     def check_admin(self, user:str)-> bool:
-        
+        """checks if the user is an admin"""
         return self._client.check_admin(user)
     
+    
+    
     def delete_measurements(self, ids: set):
-        
+        """deletes the measurements with the given ids from the database"""
         for id in ids:
             self._measurementRepository.delete_measurement(id)
             self._metadataRepository.delete_measurement_metadata(id)
@@ -200,5 +205,4 @@ class DatabaseManager:
     
     def admin_rewrite_vvt(self, new_vvt_df: DataFrame):
         """rewrites the vvt table in the database with the new vvt df"""
-        
         self._vvtRepository.rewrite_vvt(new_vvt_df)

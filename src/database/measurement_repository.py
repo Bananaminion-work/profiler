@@ -61,9 +61,11 @@ class MeasurementRepository:
         return df
         
     
+    ###################---------------------------REPO: csv---------------------------##################
     
     
 class MeasurementRepoCsv(MeasurementRepository):
+    
     def __init__(self):
         super().__init__()
         self._bronzePath = PROJECT_ROOT / "tests" / "fixtures" / "vps_bronze_data.csv"
@@ -72,7 +74,6 @@ class MeasurementRepoCsv(MeasurementRepository):
     
     def add_measurement(self, measurement_id: str, measurement: dict[str,Data]):
         """adds a measurement to the database (csv-files)"""
-        
         
         # get medallion-data-objects
         bronze = measurement.get("bronze")
@@ -112,7 +113,6 @@ class MeasurementRepoCsv(MeasurementRepository):
             
         else:
             raise WrongInputError("Measurement Data are none of type Data. Cannot add measurement to database.")
-        
             
         
         
@@ -127,11 +127,11 @@ class MeasurementRepoCsv(MeasurementRepository):
         
         # always return since its always a DataFrame even if its empty
         return self._format_measurement(filteredGoldDf) #type:ignore
-    
-    
+
     
     
     def delete_measurement(self, measurement_id):
+        """deletes a measurement from the database (csv-files)"""
         
         # delete measurement from all medallion csv files
         for path in [self._bronzePath, self._silverPath, self._goldPath]:
@@ -141,6 +141,7 @@ class MeasurementRepoCsv(MeasurementRepository):
                 df.to_csv(path, index=False)
         
         
+    ###################---------------------------REPO: databricks---------------------------##################
         
 
 class MeasurementRepoDatabricks(MeasurementRepository):
@@ -215,7 +216,9 @@ class MeasurementRepoDatabricks(MeasurementRepository):
     ##################---------------------------LONG FORMAT OF THE TABLE---------------------------##################    
     
     def add_measurement(self, measurement_id: str, measurement: dict[str,Data]):
+        """adds a measurement to the database (Databricks SQL endpoint) in long format
         
+        uses threading to upload all medallions in a separate thread for better performance"""
         
         # get medallion-data-objects
         bronze = measurement.get("bronze")
@@ -276,7 +279,9 @@ class MeasurementRepoDatabricks(MeasurementRepository):
         print(f"[DATABASE]  Measurement '{measurement_id}' saved successfully to all tables.")
         
         
+        
     def _upload_dataframe(self, table_name: str, df: DataFrame):
+        """helpingfunction for the actual upload"""
         
         # if no data to upload, return
         if df.empty:
@@ -296,6 +301,7 @@ class MeasurementRepoDatabricks(MeasurementRepository):
     
     
     def get_gold_data_by_id(self, measurement_ids: set)-> DataFrame:
+        """returns gold data for a given measurement id from the database (Databricks SQL endpoint)"""
         
         # return empty DataFrame if no measurement_ids are provided
         if not measurement_ids:
@@ -316,7 +322,7 @@ class MeasurementRepoDatabricks(MeasurementRepository):
             
             
     def delete_measurement(self, measurement_id):
-        
+        """deletes a measurement from the database (Databricks SQL endpoint)"""
         # create query to delete measurement from all tables
         for table in [self._bronzeTable, self._silverTable, self._goldTable]:
             query = f"DELETE FROM {table} WHERE measurement_id = '{measurement_id}'"

@@ -40,6 +40,7 @@ class Metadata:
     config_name:str = ""
     
     def set_user_input(self, metadata: dict[str,str]):
+        """sets the metadata attributes from a dictionary with the keys being the attribute names"""
         
         # set all metadata attributes
         self.oven_recipe = metadata.get(MetaNames.OVEN_RECIPE, "")
@@ -75,21 +76,39 @@ class Metadata:
         self.profile_name = metadata.get(MetaNames.PROFILE_NAME, "")
         self.comment = metadata.get(MetaNames.COMMENT, "")
         
+        
+        
     def set_source(self, source:str):
+        """sets the data source of the measurement"""
         self.data_source = source
         
+        
+        
     def set_datetime(self,date: datetime):
+        """sets the date and start time of the measurement"""
         self.date = date.strftime("%Y-%m-%d")
         self.start_time = date.strftime("%H:%M:%S")
         
+        
+        
     def get_metadata_dict(self) -> dict:
+        """returns the metadata as a dictionary with the keys being the attribute names"""
         return asdict(self)
     
+    
+    
     def set_description(self, description:str):
+        """sets the description of the measurement"""
         self.description = description
         
+        
+        
     def set_file_name(self, file_name:str):
+        """sets the file name of the measurement"""
         self.file_name = file_name
         
+        
+        
     def set_config_name(self, config_name:str):
+        """sets the config name of the measurement"""
         self.config_name = config_name

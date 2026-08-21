@@ -1,9 +1,9 @@
 from src.shared.channel_names import ChannelNames
 
 class PlotPresets():
+    """class that contains the presets for the plots, which are used to select which channels to display in the plots"""
     
     # dict with all presets
-    
     DEFAULT = "Default"
     DEFAULT_WITH_GRADIENTS_AND_ROLLING_AVG = "Default with Gradients and Rolling Avg"
     BOTTOM_HEATERS = "Bottom Heaters"

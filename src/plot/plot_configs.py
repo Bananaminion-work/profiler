@@ -204,6 +204,7 @@ class BasePlotConfig(ABC):
 
         
 class StandardConfig(BasePlotConfig):
+    """Standard configuration for plotting with a bottom legend."""
     
     configName = ConfigNames.STANDARD_BOTTOM
     
@@ -222,6 +223,7 @@ class StandardConfig(BasePlotConfig):
     
     
 class SideLegendConfig(BasePlotConfig):
+    """Configuration for plotting with a side legend."""
     
     configName = ConfigNames.STANDARD_SIDE
     

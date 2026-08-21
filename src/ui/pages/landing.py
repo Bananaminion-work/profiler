@@ -44,6 +44,14 @@ class LandingPage(BasePage):
                         on_click= self.handle_admin_check,
                     ).classes("w-72")
                     
+                    ui.separator().classes("my-4")
+                    
+                    ui.button(
+                        "Bulk-Import",
+                        icon="upload",
+                        on_click=lambda: start_analyzing("bulkImportPage"),
+                    ).classes("w-72")
+                    
                     
         def start_analyzing(pageName: str, mode: str = "user"):
             self.controller.init_database(self.dbType)

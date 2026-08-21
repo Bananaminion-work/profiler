@@ -2,6 +2,7 @@ from src.shared.product_names import ProductNames
 from src.shared.vvt_names import VvtNames
 
 class ProductVvtMapping():
+    """class that contains the mapping of products to vvt, which is used to select the correct vvt for a product"""
     
     @staticmethod
     def asdict():

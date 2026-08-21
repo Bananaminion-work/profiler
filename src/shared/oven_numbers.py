@@ -1,6 +1,7 @@
 from enum import Enum
 
 class OvenNumbers(str,Enum):
+    """class that holds the singel source of truth of the ovennumbers"""
     
     RTP2_1  = "Rtp2 PM5 - 5418"
     RTP2_2  = "Rtp2 PM6 Oven 1 - 5937"

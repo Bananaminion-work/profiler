@@ -15,6 +15,7 @@ class PlotFactory():
         self._load_configs()
     
     def _load_configs(self):
+        """dynamically loads all plot configs from the plot_configs module and stores them in a dict"""
         # path of the module
         moduleName = "src.plot.plot_configs"
         
@@ -29,9 +30,11 @@ class PlotFactory():
         for _, obj in inspect.getmembers(configModule, inspect.isclass):
             if obj.__module__ == moduleName and hasattr(obj, 'configName'):
                 self.configsDict[obj.configName] = obj()
+             
                 
     
     def create_plot_single(self, data: DataFrame, configName:str, offset:int):
+        """creates a plot for a single measurement with the given config and offset"""
         
         if configName not in self.configsDict:
             raise ValueError(f"Config {configName} not found in PlotFactory.")
@@ -51,6 +54,7 @@ class PlotFactory():
         
        
     def create_plot_multiple(self, dataDict: dict[str, DataFrame], offsetsDict: dict[str,int], configName:str):
+        """creates a plot for multiple measurements with the given config and offsets"""
         if configName not in self.configsDict:
             raise ValueError(f"Config {configName} not found in PlotFactory.")
         
@@ -79,4 +83,5 @@ class PlotFactory():
     
     
     def get_available_configs(self) -> list[str]:
+        """returns a list of available config names"""
         return list(self.configsDict.keys())

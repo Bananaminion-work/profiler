@@ -6,6 +6,7 @@ from typing import Optional
 # dataclass decorator allows easy conversion to dictionary
 @dataclass
 class Violation:
+    """class that provides the necessary information for a violation entry"""
     
     VVT_NAME = "VVT Name"
     VIOLATED_RULE = "Violated Rule"

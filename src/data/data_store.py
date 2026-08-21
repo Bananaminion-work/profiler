@@ -43,6 +43,7 @@ class DataStore:
         return cast(DataFrame, df[validChannels])
     
     def get_scoped_data_multiple(self, preset:str)->dict[str, DataFrame]:
+        """Return a dict of DataFrames with the data for the given preset, or an empty DataFrame if no measurement is loaded"""
         
         # check if a measurement is loaded
         if self.current_gold_data_for_plot is None:
@@ -57,7 +58,7 @@ class DataStore:
         
         scopedDict: dict[str, DataFrame] = {}
         
-        # cast the dataframes to only the columns in the preset
+        # cast the dataframes to only use the columns in the preset
         for key, df in self.current_gold_data_for_plot.items():
             validChannels = [col for col in channels if col in df.columns]
             scopedDict[key] = cast(DataFrame, df[validChannels])

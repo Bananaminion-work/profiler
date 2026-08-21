@@ -1,5 +1,5 @@
 from __future__ import annotations
-from src.shared.data_models import BronzeData, Data
+from src.shared.data_models import BronzeData
 import pandas as pd
 from pandas import DataFrame
 from src.shared.upload_container import UploadContainer
@@ -21,6 +21,7 @@ class BronzeCreator():
     csvData: DataFrame
     
     def create_bronze_object(self,uploadContainer: UploadContainer, source:str)->tuple[BronzeData, str, str]:
+        """takes in uploadcontainer and source, returns BronzeData object, description and config name"""
         
         # if else check for source is made here
         if source == "Rehm-recorder":
@@ -51,6 +52,8 @@ class BronzeCreator():
     
     
     def extract_zip(self,upload : UploadContainer):
+        """extracts the zip file and saves the xml and csv content to the class attributes"""
+        
         self.upload = upload
         
         zipBuffer = BytesIO(self.upload.content)
@@ -71,6 +74,7 @@ class BronzeCreator():
     
     
     def parse_xml(self):
+        """parses the xml content and saves the id-name-pairs to a dictionary"""
         
         # if no content to work with, raise error
         if self.xmlContent is None:
@@ -107,6 +111,7 @@ class BronzeCreator():
     
     
     def read_description(self):
+        """reads the description from the xml content and saves it to the description attribute"""
         
         # check if xml content is found
         if self.xmlContent is None:
@@ -125,6 +130,8 @@ class BronzeCreator():
     
     
     def read_config_name(self):
+        """reads the config name from the xml content and saves it to the config_name attribute"""
+        
         # check if xml content is found
         if self.xmlContent is None:
             raise NoDataToWorkWithError("No XML content found in the uploaded zip file.")
@@ -142,6 +149,7 @@ class BronzeCreator():
     
     
     def parse_csv(self):
+        """parses the CSV content and saves it to the csvData attribute"""
         
         if self.csvContent is None:
             raise NoDataToWorkWithError("No CSV content found in the uploaded zip file.")

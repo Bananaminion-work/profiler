@@ -9,6 +9,7 @@ class GoldCreator():
     goldDf: DataFrame   
     
     def create_gold_object(self, silver: SilverData, source: str)->GoldData:
+        """takes in SilverData object and source, returns GoldData object"""
         
         # raise error if no SilverData is provided
         if not isinstance(silver, SilverData): 

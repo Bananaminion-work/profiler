@@ -47,6 +47,10 @@ class DatabricksClient:
         
         
     def _connect(self):
+        """establishes a connection to the Databricks SQL endpoint
+        
+        in this case the SQL-Warehouse with the given path and host in the .env file"""
+        
         try:
             self._connection = sql.connect(
                 server_hostname=self.host,
@@ -59,7 +63,10 @@ class DatabricksClient:
             raise
     
     
+    
     def _get_cursor(self):
+        """returns a cursor from the connection, reconnects if connection is closed"""
+        
         try:
             # connect if not connected
             if self._connection is None or not self._connection.open:
@@ -73,6 +80,7 @@ class DatabricksClient:
         
         
     def close(self):
+        """closes the connection to the Databricks SQL endpoint"""
         if self._connection and self._connection.open:
             self._connection.close()
             self._connection = None
@@ -80,6 +88,7 @@ class DatabricksClient:
         
         
     def get_data(self, query:str) -> DataFrame:
+        """executes a SELECT query and returns the result as a DataFrame"""
         
         try:
             # get cursor
@@ -97,6 +106,8 @@ class DatabricksClient:
         
         
     def execute_query(self, query:str):
+        """executes a query (INSERT, UPDATE, DELETE, etc.) on the Databricks SQL endpoint"""
+        
         try:
             # get cursor
             cursor = self._get_cursor()
@@ -110,6 +121,9 @@ class DatabricksClient:
     
     ################# ------ UNUSED VERSION ------ #################
     def execute_batch_insert(self, table_name: str, records: list, columns: Optional[list] = None):
+        """chunked upload, uses INSERT INTO ... VALUES (...) for each chunk, with a default chunk size of 30k records
+        
+        CURRENTLY UNUSED BECAUSE OF PERFORMANCE ISSUES, USE bulk_insert_copy_into() or bulk_insert_parquet() INSTEAD"""
 
         # chunk size, lenth of records, and column string for SQL query
         chunk_size = 30000
@@ -178,11 +192,13 @@ class DatabricksClient:
             raise
             
             
+            
     def bulk_insert_copy_into(
         self,
         table_name: str,
         df: "DataFrame",
         volume_path: str = TableNames.EXCHANGE):
+        """bulk insert with COPY INTO and csv as temporary file"""
 
         # 1) Eindeutige ID generieren (8-stellige Zufallszahl)
         unique_id = random.randint(10_000_000, 99_999_999)
@@ -261,11 +277,13 @@ class DatabricksClient:
             raise
             
             
+            
     def bulk_insert_parquet(
         self,
         table_name: str,
         df: "DataFrame",
         volume_path: str = TableNames.EXCHANGE):
+        """bulk insert with COPY INTO and parquet as temporary file"""
 
         # 1) Eindeutige ID generieren (8-stellige Zufallszahl)
         unique_id = random.randint(10_000_000, 99_999_999)

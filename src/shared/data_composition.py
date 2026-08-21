@@ -16,9 +16,11 @@ class DataComposition:
         self._zeropoints = ZeropointContainer()
         
     def set_metadata(self, metadata: Metadata):
+        """sets the metadata object of the DataComposition"""
         self._metadata = metadata
         
     def set_medallion_data(self, medallionData: dict[str,Data]):
+        """sets the medallion data dictionary of the DataComposition"""
         if len(medallionData)!= 3:
             raise WrongInputError(f"Dictionary for the method set_medallion_data hat a length of {len(medallionData)} instead of 3.")
         
@@ -30,16 +32,21 @@ class DataComposition:
             self._medallionData = medallionData
           
     def set_zeropoint_container(self, zeropoints: ZeropointContainer):
+        """sets the zeropoint container of the DataComposition"""
         self._zeropoints = zeropoints
                 
     def get_medallion_data(self) ->dict[str,Data]:
+        """returns the medallion data dictionary of the DataComposition"""
         return self._medallionData
            
     def get_metadata(self) -> Metadata:
+        """returns the metadata object of the DataComposition"""
         return self._metadata
     
     def get_zeropoint_container(self) -> ZeropointContainer:
+        """returns the zeropoint container of the DataComposition"""
         return self._zeropoints
     
     def get_gold_data(self) -> DataFrame:
+        """returns the gold data as a DataFrame"""
         return self._medallionData["gold"].get_dataframe()

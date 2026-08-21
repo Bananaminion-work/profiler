@@ -1,6 +1,9 @@
 from src.shared.zeropoint_names import ZeropointNames
 
 class ZeropointContainer:
+    """class that works as a container for the zeropoints
+    
+    add a name here in self.zeropoints as well as in zeropoint_names.py to add a new zeropoint"""
     
     zeropoints:dict[str,int]
     

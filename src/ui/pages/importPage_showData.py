@@ -269,7 +269,7 @@ class ImportPage_showData(SubPage):
     
 
     async def on_save_click(self, saveButton) -> None:
-        
+        """handles the save button click event, checks for required fields and calls the controller to save the metadata"""
         
         # fields that must have a value
         requiredFields = {
@@ -339,7 +339,7 @@ class ImportPage_showData(SubPage):
     
     
     def _show_duplicate_dialog(self):
-        """Zeichnet das Warn-Popup"""
+        """shows a dialog as popup if there is a duplicate measurement in the database"""
         with ui.dialog() as dialog, ui.card():
             ui.label("A measurement with similar metadata (±1 hour) already exists.")
             ui.label("Do you really want to save it anyway?")
@@ -389,6 +389,7 @@ class ImportPage_showData(SubPage):
         self.config = ConfigNames.STANDARD_BOTTOM
         
     def change_vvt_preset(self):
+        """selects the vvt preset depending on the product name"""
                
         product_vvt_mapping = self.controller.load_product_vvt_mapping()
         

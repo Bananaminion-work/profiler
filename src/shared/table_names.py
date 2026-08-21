@@ -1,4 +1,9 @@
 class TableNames():
+    """this class contains the table names for Databricks
+    
+    to migration or first deployment, please change _user to your own nt-user
+    
+    therefore write "x_usr_<nt-user>" and the paths of the tables will be set automatically"""
     
     _user           = "x_usr_dea6rt"
     

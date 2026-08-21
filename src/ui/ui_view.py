@@ -21,6 +21,7 @@ class UiView:
 
 
     def switch_page(self, pageName: str):
+        """switches the current page to the given pageName, if it exists in the _pages dictionary"""
         pageToShow = self._pages.get(pageName)
         
         if pageToShow:# is available
@@ -32,6 +33,7 @@ class UiView:
             raise WrongInputError(f"The given string: {pageName} was not found in the dictionary of available pages.")
     
     def get_page(self, pageName:str):
+        """returns the page instance corresponding to the given pageName, if it exists in the _pages dictionary"""
         pageToGet = self._pages.get(pageName)
         
         if pageToGet:
@@ -41,7 +43,7 @@ class UiView:
             raise WrongInputError(f"The given string: {pageName} was not found")
         
     def _load_pages(self):
-        
+        """dynamically loads all page classes from the pages directory and returns a dictionary of page instances with their pageName as keys"""
         pagesDict = {}
         
         # get direktory

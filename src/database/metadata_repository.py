@@ -36,11 +36,13 @@ class MetadataRepository:
     
     
 class MetadataRepoCsv(MetadataRepository):
+    
     def __init__(self):
         super().__init__()
         self._pathToCsv = PROJECT_ROOT / "tests" / "fixtures" / "vps_metadata.csv"
     
     def save_measurement_metadata(self, metadata:Metadata, measurement_id: str):
+        """saves the metadata of a measurement to the csv file"""
         
         # get metadata as dict
         metaDict = metadata.get_metadata_dict()
@@ -88,7 +90,7 @@ class MetadataRepoCsv(MetadataRepository):
     
     
     def get_measurement_metadata(self, measurement_id):
-        
+        """returns the metadata for a given measurement_id as a DataFrame"""
         metaDf = self.get_saved_measurements()
         
         if metaDf.empty or "measurement_id" not in metaDf.columns:
@@ -99,12 +101,21 @@ class MetadataRepoCsv(MetadataRepository):
     
     
     def delete_measurement_metadata(self, measurement_id):
-        pass
-    
+        """deletes the metadata for the given id from the csv file"""
+        metaDf = self.get_saved_measurements()
+        
+        if metaDf.empty or "measurement_id" not in metaDf.columns:
+            return
+        
+        # filter out the row with the given measurement_id
+        metaDf = metaDf[metaDf["measurement_id"] != measurement_id]
+        
+        # save the updated DataFrame back to the CSV file
+        metaDf.to_csv(self._pathToCsv, index=False)
     
     
     def get_saved_measurements(self) -> DataFrame:
-        
+        """returns all saved measurements as a DataFrame"""
         # read in the content of the csv as a dataframe and return it
         if self._pathToCsv.exists():
             metaDf = pd.read_csv(self._pathToCsv)
@@ -148,7 +159,7 @@ class MetadataRepoDatabricks(MetadataRepository):
         self._metadataTable = TableNames.METADATA
     
     def save_measurement_metadata(self, metadata, measurement_id: str):
-        
+        """saves the metadata of a measurement to the database (Databricks SQL endpoint)"""
         # get metadata as dict
         metaDict = metadata.get_metadata_dict()
         metaDict[MetaNames.MEASUREMENT_ID] = measurement_id
@@ -193,8 +204,7 @@ class MetadataRepoDatabricks(MetadataRepository):
 
     
     def get_measurement_metadata(self, measurement_id):
-        
-        
+        """returns the metadata for a given measurement_id as a DataFrame"""
         #create the query
         query = f"SELECT * FROM {self._metadataTable} WHERE measurement_id = '{measurement_id}'"
         metaDf = self.client.get_data(query)
@@ -215,13 +225,13 @@ class MetadataRepoDatabricks(MetadataRepository):
         return metaDf
     
     def delete_measurement_metadata(self, measurement_id):
-        
+        """deletes the metadata for the given measurement_id from the database (Databricks SQL endpoint)"""
         #create query
         query = f"DELETE FROM {self._metadataTable} WHERE measurement_id = '{measurement_id}'"
         self.client.execute_query(query)
     
     def get_saved_measurements(self) -> DataFrame:
-            
+        """returns all saved measurements as a DataFrame"""
         # create query
         query = f"SELECT * FROM {self._metadataTable}"
         metaDf = self.client.get_data(query)
@@ -240,56 +250,3 @@ class MetadataRepoDatabricks(MetadataRepository):
                 errors='coerce'
                 ).dt.time #type:ignore
         return metaDf
-            
-            
-                    
-    #def create_metadata_table_if_not_exists(self):
-    #    #create types
-    #    sqlTypes = {
-    #        MetaNames.MEASUREMENT_ID: "STRING",
-    #        MetaNames.DATE: "DATE",
-    #        MetaNames.START_TIME: "STRING", 
-    #        MetaNames.OVEN_NR: "INT",
-    #        MetaNames.LOAD_PROFILE: "DOUBLE",
-    #        MetaNames.TEST_COOLER_FLAG: "BOOLEAN",
-    #        MetaNames.COOLER_COUNT_ON_TRAY: "INT",
-    #    }
-    #    
-    #    #create list of float values
-    #    floatColumns = [
-    #        MetaNames.INJECTION_1, MetaNames.INJECTION_2, MetaNames.INJECTION_3, MetaNames.INJECTION_4,
-    #        MetaNames.WAITING_1, MetaNames.WAITING_2, MetaNames.WAITING_3, MetaNames.WAITING_4,
-    #        MetaNames.COOLING_FREQ_1, MetaNames.COOLING_FREQ_2, MetaNames.COOLING_FREQ_3, MetaNames.COOLING_FREQ_4,
-    #        MetaNames.COOLING_TIME_1, MetaNames.COOLING_TIME_2, MetaNames.COOLING_TIME_3, MetaNames.COOLING_TIME_4
-    #    ]
-    #    
-    #    # apply type
-    #    for col in floatColumns:
-    #        sqlTypes[col] = "DOUBLE"
-    #        
-    #    # order the columns
-    #    columnOrder = [
-    #        MetaNames.MEASUREMENT_ID, MetaNames.DATE, MetaNames.START_TIME,
-    #        MetaNames.DATA_SOURCE, MetaNames.OVEN_RECIPE, MetaNames.OVEN_NR,
-    #        MetaNames.PRODUCT, MetaNames.LOAD_PROFILE, MetaNames.POSITION_MEASUREMENT_COOLER,
-    #        MetaNames.TEST_COOLER_FLAG, MetaNames.COOLER_COUNT_ON_TRAY, MetaNames.NOZZLEFIELD,
-    #        MetaNames.PROFILE_NAME, MetaNames.COMMENT
-    #    ] + floatColumns
-    #    
-    #    # create sql block
-    #    columnsSql = []
-    #    for col in columnOrder:
-    #        colType = sqlTypes.get(col, "STRING")  # default to STRING if not found
-    #        columnsSql.append(f"{col} {colType}")
-    #    
-    #    # create sql string    
-    #    columnsSqlStr = ",\n".join(columnsSql)
-    #    
-    #    # create query
-    #    query = f"""
-    #    CREATE TABLE IF NOT EXISTS {self._metadataTable} (
-    #        {columnsSqlStr}
-    #    )
-    #    """
-    #    
-    #    self.client.execute_query(query)

@@ -141,7 +141,7 @@ class PlotPage_showData(SubPage):
                 
                 
     def update_vvt_table(self):
-        
+        """callback to let specialist draw the vvt-table into the container"""
         # check if table already exists
         if not hasattr(self, 'tableContainer') or self.tableContainer.is_deleted:
             return  # controller is not set yet, do nothing

@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class ConditionNames(str,Enum):
+    """names of the conditions that can be used to check data"""
     
     MAX = "max"
     MIN = "min"

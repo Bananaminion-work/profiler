@@ -6,8 +6,13 @@ from src.shared.channel_names import ChannelNames
 from src.shared.condition_names import ConditionNames
 from src.shared.vvt_names import VvtNames
 from src.shared.vvt_scopes import VvtScopes
+
 @dataclass
 class VvtTableRegistry:
+    """dataclass to hold the registry information for a column in the vvt table
+    
+    Also is used as a containerclass"""
+    
     label: str
     editable: bool = True
     widget: str = "text"
