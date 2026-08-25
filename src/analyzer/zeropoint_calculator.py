@@ -9,7 +9,8 @@ class ZeropointCalculator:
     
     df : DataFrame
     
-    def __init__(self):
+    def __init__(self,warnings):
+        self._warnings = warnings
         self.df = DataFrame()
     
     def calculate_zeropoints(self, df: DataFrame):
@@ -39,7 +40,7 @@ class ZeropointCalculator:
         
         # check if column is present in the dataframe and has values, else return 0
         if ChannelNames.INLET_BULKHEAD_OPEN not in self.df.columns or not self.df[ChannelNames.INLET_BULKHEAD_OPEN].any():
-            ui.notify("No inlet-bulkhead-zeropoint was found")
+            self._warnings.warn("No inlet-bulkhead-zeropoint was found")
             return 0
         
         # only the first 300 rows + reset index to directly access the offset of the zeropoint
@@ -50,7 +51,7 @@ class ZeropointCalculator:
         
         # if no rows found, raise error
         if foundRows.empty:
-            ui.notify("No inlet-bulkhead-zeropoint was found")
+            self._warnings.warn("No inlet-bulkhead-zeropoint was found")
             return 0
         
         # return the offset of the last found row as int
@@ -63,7 +64,7 @@ class ZeropointCalculator:
         """calculates the offset to ReadTime of the last found row where outlet bulkhead is 1, searching only in the first 300 rows"""
         # check if column is present in the dataframe
         if ChannelNames.OUTLET_BULKHEAD_OPEN not in self.df.columns or not self.df[ChannelNames.OUTLET_BULKHEAD_OPEN].any():
-            ui.notify("No outlet-bulkhead-zeropoint was found")
+            self._warnings.warn("No outlet-bulkhead-zeropoint was found")
             return 0
         
         # reset index to directly access the offset of the zeropoint
@@ -74,7 +75,7 @@ class ZeropointCalculator:
         
         # if no rows found, raise error
         if foundRows.empty:
-            ui.notify("No outlet-bulkhead-zeropoint was found")
+            self._warnings.warn("No outlet-bulkhead-zeropoint was found")
             return 0
         
         # return the offset of the last found row as int
@@ -88,7 +89,7 @@ class ZeropointCalculator:
         """calculates the offset to ReadTime of the first injection from the 10. row onwards, where St_MediumPump is 1"""
         
         if ChannelNames.MEDIUM_PUMP not in self.df.columns or not self.df[ChannelNames.MEDIUM_PUMP].any():
-            ui.notify("No first injection zeropoint was found")
+            self._warnings.warn("No first injection zeropoint was found")
             return 0
         
         rowOffset = 10
@@ -99,7 +100,7 @@ class ZeropointCalculator:
         foundRows = dfSection[dfSection[ChannelNames.MEDIUM_PUMP] == 1]
         
         if foundRows.empty:
-            ui.notify("No first injection zeropoint was found")
+            self._warnings.warn("No first injection zeropoint was found")
             return 0
         
         # take the first occurance and add the offset to get the correct offset to ReadTime
@@ -111,7 +112,7 @@ class ZeropointCalculator:
         """calculates tho offset to ReadTime of the first row where temperature (CH1) is above 235°C"""
         
         if ChannelNames.CH1 not in self.df.columns or not self.df[ChannelNames.CH1].any():
-            ui.notify("No zeropoint above 235°C was found")
+            self._warnings.warn("No zeropoint above 235°C was found")
             return 0
         
         # take all rows + reset index to directly access the offset of the zeropoint
@@ -120,7 +121,7 @@ class ZeropointCalculator:
         
         
         if foundRows.empty:
-            ui.notify("No zeropoint above 235°C was found")
+            self._warnings.warn("No zeropoint above 235°C was found")
             return 0
 
         return int(foundRows.index[0])
@@ -137,7 +138,7 @@ class ZeropointCalculator:
         # check if necessary columns are present in the dataframe
         required_columns = [ChannelNames.CH1, ChannelNames.VACUUM]
         if not all(col in self.df.columns for col in required_columns):
-            ui.notify(f"Required columns for \"{ZeropointNames.VENTILATE_2}\" zeropoint calculation are missing in the dataframe.")
+            self._warnings.warn(f"Required columns for \"{ZeropointNames.VENTILATE_2}\" zeropoint calculation are missing in the dataframe.")
             return 0
         
         # copy df
@@ -166,7 +167,7 @@ class ZeropointCalculator:
         ]
         
         if foundRows.empty:
-            ui.notify(f'No "{ZeropointNames.VENTILATE_2}" zeropoint was found')
+            self._warnings.warn(f'No "{ZeropointNames.VENTILATE_2}" zeropoint was found')
             return 0
         
         return int(foundRows.index[0])

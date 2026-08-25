@@ -12,7 +12,8 @@ class ViolationDetector:
     _vvt : DataFrame
     conditionHandlers: dict[str, Callable]
     
-    def __init__(self):
+    def __init__(self,warnings):
+        self._warnings = warnings
         self._vvt = pd.DataFrame()
         self.conditionHandlers = {
             "max": self.handle_max,
@@ -80,7 +81,7 @@ class ViolationDetector:
             scope = rule.get('scope', 'all')
             
             if channel not in df.columns:
-                ui.notify(f"Channel with the name {channel} is not in the given Dataframe to analyze.")
+                self._warnings.warn(f"Channel with the name {channel} is not in the given Dataframe to analyze.")
                 continue
             
             # get handler according to the condition to check
@@ -94,14 +95,14 @@ class ViolationDetector:
                     df_to_check = self.crop_dataframe_while_process(df)
                     
                     if df_to_check.empty:
-                        ui.notify(f"No process phases found in the measurement data, cannot apply rules with process scope for channel {channel}.")
+                        self._warnings.warn(f"No process phases found in the measurement data, cannot apply rules with process scope for channel {channel}.")
                         continue
                     
                 elif scope == 'outlet_bulkhead_open':
                     df_to_check = self.crop_dataframe_bulkhead_open(df)
                     
                     if df_to_check.empty:
-                        ui.notify(f"No outlet_bulkhead_open phases found in the measurement data, cannot apply rules with outlet_bulkhead_open scope for channel {channel}.")
+                        self._warnings.warn(f"No outlet_bulkhead_open phases found in the measurement data, cannot apply rules with outlet_bulkhead_open scope for channel {channel}.")
                         continue
                 
                 # analyze violations
@@ -166,7 +167,7 @@ class ViolationDetector:
         # find base of gradient
         baseChannel = channel.removesuffix('_gradient')
         if baseChannel not in df.columns:
-            ui.notify(f"Base channel {baseChannel} not found in measurement data, cannot apply rate_in_range condition for channel {channel}.")
+            self._warnings.warn(f"Base channel {baseChannel} not found in measurement data, cannot apply rate_in_range condition for channel {channel}.")
             return DataFrame()
         # select rows where base channel is between param1 and param2
         dfSelection = df[(df[baseChannel] <= param1) & (df[baseChannel] >= param2)]
@@ -206,7 +207,7 @@ class ViolationDetector:
         
         #check if the channels are present in the dataframe
         if ChannelNames.INLET_BULKHEAD_OPEN not in df.columns or ChannelNames.OUTLET_BULKHEAD_OPEN not in df.columns:
-            ui.notify(f"Columns of Bulheads not found in measurement data, cannot apply rules with process scope.")
+            self._warnings.warn(f"Columns of Bulheads not found in measurement data, cannot apply rules with process scope.")
             return DataFrame()
         
         # get index where PrcChbInletBulkheadOpen changes from 1 to zero
@@ -236,7 +237,7 @@ class ViolationDetector:
         
         # check if column exists
         if ChannelNames.OUTLET_BULKHEAD_OPEN not  in df.columns:
-            ui.notify(f"Column '{ChannelNames.OUTLET_BULKHEAD_OPEN}' not found in measurement data, cannot apply rules with outlet_bulkhead_open scope.")
+            self._warnings.warn(f"Column '{ChannelNames.OUTLET_BULKHEAD_OPEN}' not found in measurement data, cannot apply rules with outlet_bulkhead_open scope.")
             return DataFrame()
         
         # find index where bulhead changes from 0 to 1
@@ -325,13 +326,13 @@ class ViolationDetector:
         
         # check if positioning channel is in dataframe
         if ChannelNames.OUTLET_BULKHEAD_OPEN not in df.columns:
-            ui.notify(f"Column '{ChannelNames.OUTLET_BULKHEAD_OPEN}' not found in measurement data, cannot apply main_vacuum_minimum condition.")
+            self._warnings.warn(f"Column '{ChannelNames.OUTLET_BULKHEAD_OPEN}' not found in measurement data, cannot apply main_vacuum_minimum condition.")
             return []
         
         # find index where bulkhead is 1 for the first time
         bulheadRows = df[df[ChannelNames.OUTLET_BULKHEAD_OPEN].diff() == 1]
         if bulheadRows.empty:
-            ui.notify(f"No rows with '{ChannelNames.OUTLET_BULKHEAD_OPEN}' equal to 1 found in measurement data, cannot apply main_vacuum_minimum condition.")
+            self._warnings.warn(f"No rows with '{ChannelNames.OUTLET_BULKHEAD_OPEN}' equal to 1 found in measurement data, cannot apply main_vacuum_minimum condition.")
             return []
         
         # get first index where bulkhead is open
@@ -347,7 +348,7 @@ class ViolationDetector:
         gradientIdx = dfSelection.index[dfSelection['gradient'] <= -20]
         
         if gradientIdx.empty:
-            ui.notify(f"No significant decrease in vacuum channel {channel} found before bulkhead opening, cannot apply main_vacuum_minimum condition.")
+            self._warnings.warn(f"No significant decrease in vacuum channel {channel} found before bulkhead opening, cannot apply main_vacuum_minimum condition.")
             return []
         
         # start from the last index to walk backwards

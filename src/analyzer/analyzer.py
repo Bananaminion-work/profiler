@@ -2,6 +2,8 @@ from src.analyzer.zeropoint_calculator import ZeropointCalculator
 from src.analyzer.violation_detector import ViolationDetector
 from pandas import DataFrame
 
+from src.shared.warning_collector import WarningCollector
+
 
 class Analyzer:
     
@@ -9,8 +11,9 @@ class Analyzer:
     _violation : ViolationDetector
     
     def __init__(self):
-        self._zero = ZeropointCalculator()
-        self._violation = ViolationDetector()
+        self._warnings = WarningCollector()
+        self._zero = ZeropointCalculator(self._warnings)
+        self._violation = ViolationDetector(self._warnings)
     
     @property
     def vvt_set(self)->bool:
@@ -34,3 +37,8 @@ class Analyzer:
         
         violations = self._violation.detect_violations(gold, vvtName)
         return violations
+    
+    
+    def flush_warnings(self):
+        """flushes the warnings to the UI"""
+        self._warnings.flush()

@@ -216,6 +216,9 @@ class AppController:
         #analyze data and save results in current session measurement
         zeropointList = self.analyzer.analyze_zeropoints(goldData)
         
+        # show warnings if there are any
+        self.analyzer.flush_warnings()
+        
         #save zeropoints in current session
         self.data.current_import_measurement.set_zeropoint_container(zeropointList)
         
@@ -531,7 +534,10 @@ class AppController:
             # fetch the data in a separate thread to avoid blocking the UI
             await run.io_bound(self.fetch_plot_data)
             
-            # switch page
+            # show warnings if there are any
+            self.analyzer.flush_warnings()
+            
+            # navigate to plot page
             self.handle_navigation_request('plot-show')
             
         except Exception as e:
@@ -593,9 +599,6 @@ class AppController:
                 self.data.measurement_name_mapping[str(id)] = f"({current_counts[name]}) {name}"
             else:
                 self.data.measurement_name_mapping[str(id)] = name
-        
-        # navigate to plot page
-        self.handle_navigation_request('plot-show')
         
         
         
