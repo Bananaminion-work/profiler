@@ -1,7 +1,8 @@
-nicegui
-databricks-sdk
+databricks_sdk
+databricks-sql
 databricks-sql-connector
-requests
+nicegui
+numpy<2.0.0
 pandas
-plotly==6.7.0
-pyarrow
+plotly
+python-dotenv

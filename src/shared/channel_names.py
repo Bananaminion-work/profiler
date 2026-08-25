@@ -1,7 +1,4 @@
-from enum import Enum
-
-
-class ChannelNames(str, Enum):
+class ChannelNames(str):
     """This class contains the names which the code uses from the silverobject on everywhere else
     
     here the names are set once and for all!"""
@@ -72,4 +69,4 @@ class ChannelNames(str, Enum):
     @classmethod
     def get_options(cls):
         """Return a list of available preset names"""
-        return list(cls)
+        return [value for name, value in cls.__dict__.items() if not name.startswith('__') and not callable(value)]
