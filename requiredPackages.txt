@@ -5,3 +5,4 @@ numpy<2.0.0
 pandas
 plotly
 python-dotenv
+aiohttp<3.10
