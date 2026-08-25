@@ -1,0 +1,7 @@
+databricks_sdk
+databricks-sql
+nicegui
+numpy<2.0.0
+pandas
+plotly
+python-dotenv

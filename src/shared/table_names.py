@@ -5,7 +5,7 @@ class TableNames():
     
     therefore write "x_usr_<nt-user>" and the paths of the tables will be set automatically"""
     
-    _user           = "x_usr_dea6rt"
+    _user           = "x_usr_cmo3wo"
     
     BRONZE          = f"bmlpdp_x_me_emea_d.{_user}.vps_bronze_measurements"
     SILVER          = f"bmlpdp_x_me_emea_d.{_user}.vps_silver_measurements"

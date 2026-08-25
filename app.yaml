@@ -7,4 +7,4 @@ env:
   - name: "DATABRICKS_HOST"
     value: "adb-4236431387455605.5.azuredatabricks.net"
   - name: "DATABRICKS_PAT"
-    valueFrom: "db_token_vps"
+    valueFrom: "db_token_VPS"
