@@ -302,16 +302,16 @@ class AppController:
             # run the saving in a separate thread
             await run.io_bound(self._save_measurement_to_database)
         
-            # if saving is successful, show notification
-            ui.notify("Measurement saved successfully!", color="positive")
-            self.handle_navigation_request('landing')
-            return True
-        
         except Exception as e:
             # if failiure in db happens
             print(f"APPCONTROLLER: Error while saving measurement to database: {e}")
             ui.notify(f"Error while saving measurement to database: {e}", color="negative")
             return False
+
+        # if saving is successful, show notification
+        ui.notify("Measurement saved successfully!", color="positive")
+        self.handle_navigation_request('landing')
+        return True
 
         
         
@@ -344,11 +344,13 @@ class AppController:
         
         try:
             await run.io_bound(self._save_measurement_to_database)
-            ui.notify("Measurement force-saved successfully!", color="positive")
-            self.handle_navigation_request('landing')
         
         except Exception as e:
             ui.notify(f"Error while force-saving measurement to database: {e}", color="negative")
+            return
+
+        ui.notify("Measurement force-saved successfully!", color="positive")
+        self.handle_navigation_request('landing')
     
     
     def load_vvt_options(self)-> list[str]:

@@ -52,6 +52,10 @@ class DatabricksClient:
         in this case the SQL-Warehouse with the given path and host in the .env file"""
         
         try:
+
+            #troubleshoot:
+            os.environ['HTTPS_PROXY'] = 'http://rb-proxy-de.bosch.com:8080'
+
             self._connection = sql.connect(
                 server_hostname=self.host,
                 http_path=self.http_path,

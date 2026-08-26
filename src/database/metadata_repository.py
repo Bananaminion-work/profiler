@@ -140,7 +140,6 @@ class MetadataRepoCsv(MetadataRepository):
             
             # convert the datatypes from string in the csv as needed
             type_conversions = {
-                MetaNames.LOAD_PROFILE: float,
                 MetaNames.TEST_COOLER_FLAG: bool,
                 MetaNames.COOLER_COUNT_ON_TRAY: int
             }
