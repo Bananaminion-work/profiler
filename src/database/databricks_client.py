@@ -33,7 +33,7 @@ class DatabricksClient:
         # delete the two lines above (or comment them out) if you want to use the App with public tables
         
         # errorhandling if connection fails
-        if not self.token or not self.http_path or not self.host or self.token == "db_token_vps":
+        if not self.token or not self.http_path or not self.host or self.token == "db_pat_vps":
             print("critical error: .env not loaded correctly or variables are missing")
             print(f"used .env: {dotenv_path} (exists={dotenv_path.exists()})")
             print(f"attempted to connect to: host={self.host}, http_path={self.http_path}")
