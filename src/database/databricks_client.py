@@ -29,6 +29,9 @@ class DatabricksClient:
         os.environ.pop('DATABRICKS_CLIENT_ID', None)
         os.environ.pop('DATABRICKS_CLIENT_SECRET', None)
         os.environ.pop('DATABRICKS_TOKEN', None)
+
+        #always initialize _connection before any return
+        self._connection = None
         
         # errorhandling if connection fails
         if not self.token or not self.http_path or not self.host or self.token == "db_pat_vps":
@@ -39,7 +42,6 @@ class DatabricksClient:
             return
         
         # connect initially
-        self._connection = None
         self._connect()
         
         
