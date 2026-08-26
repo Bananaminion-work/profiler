@@ -24,6 +24,9 @@ class DatabricksClient:
         self.token = os.environ.get('DATABRICKS_PAT')
         self.http_path = os.environ.get('HTTP_PATH')
         self.host = os.environ.get('DATABRICKS_HOST')
+
+        print(f"[DEBUG] DATABRICKS_PAT is: type={type(self.token)}, "
+        f"value={'None' if self.token is None else f'len={len(self.token)}, starts_with={self.token[:4]}...'}")
         
         # delete the variables coming from Databricks to only use the PAT
         os.environ.pop('DATABRICKS_CLIENT_ID', None)
