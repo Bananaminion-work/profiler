@@ -19,25 +19,23 @@ class DatabricksClient:
         
         # Load .env from project root (../.. from src/database/databricks_client.py)
         dotenv_path = Path(__file__).resolve().parents[2] / '.env'
-        load_dotenv(dotenv_path=dotenv_path)
+        load_dotenv(dotenv_path=dotenv_path) #no op if file missing
         
         self.token = os.environ.get('DATABRICKS_PAT')
         self.http_path = os.environ.get('HTTP_PATH')
         self.host = os.environ.get('DATABRICKS_HOST')
         
-        
         # delete the variables coming from Databricks to only use the PAT
         os.environ.pop('DATABRICKS_CLIENT_ID', None)
         os.environ.pop('DATABRICKS_CLIENT_SECRET', None)
         os.environ.pop('DATABRICKS_TOKEN', None)
-        # delete the two lines above (or comment them out) if you want to use the App with public tables
         
         # errorhandling if connection fails
         if not self.token or not self.http_path or not self.host or self.token == "db_pat_vps":
             print("critical error: .env not loaded correctly or variables are missing")
             print(f"used .env: {dotenv_path} (exists={dotenv_path.exists()})")
             print(f"attempted to connect to: host={self.host}, http_path={self.http_path}")
-            print(f"token={self.token}")
+            print(f"token={'SET' if self.token else 'MISSING'}")
             return
         
         # connect initially
@@ -53,8 +51,9 @@ class DatabricksClient:
         
         try:
 
-            #troubleshoot:
-            os.environ['HTTPS_PROXY'] = 'http://rb-proxy-de.bosch.com:8080'
+            #use proxy while local
+            if Path(__file__).resolve().parents[2].joinpath('.env').exists():
+                os.environ['HTTPS_PROXY'] = 'http://rb-proxy-de.bosch.com:8080'
 
             self._connection = sql.connect(
                 server_hostname=self.host,
