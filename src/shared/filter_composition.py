@@ -17,3 +17,4 @@ class FilterComposition:
     comment: str = ""
     description: str = ""
     file_name: str = ""
+    config_name: str = ""

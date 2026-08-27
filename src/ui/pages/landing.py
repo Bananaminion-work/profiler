@@ -9,7 +9,7 @@ class LandingPage(BasePage):
     def render(self, parent: ui.column) -> None:
         with parent:
             
-            ui.label("Welcome to the Temp-Profiler!").classes("w-full text-center text-2xl font-bold")
+            ui.label("Welcome to the Profile-Analyzer!").classes("w-full text-center text-2xl font-bold")
             
             with ui.column().classes("items-center gap-4 mx-auto my-8"):
                 ui.label("Choose your action:").classes("text-lg")

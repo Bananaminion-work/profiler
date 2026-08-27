@@ -18,6 +18,7 @@ class PlotPage_selectData(SubPage):
     comment: str = ""
     description: str = ""
     file_name: str = ""
+    config_name: str = ""
     
     confirmationLabel = "Save"
     configured_callback: Callable
@@ -61,6 +62,8 @@ class PlotPage_selectData(SubPage):
                         ui.input("Enter the description", placeholder="Description", on_change=self.update_table).props("debounce=150").bind_value(self, "description").classes("w-full")
                         # file name
                         ui.input("Enter the file name", placeholder="File name", on_change=self.update_table).props("debounce=150").bind_value(self, "file_name").classes("w-full")
+                        # config name
+                        ui.input("Enter the config name", placeholder="Config name", on_change=self.update_table).props("debounce=150").bind_value(self, "config_name").classes("w-full")
                         
                     with ui.grid(columns=2).classes("w-full gap-4"):
                         with ui.row().classes("w-full gap-4 items-center justify-center"):
@@ -118,7 +121,8 @@ class PlotPage_selectData(SubPage):
             str(MetaNames.LOAD_PROFILE): self.load_profile,
             str(MetaNames.COMMENT): self.comment,
             str(MetaNames.DESCRIPTION): self.description,
-            str(MetaNames.FILENAME): self.file_name
+            str(MetaNames.FILENAME): self.file_name,
+            str(MetaNames.CONFIG_NAME): self.config_name
         }
         
         filter = FilterComposition(**filter_data)

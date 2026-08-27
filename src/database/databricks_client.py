@@ -12,6 +12,7 @@ from io import StringIO, BytesIO
 
 from src.shared.app_name import AppName
 from src.shared.table_names import TableNames
+from src.shared.pat_name import PatName
 
 
 class DatabricksClient:
@@ -34,7 +35,7 @@ class DatabricksClient:
         self._connection = None
         
         # errorhandling if connection fails
-        if not self.token or not self.http_path or not self.host or self.token == "db_pat_vps":
+        if not self.token or not self.http_path or not self.host or self.token == PatName.PAT_NAME:
             print("critical error: .env not loaded correctly or variables are missing")
             print(f"used .env: {dotenv_path} (exists={dotenv_path.exists()})")
             print(f"attempted to connect to: host={self.host}, http_path={self.http_path}")

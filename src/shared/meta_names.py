@@ -35,3 +35,8 @@ class MetaNames:
     COOLING_TIME_3 = "cooling_time_3"
     COOLING_TIME_4 = "cooling_time_4"
     
+    @classmethod
+    def get_names(cls) -> list[str]:
+        """returns a list of all metadata attribute names"""
+        return [getattr(cls, attr) for attr in dir(cls) if not callable(getattr(cls, attr)) and not attr.startswith("__")]
+        

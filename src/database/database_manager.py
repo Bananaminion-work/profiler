@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 from src.shared.data_models import Data
 from src.shared.exceptions import WrongInputError
 from src.shared.meta_names import MetaNames
+from src.shared.warning_collector import WarningCollector
 
 class DatabaseManager:
     
@@ -22,6 +23,7 @@ class DatabaseManager:
     _measurementRepository : MeasurementRepository
     _metadataRepository : MetadataRepository
     _client : DatabricksClient
+    _warning = WarningCollector()
     
     source : str = ""
     
@@ -43,7 +45,7 @@ class DatabaseManager:
             # only use csv as vvt repo for now. methods are still available
             self._vvtRepository = VvtRepoCsv()
             self._measurementRepository = MeasurementRepoDatabricks(self._client)
-            self._metadataRepository = MetadataRepoDatabricks(self._client)
+            self._metadataRepository = MetadataRepoDatabricks(self._client, self._warning)
         else:
             raise ValueError(f"Invalid source '{self.source}' for database.")
         
@@ -99,6 +101,7 @@ class DatabaseManager:
             self._measurementRepository.delete_measurement(measurement_id)
             self._metadataRepository.delete_measurement_metadata(measurement_id)
             print(f"Error while saving measurement to database: {e}")
+            raise
         
     
     
@@ -206,3 +209,8 @@ class DatabaseManager:
     def admin_rewrite_vvt(self, new_vvt_df: DataFrame):
         """rewrites the vvt table in the database with the new vvt df"""
         self._vvtRepository.rewrite_vvt(new_vvt_df)
+        
+        
+    def flush_warnings(self):
+        """flushes the warnings to the ui"""
+        self._warning.flush()

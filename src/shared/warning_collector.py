@@ -17,7 +17,24 @@ class WarningCollector:
     
     def flush(self):
         """clears the list of warnings"""
+        
         for  msg, level in self.warnings:
-            ui.notify(msg, type= level)
-        self.warnings.clear()
             
+            # if the warning is a negative one, show it as a notification
+            if level in ["negative","warning"]:
+                ui.notify(
+                    msg,
+                    type= level,
+                    timeout=10000,
+                    multi_line=True,
+                    close_button='OK'
+                )
+                
+            else:
+                ui.notify(
+                    msg,
+                    type= level,
+                    close_button='OK'
+                )
+            
+        self.warnings.clear()

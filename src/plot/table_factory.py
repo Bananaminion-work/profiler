@@ -98,6 +98,14 @@ class TableFactory:
             
         table.on('selection', handle_click)
         
+    
+    def text_filter(self, mask: pd.Series, content:DataFrame, col_name:str, filter_value:str) -> pd.Series:
+        """applies a text filter to the given mask and returns the updated mask"""
+        
+        if filter_value and col_name in content.columns:
+            return mask & content[col_name].astype(str).str.contains(str(filter_value), case=False, na=False, regex=False)
+        
+        return mask
         
         
     def apply_filter(self, content: DataFrame, filter: FilterComposition, selected_ids: set) -> DataFrame:
@@ -112,46 +120,29 @@ class TableFactory:
         # create mask without filtering
         mask = pd.Series(True, index=content.index)
 
-        # filter df for each attribute
+        # TEXT-FILTERS
         
         # ovennr
-        filter_oven_nr = getattr(filter, MetaNames.OVEN_NR, "")
-        if filter_oven_nr != "":
-            mask &= content[MetaNames.OVEN_NR].astype(str).str.contains(filter_oven_nr, case=False, na=False, regex=False)
-
+        mask = self.text_filter(mask, content, MetaNames.OVEN_NR, getattr(filter, MetaNames.OVEN_NR, ""))
         # product
-        filter_product = getattr(filter, MetaNames.PRODUCT, "")
-        if filter_product:
-            mask &= content[MetaNames.PRODUCT].astype(str).str.contains(filter_product, case=False, na=False, regex=False)
-
+        mask = self.text_filter(mask, content, MetaNames.PRODUCT, getattr(filter, MetaNames.PRODUCT, ""))
         # recipe
-        filter_recipe = getattr(filter, MetaNames.OVEN_RECIPE, "")
-        if filter_recipe:
-            mask &= content[MetaNames.OVEN_RECIPE].astype(str).str.contains(filter_recipe, case=False, na=False, regex=False)
-        
+        mask = self.text_filter(mask, content, MetaNames.OVEN_RECIPE, getattr(filter, MetaNames.OVEN_RECIPE, ""))
         # load profile
-        filter_profile = getattr(filter, MetaNames.LOAD_PROFILE, "")
-        if filter_profile:
-            mask &= content[MetaNames.LOAD_PROFILE].astype(str).str.contains(filter_profile, case=False, na=False, regex=False)
-
+        mask = self.text_filter(mask, content, MetaNames.LOAD_PROFILE, getattr(filter, MetaNames.LOAD_PROFILE, ""))
         # comment
-        filter_comment = getattr(filter, MetaNames.COMMENT, "")
-        if filter_comment:
-            mask &= content[MetaNames.COMMENT].astype(str).str.contains(filter_comment, case=False, na=False, regex=False)
-            
+        mask = self.text_filter(mask, content, MetaNames.COMMENT, getattr(filter, MetaNames.COMMENT, ""))
         # description
-        filter_description = getattr(filter, MetaNames.DESCRIPTION, "")
-        if filter_description:
-            mask &= content[MetaNames.DESCRIPTION].astype(str).str.contains(filter_description, case=False, na=False, regex=False)
-            
+        mask = self.text_filter(mask, content, MetaNames.DESCRIPTION, getattr(filter, MetaNames.DESCRIPTION, ""))
         # file name
-        filter_file_name = getattr(filter, MetaNames.FILENAME, "")
-        if filter_file_name:
-            mask &= content[MetaNames.FILENAME].astype(str).str.contains(filter_file_name, case=False, na=False, regex=False)
-            
+        mask = self.text_filter(mask, content, MetaNames.FILENAME, getattr(filter, MetaNames.FILENAME, ""))
+        # config name
+        mask = self.text_filter(mask, content, MetaNames.CONFIG_NAME, getattr(filter, MetaNames.CONFIG_NAME, ""))
+
+
         # date
         filter_date = getattr(filter, MetaNames.DATE, None)
-        if filter_date:
+        if filter_date and MetaNames.DATE in content.columns:
             
             # check if it is a range or just one date
             if isinstance(filter_date, str):
@@ -176,7 +167,7 @@ class TableFactory:
             
         # time
         filter_time = getattr(filter, MetaNames.START_TIME, None)
-        if filter_time:
+        if filter_time and MetaNames.START_TIME in content.columns:
             # convert string to datetime.time
             targetTime = pd.to_datetime(filter_time, format="%H:%M").strftime("%H:%M")
             mask &= (content[MetaNames.START_TIME].astype(str).str[:5] >= targetTime)

@@ -301,6 +301,9 @@ class AppController:
         try:
             # run the saving in a separate thread
             await run.io_bound(self._save_measurement_to_database)
+            
+            # show warnings
+            self.database.flush_warnings()
         
         except Exception as e:
             # if failiure in db happens
@@ -311,6 +314,8 @@ class AppController:
         # if saving is successful, show notification
         ui.notify("Measurement saved successfully!", color="positive")
         self.handle_navigation_request('landing')
+        # show warnings and delete them from collector
+        self.database.flush_warnings()
         return True
 
         

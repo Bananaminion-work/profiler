@@ -58,9 +58,9 @@ class ImportPage_showData(SubPage):
                     with ui.card().classes("p-3 gap-2 bg-slate-50"):
                         ui.label(f"Phase {i}").classes("text-weight-bold text-primary")
                         # volume
-                        ui.input(f"Volume of injection {i}:").classes("w-full").bind_value(self, f"injection_{i}")
+                        ui.input(f"Volume of injection {i}:", validation={"Must be a Number!":self.validate_accordion}).classes("w-full").bind_value(self, f"injection_{i}")
                         # holdingTime
-                        ui.input(f"Holding Time {i}:").classes("w-full").bind_value(self, f"waiting_{i}")
+                        ui.input(f"Holding Time {i}:", validation={"Must be a Number!":self.validate_accordion}).classes("w-full").bind_value(self, f"waiting_{i}")
                     
         # create second accordion
         with ui.expansion("Coolingprocess (1-4)", icon="ac_unit").classes("w-full"):
@@ -71,9 +71,9 @@ class ImportPage_showData(SubPage):
                     with ui.card().classes("p-3 gap-2 bg-slate-50"):
                         ui.label(f"Phase {i}").classes("text-weight-bold text-primary")
                         # volume
-                        ui.input(f"Cooling Frequency {i}:").classes("w-full").bind_value(self, f"cooling_freq_{i}")
+                        ui.input(f"Cooling Frequency {i}:", validation={"Must be a Number!":self.validate_accordion}).classes("w-full").bind_value(self, f"cooling_freq_{i}")
                         # holdingTime
-                        ui.input(f"Cooling Time {i}:").classes("w-full").bind_value(self, f"cooling_time_{i}")
+                        ui.input(f"Cooling Time {i}:", validation={"Must be a Number!":self.validate_accordion}).classes("w-full").bind_value(self, f"cooling_time_{i}")
 
 
 
@@ -201,9 +201,9 @@ class ImportPage_showData(SubPage):
 
                 ui.separator()
                 with ui.row().classes("w-full"):
-                    ui.input(MetaNames.NOZZLEFIELD, placeholder="Dreifachdüsenfeld").bind_value(self, "nozzlefield").classes("w-200")
-                    ui.input(MetaNames.PROFILE_NAME, placeholder="used profilename").bind_value(self, "profile_name").classes("w-200")
-                    ui.input(MetaNames.OVEN_RECIPE, placeholder="oven recipe").bind_value(self, "oven_Recipe").classes("w-200")
+                    ui.input("Nozzlefield", placeholder="Nozzlefield").bind_value(self, "nozzlefield").classes("w-200")
+                    ui.input("Profilename", placeholder="Profilename").bind_value(self, "profile_name").classes("w-200")
+                    ui.input("Oven Recipe", placeholder="Oven Recipe").bind_value(self, "oven_Recipe").classes("w-200")
                 self._create_accordion()
                 ui.textarea(MetaNames.COMMENT, placeholder="enter your comment..").bind_value(self, "comment").classes("w-full")
                     
@@ -422,3 +422,16 @@ class ImportPage_showData(SubPage):
                         return  # exit the function after setting the oven number
         
         return  # do nothing if no matching oven number is found in ovenOptions
+    
+    
+    def validate_accordion(self,value:str)->bool:
+        """validates the input of the accordions, returns True if valid, False if not"""
+        
+        if not value:
+            return True  # empty value is valid
+        
+        try:
+            float(value.replace(",", "."))  # replace comma with dot for float conversion
+            return True
+        except ValueError:
+            return False

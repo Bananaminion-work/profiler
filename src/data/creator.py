@@ -23,6 +23,7 @@ class Creator():
         self._goldCreator = GoldCreator()
         self._dateTime = datetime.now()
         self._description = ""
+        self._config_name = ""
     
     def create_data_objects(self,uploadContainer: UploadContainer, source:str)->tuple[dict[str,Data], datetime,str,str]:
         """takes in the zip content and source of measurement to process and create 

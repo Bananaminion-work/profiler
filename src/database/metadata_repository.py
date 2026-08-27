@@ -62,23 +62,8 @@ class MetadataRepoCsv(MetadataRepository):
         metaDf = metaDf.astype(type_conversions,errors='ignore')
         
         # move Values in the right order
-        columnOrder = [
-            MetaNames.MEASUREMENT_ID,            MetaNames.DATE,
-            MetaNames.START_TIME,            MetaNames.DATA_SOURCE,
-            MetaNames.OVEN_RECIPE,            MetaNames.OVEN_NR,
-            MetaNames.PRODUCT,            MetaNames.LOAD_PROFILE,
-            MetaNames.POSITION_MEASUREMENT_COOLER,            MetaNames.TEST_COOLER_FLAG,
-            MetaNames.COOLER_COUNT_ON_TRAY,            MetaNames.NOZZLEFIELD,
-            MetaNames.PROFILE_NAME,            MetaNames.COMMENT,
-            MetaNames.INJECTION_1,            MetaNames.INJECTION_2,
-            MetaNames.INJECTION_3,            MetaNames.INJECTION_4,
-            MetaNames.WAITING_1,            MetaNames.WAITING_2,
-            MetaNames.WAITING_3,            MetaNames.WAITING_4,
-            MetaNames.COOLING_FREQ_1,            MetaNames.COOLING_FREQ_2,
-            MetaNames.COOLING_FREQ_3,            MetaNames.COOLING_FREQ_4,
-            MetaNames.COOLING_TIME_1,            MetaNames.COOLING_TIME_2,
-            MetaNames.COOLING_TIME_3,            MetaNames.COOLING_TIME_4
-        ]
+        columnOrder = MetaNames.get_names()
+        
         metaDf = metaDf[columnOrder]
         
         needsHeader = not self._pathToCsv.exists() or os.path.getsize(self._pathToCsv) == 0
@@ -152,13 +137,16 @@ class MetadataRepoCsv(MetadataRepository):
     
     
 class MetadataRepoDatabricks(MetadataRepository):
-    def __init__(self, databricksClient):
+    def __init__(self, databricksClient, warning):
         super().__init__()
         self.client = databricksClient
         self._metadataTable = TableNames.METADATA
+        self._warning = warning
+        
     
     def save_measurement_metadata(self, metadata, measurement_id: str):
         """saves the metadata of a measurement to the database (Databricks SQL endpoint)"""
+        
         # get metadata as dict
         metaDict = metadata.get_metadata_dict()
         metaDict[MetaNames.MEASUREMENT_ID] = measurement_id
@@ -173,33 +161,33 @@ class MetadataRepoDatabricks(MetadataRepository):
         }
         metaDf = metaDf.astype(type_conversions, errors='ignore')
         
+        # load columns
+        query = f"SELECT * FROM {self._metadataTable} LIMIT 0"
+        tableColumns = self.client.get_data(query).columns        
+        
         # order columns of df
-        columnOrder = [
-            MetaNames.MEASUREMENT_ID,            MetaNames.DATE,
-            MetaNames.START_TIME,            MetaNames.DATA_SOURCE,
-            MetaNames.OVEN_RECIPE,            MetaNames.OVEN_NR,
-            MetaNames.PRODUCT,            MetaNames.LOAD_PROFILE,
-            MetaNames.POSITION_MEASUREMENT_COOLER,            MetaNames.TEST_COOLER_FLAG,
-            MetaNames.COOLER_COUNT_ON_TRAY,            MetaNames.NOZZLEFIELD,
-            MetaNames.PROFILE_NAME,            MetaNames.COMMENT,
-            MetaNames.DESCRIPTION,            MetaNames.FILENAME,
-            MetaNames.INJECTION_1,            MetaNames.INJECTION_2,
-            MetaNames.INJECTION_3,            MetaNames.INJECTION_4,
-            MetaNames.WAITING_1,            MetaNames.WAITING_2,
-            MetaNames.WAITING_3,            MetaNames.WAITING_4,
-            MetaNames.COOLING_FREQ_1,            MetaNames.COOLING_FREQ_2,
-            MetaNames.COOLING_FREQ_3,            MetaNames.COOLING_FREQ_4,
-            MetaNames.COOLING_TIME_1,            MetaNames.COOLING_TIME_2,
-            MetaNames.COOLING_TIME_3,            MetaNames.COOLING_TIME_4
-        ]
-        metaDf = metaDf[columnOrder]
+        columnOrder = MetaNames.get_names()
+        
+        validColumns = []
+        
+        # find columns that are in the table
+        for col in columnOrder:
+            if col in tableColumns:
+                validColumns.append(col)
+            
+            else:
+                val = metaDf[col].values[0] if col in metaDf.columns else "N/A"
+                msg = f"column {col} not in table {self._metadataTable}, skipping \n Value of the column: {val}"
+                self._warning.warn(msg)
+                print(f"[METADATA REPOSITORY (Databricks)] WARNING:\n {msg}")
+        
+        # create the meatadata df with the valid columns
+        metaDf = metaDf[validColumns]
         
         # save to databricks table
         records = list(metaDf.itertuples(index=False, name=None))
-        self.client.execute_batch_insert(self._metadataTable, records, columns=columnOrder)
+        self.client.execute_batch_insert(self._metadataTable, records, columns=validColumns)
         
-        # return measurement_id if successful so other data is correct
-        #return measurement_id
 
     
     def get_measurement_metadata(self, measurement_id):
