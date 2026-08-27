@@ -68,7 +68,7 @@ class UiView:
                 for _,obj in inspect.getmembers(module, inspect.isclass):
                     
                     # check if the page has a PageName and instaciate
-                    if hasattr(obj, 'pageName') and obj.__module__ == moduleName:
+                    if hasattr(obj, 'pageName') and obj.__name__ not in ["BasePage","SubPage"]:
                         pagesDict[obj.pageName] = obj(self._controller)
             except Exception as e:
                 print(f"Failed to create Page ({moduleName}): {e}")
